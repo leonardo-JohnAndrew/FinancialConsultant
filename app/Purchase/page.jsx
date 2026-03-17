@@ -1,9 +1,12 @@
 'use client' 
 import { useCallback, useEffect , useState} from "react";
-
+import Link from "next/link";
 import axios from "axios";
 export default function PurchaseDetails() {
      const [ purchaseDetails, setPurchaseDetails ] = useState();
+      
+     // crud next js api route 
+     
      const fetchPurchaseDetails = useCallback( async () => {
         try{ 
             const response = await axios.get(`/api/purchase`);
@@ -38,7 +41,7 @@ return (
                 <p>Unit: {item.Unit} </p>
                 <p>Unit Price: {item.UnitPrice}</p>
                 <p>Total: {item.Quantity * item.UnitPrice}</p>
-      
+                <Link href={`/Purchase/${pr.PurchaseID}`}>View Details</Link>
              </div>       
   ))}
   <br />

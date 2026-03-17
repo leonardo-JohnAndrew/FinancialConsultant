@@ -7,6 +7,10 @@ const Purchase = sequelize.define('purchase', {
         allowNull: true, 
         primaryKey : true, 
     }, 
+     RequestorRole: { 
+        type: DataTypes.STRING, 
+        allowNull: true,
+    }, 
     EmployeeSign:{ 
         type: DataTypes.STRING, 
          allowNull: true , 
