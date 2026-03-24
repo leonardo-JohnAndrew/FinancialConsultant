@@ -11,7 +11,41 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+/* styles.css or inside a Tailwind @layer block */
+@layer utilities {
+  /* For WebKit browsers (Chrome, Edge, Safari) */
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 12px; /* scrollbar width */
+    height: 8px; /* horizontal scrollbar height */
+  }
 
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: #ffff; /* track color */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: white;  /* thumb color */
+    border-radius: 4px; /* rounded corners */
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: #ffffff; /* hover color */
+  }
+
+  /* Firefox */
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: #911707 #d6d6d6;
+  }
+}
+
+
+@theme { 
+   --color-darkRed: #911707;
+   --color-strokeRed:#F40000;
+   --color-btnRed: #FF8C8C;
+   --color-grayColumn:#C3C2C2
+}
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

@@ -7,7 +7,7 @@ const Purchase = sequelize.define('purchase', {
         allowNull: true, 
         primaryKey : true, 
     }, 
-     RequestorRole: { 
+     RequestorDepartment: { 
         type: DataTypes.STRING, 
         allowNull: true,
     }, 

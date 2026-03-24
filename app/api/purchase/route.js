@@ -1,5 +1,5 @@
 import sequelize from "@/db/connection";
-import { Purchase, PurchaseItems } from "@/db/models";
+import { Purchase, PurchaseItems, User } from "@/db/models";
 import { NextResponse } from "next/server";
 import { generatePurchaseId } from "@/functions/purchase";
 
@@ -90,6 +90,9 @@ export async function GET(){
   try {
      await sequelize.sync(); 
      const purchases = await Purchase.findAll({ 
+        include: [{ 
+         model: User
+        }], 
         include: [{ 
             model: PurchaseItems 
         }]
