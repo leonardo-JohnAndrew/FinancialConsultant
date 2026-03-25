@@ -123,64 +123,83 @@ return (
                         </div>
                       </div>
                    </div>
-            </div> 
-            
-            <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-10">
+            </div>          
+            <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-auto">
                <div className="grid grid-cols-3 gap-110  ">
-                 <div className = "px-10">Employee Name</div>
-                 <div>Chief Administrator</div>
-                 <div>Project Manager</div>
+                 <div className = "px-10 w-auto">Employee Name</div>
+                 <div  className = "w-auto">Chief Administrator</div>
+                 <div className = "w-auto">Project Manager</div>
                   
                </div>
             </div>
          </div>
 
+          <table className="border border-gray-300 w-full">
+             <thead className = "bg-black text-white border-3 border-darkRed sticky top-0 z-10 font-thin" >
+                <tr>
+                    <th></th> 
+                    <th className = "font-thin text-center">Claimable / Non - Claimable</th>
+                    <th className = "font-thin text-center">Remark</th>
+                </tr>
+             </thead>
+              <tbody> 
+                  <tr className = "border border-gray-300"> 
+                      <td className="px-4 py-2"> 
+                         <input type="checkbox" className ="w-7 h-7"/>
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                         <h5>Claimable</h5>
+                      </td>
+                      <td className = "px-4 py-2 text-center">
+                        <input type="text" className ="bg-gray-200 border-gray-300 outline-1 outline-gray-200" />
+                      </td>
+                  </tr>
+                  <tr> 
+                      <td className="px-4 py-2"> 
+                         <input type="checkbox" className ="w-7 h-7"/>
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                         <h5>Non-cClaimable</h5>
+                      </td>
+                      <td className = "px-4 py-2 text-center">
+                        <input type="text" className ="bg-gray-200 border-gray-300 outline-1 outline-gray-200" />
+                      </td>
+                  </tr>
+              </tbody>
+          </table> 
+
+
          {/* 2nd table */}
-                <div className="grid grid-flow-col grid-rows-[auto_auto] mb-10 border border-gray-200 bg-gray-100">
-            <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-10">
-               <div className="grid grid-cols-3 gap-110  ">
-                 <div className = "px-1"></div>
-                 <div>Claimable</div>
+                {/* <div className="grid grid-flow-col grid-rows-[auto_auto] mb-10 border border-gray-200 bg-gray-100">
+            <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-auto">
+               <div className="grid grid-cols-3 gap-50">
+                 <div></div>
+                 <div>Claimable / Non-Claimable</div>
                  <div>Remark</div>
                </div>
             </div>
              <div className="grid grid-cols-3">
-                   <div className = 'flex flex-col gap-4 px-2 '>
-                     <h5 className = "m-2">Requisitionist </h5>
-                     <div className="flex flex-row">
-                     <h5 className ="m-2">Surname , Lastname Middle Initial </h5> 
-                     <div className="flex items-center justify-center bg-gray-100">
-                          <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
-                            <FiPaperclip/>
-                           </span>
-                           <input type="file" className="hidden" />
-                          </label>
-                        </div>
-                   </div>
+                   <div className = 'flex flex-col gap-4 justify-center '>
+                      <input type="checkbox" className ="w-7 h-7 mt-2 self-center"/>
+                      <hr className = "border-gray-300"/>
+                      <input type="checkbox" className ="w-7 h-7 self-center mb-2"/>
               </div>
-
-              <div className = 'flex flex-col gap-4'>
-                     <h5 className ="m-2">Noted By</h5>
-                     <div className="flex flex-row ">
-                     <h5 className ="m-2">Surname , Lastname Middle Initial </h5> 
+              <div className = 'flex flex-col gap-4 justify-center'>
+                    
+                     <h5 className = "">Claimable</h5>
+                    <hr className = "border-gray-300 mt-4"/>
+                     <h5>Non - Claimable</h5> 
                      <div className="flex items-center justify-center bg-gray-100">
-                          <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
-                            <FiPaperclip/>
-                           </span>
-                           <input type="file" className="hidden" />
-                          </label>
-                        </div>
+
                      </div>
                    </div>
                    <div className = 'flex flex-col gap-4 px-6'>
-                     <h5 className ="m-2">Noted By</h5>
+                     <h5>Noted By</h5>
                       <div className="flex flex-row ">
-                        <h5 className="m-2">Surname , Lastname Middle Initial </h5> 
+                        <h5 >Surname , Lastname Middle Initial </h5> 
                         <div className="flex items-center justify-center bg-gray-100">
                           <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
+                           <span className="text-base leading-normal px-2">
                             <FiPaperclip/>
                            </span>
                            <input type="file" className="hidden" />
@@ -190,7 +209,7 @@ return (
                    </div>
             </div>         
 
-         </div>
+         </div> */}
     
     </>
 )

@@ -12,6 +12,7 @@ export async function  POST(request){
         "Quantity", 
         "UnitPrice",  
         "Total",  
+        "Inventory Data", 
         "Unit", 
         "RequiredBalance",
     ]

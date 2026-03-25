@@ -17,8 +17,13 @@ const ItemsLists = sequelize.define('itemsLists', {
         allowNull: false,
         defaultValue: 0  
       }, 
-      RequiredBalance: { 
-       type: DataTypes.INTEGER, 
+      UnitPrice: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      }, 
+      Unit: { 
+       type: DataTypes.STRING, 
        allowNull: false,
        defaultValue: 0 
       }

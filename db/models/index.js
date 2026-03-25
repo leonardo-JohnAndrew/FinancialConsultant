@@ -1,6 +1,7 @@
 import Purchase from "./purchase.js";
 import PurchaseItems from "./purchaseItems.js";
 import User from "./user.js";
+import ItemsLists  from "./itemsLists.js";
 Purchase.hasMany(PurchaseItems, { 
     foreignKey: 'PurchaseID', 
     sourceKey: 'PurchaseID', 
@@ -25,8 +26,23 @@ Purchase.belongsTo(User, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
 });
+
+
+ItemsLists.hasMany(PurchaseItems, {
+    foreignKey: 'ItemsID',
+    sourceKey: 'ItemsID',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+PurchaseItems.belongsTo(ItemsLists, {
+    foreignKey: 'ItemsID',
+    targetKey: 'ItemsID',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
 export { 
     Purchase, 
     PurchaseItems, 
-    User 
+    User,
+    ItemsLists
 }

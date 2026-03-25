@@ -14,8 +14,8 @@ const Table = (props) => {
                   {header}
                   {header === "ENDING INVENTORY" && (
                     <div className='w-auto pr-10'>   <input className="bg-gray-300 text-red-500 w-full"   type = 'date' defaultValue = {
-                        props.data.purchase?.purchaseItems[0].EndingInventoryDate ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split('T')[0] : ""
-                    } /> </div>
+                        props.data.purchase?.purchaseItems[0]?.EndingInventoryDate ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split('T')[0] : ""
+                    }/> </div>
                   )}
                 </th>
               ))}
@@ -24,8 +24,7 @@ const Table = (props) => {
             <tbody>
                 {props.data?.purchase?.purchaseItems.map((item, index) => (
                     <tr key={index} className='border-b border-gray-300'>
-                        <td className='px-4 py-2'>{parseInt(index + 1) }
-  
+                        <td className='px-4 py-2'>{parseInt(index + 1) } 
                         </td>
                         <td className='px-4 py-2'>
                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 -"  type="text" defaultValue={item.ItemName} readOnly= {true} />

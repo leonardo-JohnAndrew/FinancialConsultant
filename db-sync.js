@@ -1,6 +1,6 @@
 const sequelize = require('./db/connection'); 
 
-const {Purchase, PurchaseItems} = require('./db/models/index');
+const {Purchase, PurchaseItems, User, ItemsLists } = require('./db/models/index');
 sequelize.sync({alter: true}).then(() => {
     console.log('Database synchronized successfully.');
 }).catch((error) => {

@@ -16,7 +16,6 @@ export async function GET( request, {params}){
                 message: "record not found", 
             }, {status: 404}) 
          } 
-
          return NextResponse.json({ 
             purchase 
         }, {status: 200}); 
