@@ -8,9 +8,9 @@ export function generatePurchaseId(){
     return `${prefix}-${type}-${year}-${randomString}`;
 }
 
- export async function getItemInfo( item_id , items){ 
+ export function getItemInfo( item_id , items){ 
     const requiredBalance = items.find(item => item.ItemsID === item_id)?.RequiredBalance || 0;
-    const unitPrice = items.find(item => item.ItemsID === item_id)?.UnitPrice || " ";
+    const unitPrice = items.find(item => item.ItemsID === item_id)?.UnitPrice || 0;
     const unit = items.find(item => item.ItemsID === item_id)?.Unit || " ";
     return { 
         requiredBalance, 
