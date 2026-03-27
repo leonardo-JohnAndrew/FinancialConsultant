@@ -1,7 +1,6 @@
 import sequelize  from "@/db/connection"; 
-import { Purchase  , PurchaseItems} from "@/db/models"; 
+import { Purchase  , PurchaseItems, ItemsLists} from "@/db/models"; 
 import { NextResponse } from "next/server"; 
-
 
 // get purchase by id 
 export async function GET( request, {params}){
@@ -9,7 +8,17 @@ export async function GET( request, {params}){
     const {purchaseid} =await params; 
     try{ 
         const purchase = await Purchase.findByPk(purchaseid, { 
-            include : [PurchaseItems]   
+             include: [
+                {
+                    model: PurchaseItems, 
+                    include: [ 
+                        { 
+                          model: ItemsLists , 
+                          attributes: ['ItemName']
+                        }
+                    ]
+                }
+            ]
         }) 
          if(!purchase){ 
             return NextResponse.json({ 

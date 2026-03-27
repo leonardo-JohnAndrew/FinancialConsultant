@@ -10,6 +10,7 @@ const PurchaseSubmitTable = React.memo((props) => {
     ItemUnitPrice:0, 
     ItemQuantity:0
   }]);
+    
   /*
  [ 
    {  EndingInventory:0, 
@@ -24,7 +25,7 @@ const PurchaseSubmitTable = React.memo((props) => {
 
 
   */
-   const [isNewItem, setIsNewItem] = useState([
+   const [NewItem, setNewItem] = useState([
     {isNew: false}
    ]);
 
@@ -32,80 +33,91 @@ const PurchaseSubmitTable = React.memo((props) => {
     console.log(itemIds); 
   },[itemIds])
    //handle item info when item is selected in the dropdown
-  const handleChange = (index, value) =>{
+  const handleChange = (index, value,e) =>{
+  let ItemId 
   const updatedData = [...itemIds];
-  updatedData[index] = value;
+  if(e.target.type === "text" && e.target.name === "ItemName"){
+    ItemId = itemInfo[itemInfo.length].index; // set value to the length of the item list to represent the new item 
+    value = e.target.value
+    console.log("New Item Id: ",  e.target.type, ItemId);
+    //alert("New Item: " + value);
+  }else if(e.target.type === "select-one"){
+    ItemId = value;
+  }else{
+    ItemId = itemIds[index]; // if not changing item name, use the existing item id to get the item info and calculate quantity and total
+  }
+   
+  return ; 
+  if(e.target.name === "ItemName"){
+    updatedData[index] = ItemId;
+  }
   console.log(updatedData);
-  handleItemInfo(value, index);
+  handleItemInfo(e.target.name, ItemId, index, value);
   setItemIds(updatedData);
  }
   //get item info when item is selected in the dropdown
- const handleItemInfo = (itemId, index) => {
+ const handleItemInfo = async ( name,itemId, index,value) => {
    // if item is new, set isNewItem to true to show input fields for new item details
-   //
+   //alert(`Handle Item Info: \n Name: ${name} \n ItemId: ${itemId} \n Index: ${index} \n Value: ${value}`);
    if(itemId === "new"){
-    /* 
-       IsNewItem: [ 
-          { 
-            isNew: true, 
-            ItemName: "", 
-            ItemRequiredBalance:0, 
-            ItemUnitPrice:0, 
-            ItemUnit:"", 
-            ItemEndingInventory:0, 
-            ItemQuantity:0, 
-            ItemTotal:0
-          }
-       ]
-    */
-    setIsNewItem(prev => {
+    setNewItem(prev => {
       const updated = [...prev];
       updated[index] = {
         isNew: true, 
-        ItemName: "", 
-        ItemRequiredBalance:0, 
-        ItemUnitPrice:0,
-        ItemUnit:"", 
-        ItemEndingInventory:0, 
-        ItemQuantity:0, 
-        ItemTotal:0
       };
       return updated;
     });
     return;
    }
+  //  alert("Selected Item Id: " + itemId);
+
    const info = getItemInfo(Number(itemId), props.item); 
+   console.log("Info: ",info )
    const updatedItemInfo = [...itemInfo];
-   updatedItemInfo[Number(itemId)] = {
-     ItemRequiredBalance: info.requiredBalance,
-    ItemUnitPrice: info.unitPrice, 
-    ItemQuantity:0, 
-    ItemTotal:0
+   updatedItemInfo[Number(index)] = {
+     ItemRequiredBalance: info.requiredBalance ||0,
+     ItemUnitPrice: info.unitPrice || 0, 
+     EndingInventory:0,
+     ItemQuantity:0, 
+     ItemTotal:0
+    }
+   // console.log("updated item info:", updatedItemInfo );
+
+  await new Promise(resolve => setTimeout(resolve, 100)); // wait for state to update
+  await handleChangeInfo( name, index, value, updatedItemInfo); // calculate quantity and total based on required balance
+}
+
+const handleChangeInfo = async ( name,index, value, updated) => {
+  console.log(`Index: ${index} \n Name: ${name} \n Value: ${value}`);
+  console.log("Updated Item Info before calculation: ", updated[index]);
+  const current = updated[index] || {};
+  const requiredBalance = name === "ItemRequiredBalance" ? Number(value) : current.ItemRequiredBalance || 0;
+  //console.log("Updated Item Info before calculation: ", current);
+  const endingInventory = name === "EndingInventory" ? Number(value) : current.EndingInventory || 0;
+ //alert('Ending Inventory: ' + endingInventory);
+  const quantity = calculateQuantity(requiredBalance, endingInventory);
+  const unitPrice = current.ItemUnitPrice && name === "UnitPrice" ? Number(value) : current.ItemUnitPrice || 0;
+  const total = quantity * unitPrice;
+  updated[index] = {
+    ...current,
+    [name]:  name === "ItemName" ? value : Number(value),
+    ItemQuantity: quantity,
+    ItemTotal: total,
+    ItemUnitPrice: unitPrice, 
+    EndingInventory : endingInventory || 0,
   }
-  setItemInfo(updatedItemInfo);
- }
- const handleChangeInfo = ( e,index, value) => {
-  const updatedItemInfo = [...itemInfo];
-  updatedItemInfo[index] = {
-    ...updatedItemInfo[index],
-    [e.target.name]: Number(value),
-    ItemQuantity: calculateQuantity(
-      updatedItemInfo[index]?.ItemRequiredBalance || 0, 
-      e.target.name === "EndingInventory" ? Number(value) : updatedItemInfo[index]?.EndingInventory || 0
-    ), 
-    ItemTotal: updatedItemInfo[index]?.ItemQuantity * updatedItemInfo[index]?.ItemUnitPrice || 0
-  }
-  console.log(`Item Quantity:  ${updatedItemInfo[index].ItemQuantity}\n Item  Price: ${updatedItemInfo[index].ItemUnitPrice} \n Item Total: ${updatedItemInfo[index].ItemUnitPrice * updatedItemInfo[index].ItemQuantity}\n another total : ${updatedItemInfo[index].ItemTotal}`);
-  setItemInfo(updatedItemInfo);
+  //console.log(`Current Item Info: ${JSON.stringify(itemInfo[index])}`);
+  console.log('updated', updated); 
+  console.log(`Item Quantity:  ${updated[index].ItemQuantity}\n Item  Price: ${updated[index].ItemUnitPrice} \n Item Total: ${updated[index].ItemUnitPrice * updated[index].ItemQuantity}\n another total : ${updated[index].ItemTotal}`);
+  setItemInfo(updated);
  }
 useEffect(() => {
   console.log(itemInfo); 
+  console.log(itemIds);
 }, [itemInfo])
 
- 
   return (
     <div>
-        {JSON.stringify(props.item)}
        <table className="border border-gray-300 w-full">
                 <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
                   <tr> 
@@ -129,24 +141,26 @@ useEffect(() => {
                               <td className='px-4 py-2'>
                                {
                                 // if item is new, show input fields for new item details 
-                                isNewItem[index]?.isNew?(
+                                NewItem[index]?.isNew?(
                                   <div className='flex flex-row gap-2'>
-                                    <input type="text" className='border border-gray-300 bg-gray-200 text-black flex-1'  placeholder="Item Name" />
+                                    <input type="text" className='border border-gray-300 bg-gray-200 text-black flex-1'  placeholder="Item Name" 
+                                    onChange ={(e) => handleChange(index, e.target.value, e)} name="ItemName"
+                                    />
                                      {/* button back to select item */} 
-                                     <button className='p-1 px-2 bg-[#FF8C8C] text-white font-bold  border border-darkRed' onClick={() => setIsNewItem(prev => {
+                                     <button className='p-1 px-2 bg-[#FF8C8C] md:text-sm text-white font-bold  border border-darkRed' onClick={() => setNewItem(prev => {
                                        const updated = [...prev];
                                        updated[index] = {isNew: false};
                                        return updated;
                                      })}>
-                                       Select Item
+                                       Select
                                      </button>
                                   </div>
                                 ):
-                              <select name="item" id="" 
+                              <select name="ItemName" id="" 
                               className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold' 
                               value={itemIds[index] || ""}
                               onChange={(e) => {
-                                handleChange(index, e.target.value);
+                                handleChange(index, e.target.value, e);
                               }}>
                                 <option value="">Select an item</option>
                                 {props.item?.map((dataItem, index) => (
@@ -160,30 +174,32 @@ useEffect(() => {
 
                               </td>
                               <td className='px-4 py-2'>
-                                { isNewItem[index]?.isNew?(
+                                { NewItem[index]?.isNew?(
                                   <div className='flex flex-row gap-2'>
-                                    <input type="number" className='border border-gray-300 bg-gray-200 text-black' />
+                                    <input type="number" name='ItemRequiredBalance' className='border border-gray-300 bg-gray-200 text-black'
+                                     onChange={(e)=> handleChange(index, e.target.value, e)}
+                                    />
                                      {/* button back to select item */} 
                                   </div>
                                 ):( getItemInfo(Number(itemIds[index]), props.item)?.requiredBalance || 0 )}
                                  {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.RequiredBalance} readOnly= {true} /> */}
                               </td>
                               <td className='px-4 py-2'>
-                                 <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200" name='EndingInventory' type="text" defaultValue={item.EndingInventory || 0} 
-                                 onChange={(e) => handleChangeInfo(e,itemIds[index], e.target.value)}
+                                 <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200" name='EndingInventory' type="number"
+                                 value={ itemInfo[index]?.EndingInventory || 0} 
+                                 onChange={(e) => handleChange(index, e.target.value,e)}
                                  />
                               </td>
                               <td className='px-4 py-2'>
-                                  <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 " name="ItemQuantity"  type="text" value={itemInfo[Number(itemIds[index])]?.ItemQuantity || 0
-                                   } onChange={(e)=>handleChangeInfo(e, itemIds[index], e.target.value)} readOnly= {true} />
+                                 <h5>{itemInfo[index]?.ItemQuantity || 0}</h5>
                               </td>
                               <td className='px-4 py-2' name="Unit">
-                                { isNewItem[index]?.isNew?(
+                                { NewItem[index]?.isNew?(
                                  <select name="item" id="" 
                                      className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold' 
                                      value={itemIds[index] || ""}
                                      onChange={(e) => {
-                                     handleChange(index, e.target.value);
+                                     handleChange(index, e.target.value, e);
                                   }}>
                                   <option value="bxs">bxs</option>
                                   <option value="can">can</option>
@@ -196,17 +212,15 @@ useEffect(() => {
                                'bxs','can', 'pcks', 'kilo','btls','pcs'
                                */
                                 ):
-
                                 getItemInfo(Number(itemIds[index]), props.item)?.unit||""}
-
                               </td>
                               <td className='px-4 py-2'>
                                  <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" value={(getItemInfo(Number(itemIds[index]), props.item)?.unitPrice || 0)} onChange={(e)=>{ 
-                                  handleChangeInfo(e,itemIds[index],e.target.value)
+                                 handleChange(index, e.target.value,e)
                                  }} readOnly= {false} />
                               </td>
                               <td className='px-4 py-2 '>
-                                 <h4 className="px-2 py-1 w-auto my-1 bg-darkRed text-white" >{formatMoney(itemInfo[Number(itemIds[index])]?.ItemTotal || 0, 'PHP', 'en-PH')}</h4>    
+                                 <h4 className="px-2 py-1 w-full my-1 bg-darkRed text-white" >{formatMoney(itemInfo[index]?.ItemTotal || 0, 'PHP', 'en-PH')}</h4>    
                               </td> 
                        </tr>             
                       ))}
