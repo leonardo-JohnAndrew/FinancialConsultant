@@ -1,5 +1,5 @@
 import sequelize from "@/db/connection";
-import { Purchase, PurchaseItems, User } from "@/db/models";
+import { ItemsLists, Purchase, PurchaseItems, User } from "@/db/models";
 import { NextResponse } from "next/server";
 import { generatePurchaseId } from "@/functions/purchase";
 
@@ -8,23 +8,23 @@ export async function  POST(request){
     await sequelize.sync(); 
 
     const requiredFields = [ 
+        "ItemId",
         "ItemName", 
-        "Quantity", 
-        "UnitPrice",  
-        "Total",  
-        "Inventory Data", 
-        "Unit", 
-        "RequiredBalance",
+        "ItemQuantity",  
+        "ItemTotal",  
+        "ItemRequiredBalance",
+        "EndingInventory", 
+        "EndingInventoryDate",
+        "ItemUnitPrice", 
     ]
-
     const body = await request.json(); 
-
     if(!body.purchaseItem){ 
         return NextResponse.json( 
             {message: "Data is required"},
             {status: 400}
         ); 
-    } 
+    }
+
      let missingFields  = {}; 
     //item valdation 
     for(const item of body.purchaseItem){ 
@@ -38,26 +38,38 @@ export async function  POST(request){
             missingFields[`purchaseItem_${body.purchaseItem.indexOf(item)+1}`] = missing; 
         }
 
-    }
-
+    } 
     console.log(missingFields); 
-
     if(Object.keys(missingFields).length > 0){ 
         return NextResponse.json( 
             {message: "Validation failed", errors: missingFields},
             {status: 400}
         ); 
-    }
+    }  
+
+
+
+
+
+
      // insert data 
-    try{  
+    try{ 
+        // get name of purchase items  
         const codeID = generatePurchaseId();
         const purchase = await  Purchase.create({ 
             PurchaseID: codeID,
             timeStamp: new Date(),
         }); 
         const purchaseItemsData = body.purchaseItem.map(item => ({ 
-            ...item, 
             PurchaseID: purchase.PurchaseID, 
+            ItemName: item.ItemName,
+            ItemsID: item.ItemId,
+            Quantity: item.ItemQuantity,
+            UnitPrice: item.ItemUnitPrice,
+            Total: item.ItemTotal,
+            EndingInventory: item.EndingInventory,
+            RequiredBalance: item.ItemRequiredBalance,
+            EndingInventoryDate: item.EndingInventoryDate || null 
         })); 
        const items =   await sequelize.models.purchaseItems.bulkCreate(purchaseItemsData);
       
@@ -65,17 +77,16 @@ export async function  POST(request){
           await purchase.destroy({
               where: {PurchaseID: purchase.PurchaseID}
           });   
-
           return NextResponse.json(
             {message: "Failed to create purchase items, purchase rolled back"},
             {status: 500}
-          ); 
-        
+          );         
         } 
         return NextResponse.json({
+            message: "Purchase created successfully",
             purchase: purchase , 
             items 
-        }); 
+        } ,{status: 201}); 
     }catch(error){ 
         console.error("Error inserting data:", error); 
         return NextResponse.json( 
@@ -95,11 +106,14 @@ export async function GET(){
          model: User
         }], 
         include: [{ 
-            model: PurchaseItems 
+            model: PurchaseItems, 
+            include: [{ 
+                model: ItemsLists,
+            }]
         }]
      }); 
         return NextResponse.json({purchases}, {status: 200});
-  } catch (error) {
+  }catch (error) {
      return NextResponse.json(
         {message: "Internal Server Error" , error: error.message},
         {status: 500}

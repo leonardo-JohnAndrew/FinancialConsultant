@@ -39,7 +39,6 @@ return (
       </div> 
       <hr className = 'border-t border-gray-300'/>
       </div>     
-
       <Table tableHeader={['REQUEST ID','REQUESTOR NAME', 'DEPARTMENT', 'ITEMS', 'TOTAL','REMARK', 'REQUISITION DATE', 'ACTION']} list = {purchaseDetails?.purchases || []} /> 
     </>
 //     <>

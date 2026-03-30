@@ -29,22 +29,22 @@ const Table = (props) => {
                         <td className='px-4 py-2'>
                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 -"  type="text" defaultValue={item.ItemName} readOnly= {true} />
                         </td>
-                        <td className='px-4 py-2'>{item.RequiredBalance}
+                        <td className='px-4 py-2'>{item?.RequiredBalance}
                            {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.RequiredBalance} readOnly= {true} /> */}
                         </td>
                         <td className='px-4 py-2'>
-                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.EndingInventory || 0} readOnly= {true} />
+                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.EndingInventory || 0} readOnly= {true} />
                         </td>
                         <td className='px-4 py-2'>
-                            <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.Quantity} readOnly= {true} />
+                            <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.Quantity} readOnly= {true} />
                         </td>
                         <td className='px-4 py-2'>{item.Unit}
                         </td>
                         <td className='px-4 py-2'>
-                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.UnitPrice} readOnly= {true} />
+                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.UnitPrice} readOnly= {true} />
                         </td>
                         <td className='px-4 py-2 '>
-                           <h4 className="px-2 py-1 w-auto my-1 bg-darkRed text-white" >{formatMoney(item.Quantity * item.UnitPrice || 0, 'PHP', 'en-PH')}</h4>    
+                           <h4 className="px-2 py-1 w-auto my-1 bg-darkRed text-white" >{formatMoney(item?.Quantity * item?.UnitPrice || 0, 'PHP', 'en-PH')}</h4>    
                         </td> 
                  </tr>             
                 ))}
@@ -62,6 +62,11 @@ const Table = (props) => {
                           <a href={`/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-[#FF8C8C] rounded-xl text-darkRed hover:bg-white text-sm" >
                             View
                           </a>
+                        </td>
+                        <td>
+                          <button  className="px-4 py-2 w-auto my-1 border border-darkRed bg-[#FF8C8C] rounded-xl text-darkRed hover:bg-white text-sm" >
+                            View
+                          </button>
                         </td> 
                  </tr>             
                 ))}

@@ -3,13 +3,18 @@ import React, { use, useEffect , useState} from 'react'
 import { formatMoney } from '@/functions/formatCurrency';
 import { getItemInfo , calculateQuantity  } from '@/functions/purchase';
 const PurchaseSubmitTable = React.memo((props) => {
-  const [itemIds, setItemIds] = useState([]); //
-  const [itemInfo, setItemInfo] = useState([{
-    EndingInventory:0, 
-    ItemRequiredBalance:0, 
-    ItemUnitPrice:0, 
-    ItemQuantity:0
-  }]);
+  // destructure props to get data, item, setItemInfo, setItemIds, and tableHeader
+  const {
+    handleSubmitInfo, 
+    item, 
+    setItemIds, 
+    itemIds,
+    setItemInfo, 
+    itemInfo,  
+    setData, 
+    setEndingInventoryDate,
+  } = props
+  
     
   /*
  [ 
@@ -30,12 +35,16 @@ const PurchaseSubmitTable = React.memo((props) => {
    ]);
 
   useEffect(() => {
+    //alert(props.message? props.message : "No message provided"); 
     console.log(itemIds); 
   },[itemIds])
    //handle item info when item is selected in the dropdown
   const handleChange = (index, value,e) =>{
   let ItemId 
   const updatedData = [...itemIds];
+  if(e.target.name ==="EndingInventoryDate"){
+      setEndingInventoryDate(value);
+  }
   if(e.target.type === "text" && e.target.name === "ItemName"){
     ItemId = itemInfo[itemInfo.length].index; // set value to the length of the item list to represent the new item 
     value = e.target.value
@@ -43,13 +52,14 @@ const PurchaseSubmitTable = React.memo((props) => {
     //alert("New Item: " + value);
   }else if(e.target.type === "select-one"){
     ItemId = value;
+    value = item.find(i => i.ItemsID == ItemId)?.ItemName || ""; // get item name based on the selected item id from the dropdown
+    console.log("Selected Item Id: ",  e.target.type, ItemId , value);
   }else{
     ItemId = itemIds[index]; // if not changing item name, use the existing item id to get the item info and calculate quantity and total
   }
-   
-  return ; 
+
   if(e.target.name === "ItemName"){
-    updatedData[index] = ItemId;
+    updatedData[index] = Number(ItemId);
   }
   console.log(updatedData);
   handleItemInfo(e.target.name, ItemId, index, value);
@@ -74,12 +84,14 @@ const PurchaseSubmitTable = React.memo((props) => {
    const info = getItemInfo(Number(itemId), props.item); 
    console.log("Info: ",info )
    const updatedItemInfo = [...itemInfo];
-   updatedItemInfo[Number(index)] = {
+   console.log("Updated Item Info before update: ", updatedItemInfo, "Index: ", index);
+   updatedItemInfo[Number(index)] = { ...updatedItemInfo[Number(index)],
      ItemRequiredBalance: info.requiredBalance ||0,
      ItemUnitPrice: info.unitPrice || 0, 
      EndingInventory:0,
      ItemQuantity:0, 
-     ItemTotal:0
+     ItemTotal:0,
+     ItemId: Number(itemId) || 0,
     }
    // console.log("updated item info:", updatedItemInfo );
 
@@ -93,7 +105,7 @@ const handleChangeInfo = async ( name,index, value, updated) => {
   const current = updated[index] || {};
   const requiredBalance = name === "ItemRequiredBalance" ? Number(value) : current.ItemRequiredBalance || 0;
   //console.log("Updated Item Info before calculation: ", current);
-  const endingInventory = name === "EndingInventory" ? Number(value) : current.EndingInventory || 0;
+  const endingInventory = name === "EndingInventory" ? Number(value) : current.EndingInventory || current.ItemRequiredBalance || 0;
  //alert('Ending Inventory: ' + endingInventory);
   const quantity = calculateQuantity(requiredBalance, endingInventory);
   const unitPrice = current.ItemUnitPrice && name === "UnitPrice" ? Number(value) : current.ItemUnitPrice || 0;
@@ -104,7 +116,7 @@ const handleChangeInfo = async ( name,index, value, updated) => {
     ItemQuantity: quantity,
     ItemTotal: total,
     ItemUnitPrice: unitPrice, 
-    EndingInventory : endingInventory || 0,
+    EndingInventory : endingInventory || 0
   }
   //console.log(`Current Item Info: ${JSON.stringify(itemInfo[index])}`);
   console.log('updated', updated); 
@@ -115,7 +127,12 @@ useEffect(() => {
   console.log(itemInfo); 
   console.log(itemIds);
 }, [itemInfo])
+  setData
 
+useEffect(() => {
+  //update data remove item alread selected
+  console.log("Updating data", item);
+}, [item])
   return (
     <div>
        <table className="border border-gray-300 w-full">
@@ -125,7 +142,7 @@ useEffect(() => {
                       <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold'>
                         {header}
                         {header === "ENDING INVENTORY" && (
-                          <div className='w-auto pr-10'>   <input className="bg-gray-300 text-red-500 w-full"   type = 'date' defaultValue = {
+                          <div className='w-auto pr-10'>   <input className="bg-gray-300 text-red-500 w-full" name='EndingInventoryDate' onChange={(e)=> handleChange(index, e.target.value, e)} type = 'date' defaultValue = {
                               props.data.purchase?.purchaseItems[0]?.EndingInventoryDate ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split('T')[0] : ""
                           }/> </div>
                         )}
@@ -163,11 +180,15 @@ useEffect(() => {
                                 handleChange(index, e.target.value, e);
                               }}>
                                 <option value="">Select an item</option>
-                                {props.item?.map((dataItem, index) => (
-                                  <option key={index} value={dataItem.ItemsID}>
-                                    {dataItem.ItemName}
-                                  </option>
-                                ))}
+                              {props.item?.filter(dataItem => {
+                             // allow current selected item in this row
+                                  return !itemIds.includes(dataItem.ItemsID) || itemIds[index] === dataItem.ItemsID;
+                              })
+                               .map((dataItem, i) => (
+                                <option key={i} value={dataItem.ItemsID}>
+                                 {dataItem.ItemName}
+                                </option>
+                               ))} 
                                   <option value="new">+ Add new item</option>
                               </select>
                                }
