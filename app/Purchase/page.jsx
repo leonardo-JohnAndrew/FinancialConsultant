@@ -35,7 +35,17 @@ return (
       <div className = "grid grid-row-3 mb-5">  
       <hr className = 'border-t border-gray-300'/>
       <div className = 'flex text-xl'> 
-      <h5 className ='display-inline text-red-700 font-bold p-5'> {purchaseDetails?.purchase?.PurchaseID}</h5>
+        <div className = "py-4 basis-2xl mr-20 w-50 h-auto flex flex-row text-center items-start justify-start  text-white font-bold">
+           <h2 className = "text-black text-2xl" >Search ID: </h2> 
+           <input type="text" className="bg-gray-100 ml-4 text-black outline-2 outline-gray-300 text-lg" placeholder="Enter Purchase ID" />
+        
+        </div>
+        <div className="basis-64 ml-30 w-50 h-10 bg-yellow-300">
+
+        </div>
+         <div className="basis-64 w-50 h-10 bg-darkRed">
+
+         </div>
       </div> 
       <hr className = 'border-t border-gray-300'/>
       </div>     

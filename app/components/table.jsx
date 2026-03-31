@@ -63,11 +63,6 @@ const Table = (props) => {
                             View
                           </a>
                         </td>
-                        <td>
-                          <button  className="px-4 py-2 w-auto my-1 border border-darkRed bg-[#FF8C8C] rounded-xl text-darkRed hover:bg-white text-sm" >
-                            View
-                          </button>
-                        </td> 
                  </tr>             
                 ))}
             </tbody>

@@ -128,7 +128,7 @@ return (
                <div className="grid grid-cols-3 gap-110  ">
                  <div className = "px-10 w-auto">Employee Name</div>
                  <div  className = "w-auto">Chief Administrator</div>
-                 <div className = "w-auto">Project Manager</div>
+                 <div className = "w-auto">Project Director</div>
                   
                </div>
             </div>

@@ -4,10 +4,12 @@ import React, { use, useCallback, useEffect, useState } from 'react'
 import {calculateQuantity, getItemInfo , } from "@/functions/purchase"
 import PurchaseSubmitTable from '@/app/components/Tables/purchase-submit-table';
 import { formatDates } from '@/functions/formattDate';
+import { FiMinus , FiPlus } from 'react-icons/fi';
 const CreateRequisition = () => {
   const [data, setData] =  useState([]); 
   const [row , setRow] = useState([]); 
   const [itemIds, setItemIds] = useState([]);
+  //const [totalRow, setTotalRow] = useState(0);
   const [itemInfo, setItemInfo] = useState([{
     EndingInventory:0, 
     ItemRequiredBalance:0, 
@@ -40,9 +42,20 @@ const CreateRequisition = () => {
 
 
    const handleSubmitInfo = useCallback(async () => { 
-    console.log("Submitting purchase requisition with item info:", itemInfo);
-    console.log("Ending Inventory Date:", endindInventoryDate);
-      // map through itemInfo to add ending inventory date
+     // map through itemInfo to add ending inventory date
+     if(itemInfo.length === 0) return ;     
+     // alert(`row length: ${row.length}, itemInfo length: ${itemInfo.length}`);
+     if(itemInfo.length > row.length) {      
+       // remove extra itemInfo if it exceeds the number of rows 
+       setItemInfo(prev => prev.slice(0, row.length));
+       setItemIds(prev => prev.slice(0, row.length));
+      }
+      console.log("Submitting purchase requisition with item info:", itemInfo);
+      console.log("Ending Inventory Date:", endindInventoryDate);
+     
+      resetTable();
+
+      return; 
     const itemInfoWithDate = itemInfo.map(item => ({
       ...item,
       EndingInventoryDate: endindInventoryDate
@@ -63,14 +76,33 @@ const CreateRequisition = () => {
    }
 
    const addTableRow = (added = 1) => {
+    // adding multiple rows based on the input value
       for(let i = 0; i < added; i++){
-          setRow(prevData => [...prevData, {id: prevData.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}]);
-      } 
+        setRow(prevData => [...prevData, {id: prevData.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}]);
+      }  
      //setData([...data, {id: data.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}])
-   }
-  const handleDeleteRow = () => {  
+   } 
+       // console.log("Row changed:", value); 
+       // setRow(prevData => prevData.map(row => row.id === value.id ? {...row, ...value} : row)); 
+    const handleRowChange = (value) => {
+      alert(`Value changed: ${value}`);
+      if (value === row.length) return;
+
+      if (value > row.length) {   
+    addTableRow(value - row.length);
+     } else {
+    // remove rows if value is smaller
+        setRow(prev => prev.slice(0, value));
+        // setData(prev => prev.slice(0, value));
+        // setItemInfo(prev => prev.slice(0, value));
+        // setItemIds(prev => prev.slice(0, value));
+  }
+};
+    
+
+ const handleDeleteRow = () => {  
     setRow(prevData => prevData.filter((_, i) => i !== row.length - 1));
-    setData(prevData => prevData.filter((_, i) => i !== row.length - 1));
+  //setData(prevData => prevData.filter((_, i) => i !== row.length - 1));
     setItemInfo(prevData => prevData.filter((_, i) => i !== row.length - 1));
     setItemIds(prevData => prevData.filter((_, i) => i !== row.length - 1));
      // setRow(prevData => prevData.filter((_, i) => i !== index));// through index to delete specific row
@@ -86,7 +118,13 @@ const CreateRequisition = () => {
    useEffect(() => { 
       addTableRow(5);
    },[])
- 
+
+   const resetTable = () => { 
+    setRow([]);
+    setItemInfo([]);
+    setItemIds([]);
+    addTableRow(5)
+   }
   return (
    <> 
       <div className="flex relative mb-5 w-auto">
@@ -108,16 +146,15 @@ const CreateRequisition = () => {
       </div>     
        {/* <button onClick={handleClick}>Fetch Item Info</button> */}
        <div className='flex relative flex-row place-content-end mb-5 w-auto'>
-          <div className='grid-cols-[auto_auto_auto] place-content-end'>
-      <button className="text-white outline outline-darkRed font-bold rounded-tl-lg rounded-bl-lg bg-black py-1 px-2 hover:bg-white hover:text-black text-sm" 
-   >
-    Delete
-</button>
-          <input type="Number" className='bg-gray-100 border border-gray-300 outline outline-gray-400 w-30 mx-1'  />
-        <button className='bg-darkRed text-white py-1 px-2 text-sm hover:bg-white' onClick={(e) => addTableRow(1)}>ADD ROW</button>
+          <div className='grid-cols-[auto_auto_auto] place-content-end flex flex-row '> 
+      
+      <button className="text-white outline outline-darkRed font-bold rounded-tl-lg rounded-bl-lg bg-black pl-2 py-1 w-10 hover:bg-gray-300 hover:text-black text-sm flex flex-row" onClick={()=>handleDeleteRow()}><FiMinus size={20}/></button>
+          <input type="Number" className='bg-gray-100 border border-gray-300 outline outline-gray-400 w-20 mx-1 text-center' 
+          value={row.length || 0} onChange={(e)=>handleRowChange(parseInt(e.target.value) || 0)} />
+        <button className='bg-darkRed text-white pl-2 py-1 w-10 text-sm outline outline-darkRed rounded-tr-lg rounded-br-lg  hover:bg-btnRed hover:text-black flex flex-row ' onClick={(e) => addTableRow(1)}><FiPlus size={20}/></button>
            </div> 
        </div>
-     <div className="max-h-125 scrollbar-custom overflow-y-auto">      
+     <div className="h-125 scrollbar-custom overflow-y-auto">      
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
@@ -136,10 +173,13 @@ const CreateRequisition = () => {
         
        Table 
               
-              submit button 
-              
+              submit button               
        */}
-      
+          <div className='mt-10 flex relative flex-row place-content-end mb-5 w-auto'>
+          <div className='grid-cols-[auto_auto_auto] place-content-end'>  
+        <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black'  onClick={(e) => handleSubmitInfo()}>Submit</button>
+           </div> 
+       </div>
    </>
   )
 }

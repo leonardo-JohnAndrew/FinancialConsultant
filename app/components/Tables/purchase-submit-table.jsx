@@ -2,6 +2,7 @@
 import React, { use, useEffect , useState} from 'react'
 import { formatMoney } from '@/functions/formatCurrency';
 import { getItemInfo , calculateQuantity  } from '@/functions/purchase';
+import { getTotal } from '@/functions/purchase';
 const PurchaseSubmitTable = React.memo((props) => {
   // destructure props to get data, item, setItemInfo, setItemIds, and tableHeader
   const {
@@ -44,7 +45,7 @@ const PurchaseSubmitTable = React.memo((props) => {
   const updatedData = [...itemIds];
   if(e.target.name ==="EndingInventoryDate"){
       setEndingInventoryDate(value);
-  }
+  } 
   if(e.target.type === "text" && e.target.name === "ItemName"){
     ItemId = itemInfo[itemInfo.length].index; // set value to the length of the item list to represent the new item 
     value = e.target.value
@@ -80,7 +81,6 @@ const PurchaseSubmitTable = React.memo((props) => {
     return;
    }
   //  alert("Selected Item Id: " + itemId);
-
    const info = getItemInfo(Number(itemId), props.item); 
    console.log("Info: ",info )
    const updatedItemInfo = [...itemInfo];
@@ -141,8 +141,9 @@ useEffect(() => {
                     {props.tableHeader.map((header, index) => (
                       <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold'>
                         {header}
-                        {header === "ENDING INVENTORY" && (
-                          <div className='w-auto pr-10'>   <input className="bg-gray-300 text-red-500 w-full" name='EndingInventoryDate' onChange={(e)=> handleChange(index, e.target.value, e)} type = 'date' defaultValue = {
+                         {
+                           header === "ENDING INVENTORY" && (
+                           <div className='w-auto pr-10'>   <input className="bg-gray-300 text-red-500 w-full" name='EndingInventoryDate' onChange={(e)=> handleChange(index, e.target.value, e)} type = 'date' defaultValue = {
                               props.data.purchase?.purchaseItems[0]?.EndingInventoryDate ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split('T')[0] : ""
                           }/> </div>
                         )}
@@ -206,9 +207,11 @@ useEffect(() => {
                                  {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.RequiredBalance} readOnly= {true} /> */}
                               </td>
                               <td className='px-4 py-2'>
-                                 <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200" name='EndingInventory' type="number"
+                                 <input className="bg-gray-200 min-w-30 border border-gray-300 outline-1 outline-gray-200" name='EndingInventory' type="number"
                                  value={ itemInfo[index]?.EndingInventory || 0} 
                                  onChange={(e) => handleChange(index, e.target.value,e)}
+                                 min={0}
+                                 max={itemInfo[index]?.ItemRequiredBalance || 0}
                                  />
                               </td>
                               <td className='px-4 py-2'>
@@ -243,10 +246,17 @@ useEffect(() => {
                               <td className='px-4 py-2 '>
                                  <h4 className="px-2 py-1 w-full my-1 bg-darkRed text-white" >{formatMoney(itemInfo[index]?.ItemTotal || 0, 'PHP', 'en-PH')}</h4>    
                               </td> 
-                       </tr>             
+                         </tr>             
                       ))}
                     </tbody>
                 </table>
+                 <div className ='mt-5 flex relative flex-row place-content-end mb-5 w-auto'>
+                    <div className='grid-cols-[auto_auto_auto] place-content-end'>
+                        <div className='w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white'>
+                            <h4>Total: {formatMoney(itemInfo.reduce((sum, item) => sum + (item.ItemTotal || 0), 0), 'PHP', 'en-PH')}</h4>
+                        </div>
+                    </div>
+                 </div>
           </div>
       )
   })
