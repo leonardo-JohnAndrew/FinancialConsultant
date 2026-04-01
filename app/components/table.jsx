@@ -6,7 +6,7 @@ const Table = (props) => {
   return (
     <> 
       <div className='table-container w-full '>
-        <table className="border border-gray-300 w-full">
+        <table className="border border-gray-300 w-full ">
           <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
             <tr> 
               {props.tableHeader.map((header, index) => (
