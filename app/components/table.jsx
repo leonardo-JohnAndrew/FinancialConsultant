@@ -4,7 +4,8 @@ import { formatMoney } from "@/functions/formatCurrency";
 const Table = (props) => { 
 
   return (
-    <> 
+<> 
+
       <div className='table-container w-full '>
         <table className="border border-gray-300 w-full ">
           <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
@@ -59,7 +60,7 @@ const Table = (props) => {
                         <td className='px-4 py-2'>{purchase.Remark}</td>
                         <td className='px-4 py-2'>{new Date(purchase.createdAt).toLocaleDateString()}</td>
                         <td className='px-4 py-2'>
-                          <a href={`/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-[#FF8C8C] rounded-xl text-darkRed hover:bg-white text-sm" >
+                          <a href={`/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm" >
                             View
                           </a>
                         </td>

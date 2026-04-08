@@ -150,7 +150,7 @@ return (
     onClick={() =>
       setPage(prev => Math.min(prev + 1, totalPages))
     }
-    className="px-3 py-1 bg-black text-white hover:text-black  hover:bg-white ml-1"
+    className="px-3 py-1 border-2 border-black bg-black text-white hover:text-black  hover:bg-white ml-1"
     disabled={page === totalPages}
   >
     <FiChevronRight size={22}/>

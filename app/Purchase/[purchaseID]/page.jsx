@@ -159,7 +159,7 @@ return (
                          <input type="checkbox" className ="w-7 h-7"/>
                       </td>
                       <td className="px-4 py-2 text-center">
-                         <h5>Non-cClaimable</h5>
+                         <h5>Non-Claimable</h5>
                       </td>
                       <td className = "px-4 py-2 text-center">
                         <input type="text" className ="bg-gray-200 border-gray-300 outline-1 outline-gray-200" />

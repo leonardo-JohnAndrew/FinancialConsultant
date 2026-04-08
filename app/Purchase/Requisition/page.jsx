@@ -85,7 +85,7 @@ const CreateRequisition = () => {
        // console.log("Row changed:", value); 
        // setRow(prevData => prevData.map(row => row.id === value.id ? {...row, ...value} : row)); 
     const handleRowChange = (value) => {
-      alert(`Value changed: ${value}`);
+    //  alert(`Value changed: ${value}`);
       if (value === row.length) return;
 
       if (value > row.length) {   
@@ -145,7 +145,7 @@ const CreateRequisition = () => {
       <hr className = 'border-t border-gray-300'/>
       </div>     
        {/* <button onClick={handleClick}>Fetch Item Info</button> */}
-       <div className='flex relative flex-row place-content-end mb-5 w-auto'>
+       <div className='flex relative flex-row place-content-end mb-5 w-auto print:hidden'>
           <div className='grid-cols-[auto_auto_auto] place-content-end flex flex-row '> 
       
       <button className="text-white outline outline-darkRed font-bold rounded-tl-lg rounded-bl-lg bg-black pl-2 py-1 w-10 hover:bg-gray-300 hover:text-black text-sm flex flex-row" onClick={()=>handleDeleteRow()}><FiMinus size={20}/></button>
@@ -154,7 +154,7 @@ const CreateRequisition = () => {
         <button className='bg-darkRed text-white pl-2 py-1 w-10 text-sm outline outline-darkRed rounded-tr-lg rounded-br-lg  hover:bg-btnRed hover:text-black flex flex-row ' onClick={(e) => addTableRow(1)}><FiPlus size={20}/></button>
            </div> 
        </div>
-     <div className="h-125 scrollbar-custom overflow-y-auto">      
+     <div className="h-125 scrollbar-custom overflow-y-auto print:overflow-hidden">      
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
@@ -178,7 +178,11 @@ const CreateRequisition = () => {
           <div className='mt-10 flex relative flex-row place-content-end mb-5 w-auto'>
           <div className='grid-cols-[auto_auto_auto] place-content-end'>  
         <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black'  onClick={(e) => handleSubmitInfo()}>Submit</button>
-           </div> 
+         {/* <button onClick={() => window.print()} className="print:hidden">
+  Print
+</button> */}
+           </div>
+
        </div>
    </>
   )

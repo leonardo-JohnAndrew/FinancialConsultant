@@ -135,11 +135,11 @@ useEffect(() => {
 }, [item])
   return (
     <div>
-       <table className="border border-gray-300 w-full">
+       <table className="border border-gray-300 w-full ">
                 <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
                   <tr> 
                     {props.tableHeader.map((header, index) => (
-                      <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold'>
+                      <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold print:text-black '>
                         {header}
                          {
                            header === "ENDING INVENTORY" && (
@@ -161,7 +161,8 @@ useEffect(() => {
                                 // if item is new, show input fields for new item details 
                                 NewItem[index]?.isNew?(
                                   <div className='flex flex-row gap-2'>
-                                    <input type="text" className='border border-gray-300 bg-gray-200 text-black flex-1'  placeholder="Item Name" 
+                                    <input type="text" className='border border-gray-300 bg-gray-200 text-black flex-1 
+                                    print:border-0 print:outline-none print:bg-transparent'  placeholder="Item Name" 
                                     onChange ={(e) => handleChange(index, e.target.value, e)} name="ItemName"
                                     />
                                      {/* button back to select item */} 
@@ -175,7 +176,8 @@ useEffect(() => {
                                   </div>
                                 ):
                               <select name="ItemName" id="" 
-                              className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold' 
+                              className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold 
+                              print:border-0 print:outline-none print:bg-transparent' 
                               value={itemIds[index] || ""}
                               onChange={(e) => {
                                 handleChange(index, e.target.value, e);
@@ -190,7 +192,6 @@ useEffect(() => {
                                  {dataItem.ItemName}
                                 </option>
                                ))} 
-                                  <option value="new">+ Add new item</option>
                               </select>
                                }
 
@@ -198,7 +199,8 @@ useEffect(() => {
                               <td className='px-4 py-2'>
                                 { NewItem[index]?.isNew?(
                                   <div className='flex flex-row gap-2'>
-                                    <input type="number" name='ItemRequiredBalance' className='border border-gray-300 bg-gray-200 text-black'
+                                    <input type="number" name='ItemRequiredBalance' className='border border-gray-300 bg-gray-200 text-black 
+                                    print:border-0 print:outline-none print:bg-transparent'
                                      onChange={(e)=> handleChange(index, e.target.value, e)}
                                     />
                                      {/* button back to select item */} 
@@ -207,7 +209,8 @@ useEffect(() => {
                                  {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.RequiredBalance} readOnly= {true} /> */}
                               </td>
                               <td className='px-4 py-2'>
-                                 <input className="bg-gray-200 min-w-30 border border-gray-300 outline-1 outline-gray-200" name='EndingInventory' type="number"
+                                 <input className="bg-gray-200 min-w-30 border border-gray-300 outline-1 outline-gray-200
+                                 print:border-0 print:outline-none print:bg-transparent" name='EndingInventory' type="number"
                                  value={ itemInfo[index]?.EndingInventory || 0} 
                                  onChange={(e) => handleChange(index, e.target.value,e)}
                                  min={0}
@@ -239,7 +242,8 @@ useEffect(() => {
                                 getItemInfo(Number(itemIds[index]), props.item)?.unit||""}
                               </td>
                               <td className='px-4 py-2'>
-                                 <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" value={(getItemInfo(Number(itemIds[index]), props.item)?.unitPrice || 0)} onChange={(e)=>{ 
+                                 <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 
+                                 print:border-0 print:outline-none print:bg-transparent"  type="text" value={(getItemInfo(Number(itemIds[index]), props.item)?.unitPrice || 0)} onChange={(e)=>{ 
                                  handleChange(index, e.target.value,e)
                                  }} readOnly= {false} />
                               </td>
