@@ -5,7 +5,6 @@ const Table = (props) => {
 
   return (
 <> 
-
       <div className='table-container w-full '>
         <table className="border border-gray-300 w-full ">
           <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
@@ -52,14 +51,14 @@ const Table = (props) => {
                  {/* for list of all purchases */}
                   {props.list?.map((purchase, index) => (
                     <tr key={index} className='border-b border-gray-300'>
-                        <td className='px-4 py-2'>{purchase.PurchaseID}</td>  
-                        <td className='px-4 py-2'>{purchase.RequestorName}</td>
-                        <td className='px-4 py-2'>{purchase.RequestorDepartment}</td>
-                        <td className='px-4 py-2'>{purchase.purchaseItems.length}</td>
-                        <td className='px-4 py-2'>{formatMoney(purchase.purchaseItems.reduce((total, item) => total + (item.Quantity * item.UnitPrice), 0), 'PHP', 'en-PH')}</td>
-                        <td className='px-4 py-2'>{purchase.Remark}</td>
-                        <td className='px-4 py-2'>{new Date(purchase.createdAt).toLocaleDateString()}</td>
-                        <td className='px-4 py-2'>
+                        <td className='px-1 py-3'>{purchase.PurchaseID}</td>  
+                        <td className='px-4 py-3'>{purchase.RequestorName || 'NAME'}</td>
+                        <td className='px-4 py-3'>{purchase.RequestorDepartment}</td>
+                        <td className='px-4 py-3'>{purchase.purchaseItems.length}</td>
+                        <td className='px-4 py-3'>{formatMoney(purchase.purchaseItems.reduce((total, item) => total + (item.Quantity * item.UnitPrice), 0), 'PHP', 'en-PH')}</td>
+                        <td className='px-4 py-3'>{purchase.Remark}</td>
+                        <td className='px-4 py-3'>{new Date(purchase.createdAt).toLocaleDateString()}</td>
+                        <td className='px-4 py-3'>
                           <a href={`/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm" >
                             View
                           </a>
@@ -68,6 +67,7 @@ const Table = (props) => {
                 ))}
             </tbody>
         </table>
+        
       </div>
     </>
   ); 

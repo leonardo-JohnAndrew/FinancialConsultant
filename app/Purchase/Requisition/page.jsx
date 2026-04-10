@@ -5,6 +5,7 @@ import {calculateQuantity, getItemInfo , } from "@/functions/purchase"
 import PurchaseSubmitTable from '@/app/components/Tables/purchase-submit-table';
 import { formatDates } from '@/functions/formattDate';
 import { FiMinus , FiPlus } from 'react-icons/fi';
+import { formatMoney } from '@/functions/formatCurrency';
 const CreateRequisition = () => {
   const [data, setData] =  useState([]); 
   const [row , setRow] = useState([]); 
@@ -154,7 +155,7 @@ const CreateRequisition = () => {
         <button className='bg-darkRed text-white pl-2 py-1 w-10 text-sm outline outline-darkRed rounded-tr-lg rounded-br-lg  hover:bg-btnRed hover:text-black flex flex-row ' onClick={(e) => addTableRow(1)}><FiPlus size={20}/></button>
            </div> 
        </div>
-     <div className="h-125 scrollbar-custom overflow-y-auto print:overflow-hidden">      
+     <div className=" print:overflow-hidden">      
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
@@ -175,6 +176,13 @@ const CreateRequisition = () => {
               
               submit button               
        */}
+         <div className ='mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto'>
+                           <div className='grid-cols-[auto_auto_auto] place-content-end'>
+                               <div className='w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white'>
+                                   <h4>Total: {formatMoney(itemInfo.reduce((sum, item) => sum + (item.ItemTotal || 0), 0), 'PHP', 'en-PH')}</h4>
+                               </div>
+                           </div>
+                        </div>
           <div className='mt-10 flex relative flex-row place-content-end mb-5 w-auto'>
           <div className='grid-cols-[auto_auto_auto] place-content-end'>  
         <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black'  onClick={(e) => handleSubmitInfo()}>Submit</button>

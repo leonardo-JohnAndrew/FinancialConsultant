@@ -34,6 +34,7 @@ const PurchaseSubmitTable = React.memo((props) => {
    const [NewItem, setNewItem] = useState([
     {isNew: false}
    ]);
+   
 
   useEffect(() => {
     //alert(props.message? props.message : "No message provided"); 
@@ -134,7 +135,9 @@ useEffect(() => {
   console.log("Updating data", item);
 }, [item])
   return (
-    <div>
+    <>
+    
+    <div className='max-h-125 scrollbar-custom overflow-y-auto'>
        <table className="border border-gray-300 w-full ">
                 <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
                   <tr> 
@@ -254,14 +257,9 @@ useEffect(() => {
                       ))}
                     </tbody>
                 </table>
-                 <div className ='mt-5 flex relative flex-row place-content-end mb-5 w-auto'>
-                    <div className='grid-cols-[auto_auto_auto] place-content-end'>
-                        <div className='w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white'>
-                            <h4>Total: {formatMoney(itemInfo.reduce((sum, item) => sum + (item.ItemTotal || 0), 0), 'PHP', 'en-PH')}</h4>
-                        </div>
-                    </div>
-                 </div>
           </div>
+    
+          </>
       )
   })
 
