@@ -1,7 +1,7 @@
 import sequelize from "@/db/connection";
 import { ItemsLists, Purchase, PurchaseItems, User } from "@/db/models";
 import { NextResponse } from "next/server";
-import { generatePurchaseId } from "@/functions/purchase";
+import { generatePurchaseId } from "@/functions/autogenerate";
 import { DATE, Op } from "sequelize";
 
 
@@ -20,6 +20,7 @@ export async function  POST(request){
         "ItemUnitPrice", 
     ]
     const body = await request.json(); 
+    console.log(body); 
     if(!body.purchaseItem){ 
         return NextResponse.json( 
             {message: "Data is required"},
@@ -28,6 +29,7 @@ export async function  POST(request){
     }
 
      let missingFields  = {}; 
+     
     //item valdation 
     for(const item of body.purchaseItem){ 
       let missing  =[]; 

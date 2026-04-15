@@ -6,7 +6,16 @@ const User = sequelize.define('user', {
     type: DataTypes.STRING, 
     allowNull: false, 
     primaryKey: true , 
+    validate:{
+      notNull:{
+        msg: "UserID is Required"
+      }
+    }
   }, 
+  profile_pic: { 
+       type: DataTypes.STRING, 
+       allowNull: true,
+  },
   lastname : {
      type : DataTypes.STRING, 
      allowNull: false, 
@@ -44,4 +53,6 @@ const User = sequelize.define('user', {
      type : DataTypes.STRING, 
      allowNull : false
    } 
-}, {}); module.exports = User; 
+}, {
+      
+}); module.exports = User; 

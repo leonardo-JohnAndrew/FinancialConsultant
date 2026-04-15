@@ -51,12 +51,7 @@ const CreateRequisition = () => {
        setItemInfo(prev => prev.slice(0, row.length));
        setItemIds(prev => prev.slice(0, row.length));
       }
-      console.log("Submitting purchase requisition with item info:", itemInfo);
-      console.log("Ending Inventory Date:", endindInventoryDate);
-     
-      resetTable();
-
-      return; 
+    
     const itemInfoWithDate = itemInfo.map(item => ({
       ...item,
       EndingInventoryDate: endindInventoryDate
