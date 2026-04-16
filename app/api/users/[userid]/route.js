@@ -1,6 +1,5 @@
 import { User } from "@/db/models";
 import { NextResponse } from "next/server";
-import { where } from "sequelize";
 
 
 

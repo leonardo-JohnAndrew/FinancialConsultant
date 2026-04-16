@@ -35,11 +35,6 @@ const PurchaseSubmitTable = React.memo((props) => {
     {isNew: false}
    ]);
    
-
-  useEffect(() => {
-    //alert(props.message? props.message : "No message provided"); 
-    console.log(itemIds); 
-  },[itemIds])
    //handle item info when item is selected in the dropdown
   const handleChange = (index, value,e) =>{
   let ItemId 
@@ -50,12 +45,12 @@ const PurchaseSubmitTable = React.memo((props) => {
   if(e.target.type === "text" && e.target.name === "ItemName"){
     ItemId = itemInfo[itemInfo.length].index; // set value to the length of the item list to represent the new item 
     value = e.target.value
-    console.log("New Item Id: ",  e.target.type, ItemId);
+ //   console.log("New Item Id: ",  e.target.type, ItemId);
     //alert("New Item: " + value);
   }else if(e.target.type === "select-one"){
     ItemId = value;
     value = item.find(i => i.ItemsID == ItemId)?.ItemName || ""; // get item name based on the selected item id from the dropdown
-    console.log("Selected Item Id: ",  e.target.type, ItemId , value);
+  //  console.log("Selected Item Id: ",  e.target.type, ItemId , value);
   }else{
     ItemId = itemIds[index]; // if not changing item name, use the existing item id to get the item info and calculate quantity and total
   }
@@ -63,7 +58,7 @@ const PurchaseSubmitTable = React.memo((props) => {
   if(e.target.name === "ItemName"){
     updatedData[index] = Number(ItemId);
   }
-  console.log(updatedData);
+  //console.log(updatedData);
   handleItemInfo(e.target.name, ItemId, index, value);
   setItemIds(updatedData);
  }
@@ -83,9 +78,9 @@ const PurchaseSubmitTable = React.memo((props) => {
    }
   //  alert("Selected Item Id: " + itemId);
    const info = getItemInfo(Number(itemId), props.item); 
-   console.log("Info: ",info )
+ //  console.log("Info: ",info )
    const updatedItemInfo = [...itemInfo];
-   console.log("Updated Item Info before update: ", updatedItemInfo, "Index: ", index);
+ //  console.log("Updated Item Info before update: ", updatedItemInfo, "Index: ", index);
    updatedItemInfo[Number(index)] = { ...updatedItemInfo[Number(index)],
      ItemRequiredBalance: info.requiredBalance ||0,
      ItemUnitPrice: info.unitPrice || 0, 
@@ -101,8 +96,8 @@ const PurchaseSubmitTable = React.memo((props) => {
 }
 
 const handleChangeInfo = async ( name,index, value, updated) => {
-  console.log(`Index: ${index} \n Name: ${name} \n Value: ${value}`);
-  console.log("Updated Item Info before calculation: ", updated[index]);
+ // console.log(`Index: ${index} \n Name: ${name} \n Value: ${value}`);
+//  console.log("Updated Item Info before calculation: ", updated[index]);
   const current = updated[index] || {};
   const requiredBalance = name === "ItemRequiredBalance" ? Number(value) : current.ItemRequiredBalance || 0;
   //console.log("Updated Item Info before calculation: ", current);
@@ -120,20 +115,12 @@ const handleChangeInfo = async ( name,index, value, updated) => {
     EndingInventory : endingInventory || 0
   }
   //console.log(`Current Item Info: ${JSON.stringify(itemInfo[index])}`);
-  console.log('updated', updated); 
-  console.log(`Item Quantity:  ${updated[index].ItemQuantity}\n Item  Price: ${updated[index].ItemUnitPrice} \n Item Total: ${updated[index].ItemUnitPrice * updated[index].ItemQuantity}\n another total : ${updated[index].ItemTotal}`);
+  //console.log('updated', updated); 
+ // console.log(`Item Quantity:  ${updated[index].ItemQuantity}\n Item  Price: ${updated[index].ItemUnitPrice} \n Item Total: ${updated[index].ItemUnitPrice * updated[index].ItemQuantity}\n another total : ${updated[index].ItemTotal}`);
   setItemInfo(updated);
  }
-useEffect(() => {
-  console.log(itemInfo); 
-  console.log(itemIds);
-}, [itemInfo])
-  setData
 
-useEffect(() => {
-  //update data remove item alread selected
-  console.log("Updating data", item);
-}, [item])
+
   return (
     <>
     

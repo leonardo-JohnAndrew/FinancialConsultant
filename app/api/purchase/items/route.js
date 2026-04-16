@@ -20,6 +20,7 @@ export async function GET(){
 export async function POST(request){
    //validations
      
+   
    const validation =  await validationRequiredFields(['itemName', 'RequiredBalance', 'UnitPrice', 'Unit'], [{ItemName: 'Tissue'}, {ItemName: 'Domex'}]); 
    return NextResponse.json(
     {validation},

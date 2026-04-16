@@ -1,0 +1,63 @@
+import { NextResponse } from "next/server";
+import bcrypt from "bcrypt"; 
+import { cookies } from "next/headers";
+import { signToken } from "@/lib/auth";
+import { User } from "@/db/models";
+
+
+export async function POST(request) {
+    try { 
+        const body = await request.json(); 
+        const {userID , password}  = body
+ 
+
+        if(!userID || !password){ 
+            return NextResponse.json({ 
+                error_message : "Missing credentials"
+            }, { status: 400}); 
+        }
+
+        //find account in db 
+        const userAccount = await User.findByPk(userID); 
+    
+
+        if(!userAccount) {
+            return NextResponse.json({error_message: "Invalid credentials"}, 
+            {status: 401}
+            ); 
+        }
+
+        // password hash compared 
+        const isMatch = await  bcrypt.compare(password,userAccount.password); 
+        if(!isMatch){
+            return NextResponse.json({
+                error_message : "Invalid credential"
+            }, {status: 401}); 
+        }
+        // create token 
+        const token = signToken({
+            id: userAccount.userID, 
+            userID : userAccount.userID, 
+            role: userAccount.role 
+        }); 
+    
+        // store in cookie 
+        (await cookies()).set(`${userAccount.role}_token`, token, {
+            httpOnly: true, 
+            secure : process.env.NODE_ENV === "development", 
+            sameSite: "strict", 
+            maxAge: 60 * 5, 
+            path: "/", 
+        }); 
+
+        return NextResponse.json({
+            message: "Login successful", 
+            user: {
+                userID: userAccount.userID, 
+                role: userAccount.role
+            }, 
+        }); 
+    }catch(error){ 
+        return NextResponse.json({error_message: error.message} ,{status: 500})
+    }
+}

@@ -10,7 +10,6 @@ export async function  POST(request){
     await sequelize.sync(); 
 
     const requiredFields = [ 
-        "ItemId",
         "ItemName", 
         "ItemQuantity",  
         "ItemTotal",  
@@ -19,6 +18,7 @@ export async function  POST(request){
         "EndingInventoryDate",
         "ItemUnitPrice", 
     ]
+
     const body = await request.json(); 
     console.log(body); 
     if(!body.purchaseItem){ 
@@ -41,7 +41,6 @@ export async function  POST(request){
         if(missing.length > 0){ 
             missingFields[`purchaseItem_${body.purchaseItem.indexOf(item)+1}`] = missing; 
         }
-
     } 
     console.log(missingFields); 
     if(Object.keys(missingFields).length > 0){ 

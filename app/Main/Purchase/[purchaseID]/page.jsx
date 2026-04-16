@@ -70,7 +70,7 @@ return (
       </div> 
       <hr className = 'border-t border-gray-300'/>
       </div>     
-       <div className="max-h-125 scrollbar-custom overflow-y-auto">       
+       <div className="scrollbar-custom overflow-y-auto">       
        <Table tableHeader={['NO.','ITEM DESCRIPTION', 'REQUIRED BALANCE', 'ENDING INVENTORY', 'QUANTITY', 'UNIT', 'UNIT PRICE', 'TOTAL']} data = {purchaseDetails || isfetching === false? purchaseDetails : []} Ending = {formattedEnding} 
        purchaseID = {params.purchaseID} /> 
        </div> 
@@ -168,7 +168,6 @@ return (
               </tbody>
           </table> 
 
-
          {/* 2nd table */}
                 {/* <div className="grid grid-flow-col grid-rows-[auto_auto] mb-10 border border-gray-200 bg-gray-100">
             <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-auto">
@@ -208,7 +207,6 @@ return (
                       </div>
                    </div>
             </div>         
-
          </div> */}
     
     </>

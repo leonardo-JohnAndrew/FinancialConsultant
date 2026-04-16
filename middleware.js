@@ -13,14 +13,18 @@ export function middleware(request) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    if (token !== process.env.JWT_SECRET) {
-        return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    try{
+        
+        return NextResponse.next();
+    }catch(error){ 
+       if(!pathname.startsWith("/api")){
+        return NextResponse.redirect(new URL("/login", request.url)); 
+       }
+       return NextResponse.json({error_message: "Unauthorized"}, {status: 401});
     }
 
-    return NextResponse.next();
 }
 
 export const config = {
-   matcher : [
-   ]
+   matcher : ["/api/user/:path*"]
 }

@@ -44,6 +44,8 @@ const CreateRequisition = () => {
 
    const handleSubmitInfo = useCallback(async () => { 
      // map through itemInfo to add ending inventory date
+      
+
      if(itemInfo.length === 0) return ;     
      // alert(`row length: ${row.length}, itemInfo length: ${itemInfo.length}`);
      if(itemInfo.length > row.length) {      
@@ -51,15 +53,19 @@ const CreateRequisition = () => {
        setItemInfo(prev => prev.slice(0, row.length));
        setItemIds(prev => prev.slice(0, row.length));
       }
+      
     
-    const itemInfoWithDate = itemInfo.map(item => ({
-      ...item,
-      EndingInventoryDate: endindInventoryDate
-    }));
-    //
+      const filterize = itemInfo.filter(item => item.ItemName !== undefined || item.ItemTotal > 0)
+      // 
+      const itemInfoWithDate = filterize.map(item => ({
+        ...item,
+        EndingInventoryDate: endindInventoryDate
+      }));
+    
+   // console.log("Info pURCHASE", itemInfoWithDate); 
     try{ 
       const response = await axios.post('/api/purchase', { purchaseItem: itemInfoWithDate });
-      console.log("Response from server:", response.data);
+      //console.log("Response from server:", response.data);
     } catch (error) {
       console.error("Error submitting purchase requisition:", error);
     }
@@ -67,9 +73,9 @@ const CreateRequisition = () => {
 
 
 
-   const handleQuantity = (e) => { 
-    console.log(calculateQuantity(itemInfo.ItemRequiredBalance, 15)); 
-   }
+  //  const handleQuantity = (e) => { 
+  //   console.log(calculateQuantity(itemInfo.ItemRequiredBalance, 15)); 
+  //  }
 
    const addTableRow = (added = 1) => {
     // adding multiple rows based on the input value
