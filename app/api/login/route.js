@@ -10,23 +10,22 @@ export async function POST(request) {
         const body = await request.json(); 
         const {userID , password}  = body
  
-
         if(!userID || !password){ 
             return NextResponse.json({ 
                 error_message : "Missing credentials"
             }, { status: 400}); 
         }
-
+        
         //find account in db 
         const userAccount = await User.findByPk(userID); 
-    
-
+        
+        
         if(!userAccount) {
             return NextResponse.json({error_message: "Invalid credentials"}, 
-            {status: 401}
+                {status: 401}
             ); 
         }
-
+        
         // password hash compared 
         const isMatch = await  bcrypt.compare(password,userAccount.password); 
         if(!isMatch){
@@ -34,19 +33,20 @@ export async function POST(request) {
                 error_message : "Invalid credential"
             }, {status: 401}); 
         }
+        console.log(body); 
         // create token 
-        const token = signToken({
-            id: userAccount.userID, 
-            userID : userAccount.userID, 
-            role: userAccount.role 
-        }); 
+       const token = await signToken({
+         id: userAccount.userID,
+         userID: userAccount.userID,
+         role: userAccount.role,
+       });
     
         // store in cookie 
-        (await cookies()).set(`${userAccount.role}_token`, token, {
+        (await cookies()).set(`token`, token, {
             httpOnly: true, 
-            secure : process.env.NODE_ENV === "development", 
-            sameSite: "strict", 
-            maxAge: 60 * 5, 
+            secure : process.env.NODE_ENV === "production", 
+            sameSite: "lax", 
+            maxAge: 60 * 60, 
             path: "/", 
         }); 
 

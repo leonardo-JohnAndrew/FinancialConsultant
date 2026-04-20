@@ -1,30 +1,39 @@
-import { NextResponse  } from "next/server";
+import { NextResponse } from "next/server";
+import { verifyToken } from "./lib/auth";
 
-export function middleware(request) {
-    const {pathname} = request.nextUrl; 
-   // public api 
-    
+export async function middleware(request) {
+  const { pathname } = request.nextUrl;
 
- // protected api 
- // Get token from cookies
-    const token = request.cookies.get("token")?.value;
+  if (pathname.startsWith("/api/login")) {
+    return NextResponse.next();
+  }
 
-    if (!token) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  const token = request.cookies.get("token")?.value;
+
+  console.log("TOKEN:", token);
+
+  if (!token) {
+    if (!pathname.startsWith("/api")) {
+      return NextResponse.redirect(new URL("/Login", request.url));
     }
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
-    try{
-        
-        return NextResponse.next();
-    }catch(error){ 
-       if(!pathname.startsWith("/api")){
-        return NextResponse.redirect(new URL("/login", request.url)); 
-       }
-       return NextResponse.json({error_message: "Unauthorized"}, {status: 401});
-    }
-
+  try {
+    await verifyToken(token);
+    return NextResponse.next();
+  } catch (error) {
+   // console.log("VERIFY ERROR:", error.message);
+     if(!pathname.startsWith("/api")){ 
+        return NextResponse.redirect(new URL("/Login", request.url)); 
+     }
+     return NextResponse.json(
+      { error_message: error.message },
+      { status: 401 }
+    );
+  }
 }
 
 export const config = {
-   matcher : ["/api/user/:path*"]
-}
+  matcher: ["/api/:path*", "/Main/:path*"],
+};
