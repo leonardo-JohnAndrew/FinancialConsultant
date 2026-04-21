@@ -23,7 +23,7 @@ export default function Menus(role){
                  {
                     label: "Recommending Approval", 
                     icon: "□", 
-                    path: "/Main/Purchase/PurchaseRecommendedApproval"                   
+                    path: "/Main/Purchase/PurchaseRecommendingApproval"                   
                  }, 
                  {
                     label : "Requisition History", 
@@ -60,6 +60,7 @@ export default function Menus(role){
             label: "Logout", 
             icon: "□", 
             section: "footer", 
+            path:"/Login",
             hasArrow: true
          }
         ]    
@@ -75,9 +76,9 @@ export default function Menus(role){
                 "Purchase Requisition Form", 
                 "Requisition List", 
                 "My Requisition", 
-                "Profile"
+                "Profile", 
             ], 
-            "SupeAdmin":[  
+            "SuperAdmin":[  
                 "Dashboard", 
                 "Purchase Requisition Form", 
                 "My Requisition", 
@@ -90,6 +91,6 @@ export default function Menus(role){
         
          // map or filterized menu matching 
         return allMenu.filter((item) => allowedMenus.includes(item.label) || item.label === "Logout"); 
-
-    
 }
+
+ 

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request) {
     try{
     (await cookies()).set("token", "", { 
         httpOnly: true, 

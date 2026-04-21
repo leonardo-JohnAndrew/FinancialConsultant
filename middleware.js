@@ -3,14 +3,14 @@ import { verifyToken } from "./lib/auth";
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-
-  if (pathname.startsWith("/api/login")) {
+  const userInfo  = {}
+  if (pathname.startsWith("/api/login") || pathname.startsWith("/api/cookie")) {
     return NextResponse.next();
   }
 
+  
   const token = request.cookies.get("token")?.value;
-
-  console.log("TOKEN:", token);
+  
 
   if (!token) {
     if (!pathname.startsWith("/api")) {
@@ -20,7 +20,7 @@ export async function middleware(request) {
   }
 
   try {
-    await verifyToken(token);
+     await  verifyToken(token);
     return NextResponse.next();
   } catch (error) {
    // console.log("VERIFY ERROR:", error.message);

@@ -39,6 +39,8 @@ export async function POST(request) {
          id: userAccount.userID,
          userID: userAccount.userID,
          role: userAccount.role,
+         profile: userAccount.profile_pic, 
+         name: `${userAccount.lastname}, ${userAccount.firstname} ${!userAccount.middle || userAccount.middle === 'N/A' || userAccount.middle === null? "": userAccount.middle}`
        });
     
         // store in cookie 

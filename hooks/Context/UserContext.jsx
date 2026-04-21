@@ -1,41 +1,39 @@
 "use client"
+import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 
 export const UserContext = createContext({ 
    user : {},  
    updateUser: () => {} , 
-   getUser:() => {}
 }); 
 
 //2 Create the context Provider 
 export function UserContextProvider({children}){ 
- const [user , setUser]  = useState({
-    userID : "", 
-    role: "", 
- })
-  const getUser = () => { 
-    return user
-  }
- // update user 
-  const updateUser = (UserInfo) =>{ 
-    setUser((prev) =>({
-        ...prev, 
-        ...UserInfo
-    }))
+     const [user, setUser] = useState(null);
+     
+       const updateUser = (newUser) => {
+         setUser(newUser);
+         localStorage.setItem("user", JSON.stringify(newUser));
+       };
 
-  }
-  const contextValue = { 
-    user, 
-    getUser, 
-    updateUser
-  }
+ useEffect(() => {
+  const fetchUser = async () => {
+    const res = await axios.get("/api/cookies")
+    if(res.status === 200){
+        console.log(res.data); 
+        setUser(res.data); 
+    }else{
+        setUser(null); 
+    }
+  };
+  fetchUser();
+}, []);
 
-  return( 
-    <UserContext.Provider
-     value = {contextValue}>
-    {children}
+  return (
+    <UserContext.Provider value={{ user, updateUser }}>
+      {children}
     </UserContext.Provider>
-  ); 
+  );
 }
   export default function useUserContext(){ 
     return useContext(UserContext); 

@@ -8,7 +8,7 @@ const Login = () => {
     userID : "" , 
     password :""
   }); 
-  const {updateUser } = useUserContext(); 
+  const {updateUser ,user} = useUserContext(); 
   const idRef = useRef(); 
   const passRef = useRef(); 
   const router = useRouter(); 
@@ -20,13 +20,13 @@ const Login = () => {
        // console.log("unable");
         return; 
      }else { 
-         console.log(data);
+         //console.log(data);
           
         try{ 
           const response = await axios.post('/api/login',data); 
           if(response.status === 200){
-            updateUser(response.data?.user); 
             router.push('/Main/Home')
+            user
           }else{ 
              return; 
           }
@@ -101,7 +101,7 @@ const Login = () => {
               </div>
               {/* buttons  */}
               <div className='flex-1 pr-10 relative'>          
-                  <button className="text-white font-bold text-lg w-full h-10 absolute bottom-0 outline outline-lightRed bg-lightRed hover:bg-white hover:outline-darkRed"
+                  <button className="text-white font-bold text-lg w-full h-10 absolute bottom-0 outline outline-lightRed bg-lightRed hover:bg-white hover:text-black hover:font-semibold hover:outline-darkRed"
                    onClick={() => {handleSubmit()}}
                   >
                     Submit </button>      
