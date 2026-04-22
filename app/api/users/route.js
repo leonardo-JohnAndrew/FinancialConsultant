@@ -9,7 +9,6 @@ import { generatUserID } from "@/functions/autogenerate";
 // post 
 export async function  POST(request) {
     await sequelize.sync(); 
-
     const requiredFields = [ 
     'lastname', 
     'firstname', 
@@ -53,10 +52,12 @@ export async function  POST(request) {
 
 }
 
-// Get 
+//Get 
 export async function GET() {
     try{ 
-      const users = await User.findAll(); 
+      const users = await User.findAll({
+        attributes: {exclude : ["password"]}
+      }); 
       return NextResponse.json({users}, {status: 200}); 
     }catch(error){ 
         return NextResponse.json(

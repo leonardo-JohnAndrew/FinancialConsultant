@@ -8,8 +8,8 @@ const UserManagement = () => {
     
     const fetchUser = async()=>{
         try{
-            const response = await axios.post('/api/users'); 
-             setUserInfo(response.data); 
+            const response = await axios.get('/api/users'); 
+             setUserInfo(response.data.users); 
         }catch(error){ 
             const message = error.response?.data?.error_message || "Something went wrong"; 
         }
@@ -53,15 +53,13 @@ const UserManagement = () => {
       </div>     
       <div className="max-h-200 scrollbar-custom overflow-y-auto">
         <UserTable 
-         tableHeader = {['ID', 'PROFILE', 'LASTNAME', 'FIRSTNAME', 'MIDDLE', 'DEPARTMENT', 'POSITION', 'ROLE', 'STATUS','DATE CREATED', 'ACTION']} 
+         tableHeader = {['ID', 'PROFILE', 'LASTNAME', 'FIRSTNAME', 'MIDDLE', 'DEPARTMENT', 'POSITION', 'ROLE', 'STATUS', 'ACTION']} 
          data={userInfo}
          />
       </div>
       {/* paginations */}
       <div className="flex justify-center items-center mt-5 ">
- 
 </div>
-  
     </>
   )
 }

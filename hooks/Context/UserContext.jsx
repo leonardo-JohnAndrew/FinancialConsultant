@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 export const UserContext = createContext({ 
    user : {},  
    updateUser: () => {} , 
+   fetchUser: () =>{}
 }); 
 
 //2 Create the context Provider 
@@ -16,21 +17,19 @@ export function UserContextProvider({children}){
          localStorage.setItem("user", JSON.stringify(newUser));
        };
 
- useEffect(() => {
+
   const fetchUser = async () => {
     const res = await axios.get("/api/cookies")
     if(res.status === 200){
-        console.log(res.data); 
+       //  console.log(res.data); 
         setUser(res.data); 
     }else{
         setUser(null); 
     }
   };
-  fetchUser();
-}, []);
 
   return (
-    <UserContext.Provider value={{ user, updateUser }}>
+    <UserContext.Provider value={{ user, updateUser, fetchUser }}>
       {children}
     </UserContext.Provider>
   );

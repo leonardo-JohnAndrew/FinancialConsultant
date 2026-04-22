@@ -9,7 +9,7 @@ import { FiChevronDown , FiChevronUp } from "react-icons/fi";
 
 export default function Sidebar(){
   const [openPurchase, setOpenPurchase] = useState(false);
-  const {user} = useUserContext();
+  const {user , fetchUser} = useUserContext();
   const router = useRouter();
   const [name , setName] = useState(); 
   const pathname = usePathname(); // get current path 
@@ -17,6 +17,9 @@ export default function Sidebar(){
   const others = user ? Menus(user.role).filter(i => i.section === "others") : [];
   const logout = user ? Menus(user.role).filter(i => i.section === "footer") : [];
 
+  useEffect(()=>{ 
+      fetchUser(); 
+  }, [])
 
   const handleLogOut = async() =>{ 
     // api call logout 
@@ -25,8 +28,12 @@ export default function Sidebar(){
          router.push('/Login')
        }
     }
- if (!user) {
+ if (!user) { 
+      
   return <aside className="p-4 text-white">Loading...</aside>;
+
+}else{ 
+  console.log(user); 
 }
   return (
     <aside className="min-w-54 min-h-270 relative  bg-darkRed text-white flex flex-col p-4 print:hidden">
