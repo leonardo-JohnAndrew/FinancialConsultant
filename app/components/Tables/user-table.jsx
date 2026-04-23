@@ -1,8 +1,26 @@
 "use client"
+import { useEffect, useState , } from "react"
 import {FaFilter} from "react-icons/fa"
+import { FiTrash } from "react-icons/fi"
+import { FiEdit } from "react-icons/fi"
+import UpdateUserModal from "../modals/usermanagement/update"
+import useModalContext from "@/hooks/Context/modal"
 const UserTable = (props) => {
+      const [edit, setEdit] = useState(false); 
+      const [archive , setArchive ] = useState(false); 
+      const {modal ,updateModal} = useModalContext(); 
+
+      const handleEditClick  = ()=>{ 
+        updateModal();
+        setEdit(!edit)
+      }
+
+      const handleCloseClick = ()=> {
+        updateModal(); 
+        setEdit(false); 
+      }
   return (
-    <div className='w-full'>
+    <div className='w-full' >
        <table className='border border-gray-300 w-full'>
           <thead className='bg-black text-white border-3 text-left border-darkRed sticky top-0 z-10'>
               <tr>
@@ -32,11 +50,28 @@ const UserTable = (props) => {
                      <td className="px-4 py-2">{item.position}</td>
                      <td className="px-4 py-2">{item.role}</td>
                      <td className="px-4 py-2">{item.status}</td>
-                     <td className="px-4 py-2">Action</td>
+                     <td className="px-4 py-2">
+                         <div className="flex flex-row gap-3">
+                             <button onClick={()=>handleEditClick()}>
+                                <FiEdit size={25} /> 
+                            </button> 
+                            <button>
+                            <FiTrash size={25} className="text-darkRed"/>
+                            </button>
+                         </div>
+                    </td>
                 </tr>
               ))}
           </tbody>
        </table>
+
+        {/* modal */}
+           { edit && (
+            <div className= {`fixed inset-0 z-50 flex items-center justify-center `} >
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+               <UpdateUserModal handleclose ={handleCloseClick} />
+            </div>
+           )}
     </div>
   )
 }

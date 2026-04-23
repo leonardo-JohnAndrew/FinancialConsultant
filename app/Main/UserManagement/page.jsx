@@ -14,7 +14,6 @@ const UserManagement = () => {
             const message = error.response?.data?.error_message || "Something went wrong"; 
         }
     }
-
     useEffect(()=>{ 
       fetchUser(); 
     }, [])
