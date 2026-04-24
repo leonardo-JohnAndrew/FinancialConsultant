@@ -3,6 +3,12 @@ import React, { use, useEffect , useState} from 'react'
 import { formatMoney } from '@/functions/formatCurrency';
 import { getItemInfo , calculateQuantity  } from '@/functions/purchase';
 import { getTotal } from '@/functions/purchase';
+import AutoSuggestInput from '../modals/autosuggested';
+import useUserContext from '@/hooks/Context/UserContext';
+import axios from 'axios';
+import { userInfo } from 'os';
+import { data } from 'autoprefixer';
+import usePurchaseContext from '@/hooks/Context/purchaseContext';
 const PurchaseSubmitTable = React.memo((props) => {
   // destructure props to get data, item, setItemInfo, setItemIds, and tableHeader
   const {
@@ -16,7 +22,6 @@ const PurchaseSubmitTable = React.memo((props) => {
     setEndingInventoryDate,
   } = props
   
-    
   /*
  [ 
    {  EndingInventory:0, 
@@ -32,98 +37,67 @@ const PurchaseSubmitTable = React.memo((props) => {
 
   */
    const [NewItem, setNewItem] = useState([
-    {isNew: false}
-   ]);
-   
-   //handle item info when item is selected in the dropdown
-  const handleChange = (index, value,e) =>{
-  let ItemId 
-  const updatedData = [...itemIds];
-  if(e.target.name ==="EndingInventoryDate"){
-      setEndingInventoryDate(value);
-  } 
-  if(e.target.type === "text" && e.target.name === "ItemName"){
-    ItemId = itemInfo[itemInfo.length].index; // set value to the length of the item list to represent the new item 
-    value = e.target.value
- //   console.log("New Item Id: ",  e.target.type, ItemId);
-    //alert("New Item: " + value);
-  }else if(e.target.type === "select-one"){
-    ItemId = value;
-    value = item.find(i => i.ItemsID == ItemId)?.ItemName || ""; // get item name based on the selected item id from the dropdown
-  //  console.log("Selected Item Id: ",  e.target.type, ItemId , value);
-  }else{
-    ItemId = itemIds[index]; // if not changing item name, use the existing item id to get the item info and calculate quantity and total
+    {isNew : true}
+  ]);
+  const {user} = useUserContext();
+  const [listItem , setListItem] = useState([])
+  const [unit ,setUnit] = useState([])
+  const { purchase, updatePurchase} = usePurchaseContext();  
+  if(!user){
+    return <div className="p-4 text-white">Loading...</div>;
   }
+ 
+  useEffect(()=>{
+      if(!item || item.length === 0) return;
+       let array = []; 
+      item.map((i )=> { 
+        array.push(i.ItemName)
+      })
+      setListItem(array); 
+  },[item])
 
-  if(e.target.name === "ItemName"){
-    updatedData[index] = Number(ItemId);
-  }
-  //console.log(updatedData);
-  handleItemInfo(e.target.name, ItemId, index, value);
-  setItemIds(updatedData);
- }
-  //get item info when item is selected in the dropdown
- const handleItemInfo = async ( name,itemId, index,value) => {
-   // if item is new, set isNewItem to true to show input fields for new item details
-   //alert(`Handle Item Info: \n Name: ${name} \n ItemId: ${itemId} \n Index: ${index} \n Value: ${value}`);
-   if(itemId === "new"){
-    setNewItem(prev => {
-      const updated = [...prev];
-      updated[index] = {
-        isNew: true, 
-      };
-      return updated;
-    });
-    return;
-   }
-  //  alert("Selected Item Id: " + itemId);
-   const info = getItemInfo(Number(itemId), props.item); 
- //  console.log("Info: ",info )
-   const updatedItemInfo = [...itemInfo];
- //  console.log("Updated Item Info before update: ", updatedItemInfo, "Index: ", index);
-   updatedItemInfo[Number(index)] = { ...updatedItemInfo[Number(index)],
-     ItemRequiredBalance: info.requiredBalance ||0,
-     ItemUnitPrice: info.unitPrice || 0, 
-     EndingInventory:0,
-     ItemQuantity:0, 
-     ItemTotal:0,
-     ItemId: Number(itemId) || 0,
+  useEffect(()=>{
+    const fetchUnit = async()=>{ 
+      let array = []; 
+       const res = await axios.get("/api/purchase/items/suggested"); 
+       console.log(res)
+        if(res.status === 200 ){ 
+          res?.data?.Unit?.map((u) => { 
+              array.push(u.Unit)
+          })
+        }
+        setUnit(array);
+     }
+
+     fetchUnit(); 
+  },[])
+ 
+  const handleChange = (index, field, value)=>{
+    setItemInfo((prev)=> { 
+      const update = [...prev]; 
+
+     if(!update[index]){
+      update[index] = {
+          ItemName : "", 
+          Unit: "", 
+          ItemUnitPrice:0, 
+          ItemQuantity:0
+      }
+
     }
-   // console.log("updated item info:", updatedItemInfo );
-
-  await new Promise(resolve => setTimeout(resolve, 100)); // wait for state to update
-  await handleChangeInfo( name, index, value, updatedItemInfo); // calculate quantity and total based on required balance
-}
-
-const handleChangeInfo = async ( name,index, value, updated) => {
- // console.log(`Index: ${index} \n Name: ${name} \n Value: ${value}`);
-//  console.log("Updated Item Info before calculation: ", updated[index]);
-  const current = updated[index] || {};
-  const requiredBalance = name === "ItemRequiredBalance" ? Number(value) : current.ItemRequiredBalance || 0;
-  //console.log("Updated Item Info before calculation: ", current);
-  const endingInventory = name === "EndingInventory" ? Number(value) : current.EndingInventory || current.ItemRequiredBalance || 0;
- //alert('Ending Inventory: ' + endingInventory);
-  const quantity = calculateQuantity(requiredBalance, endingInventory);
-  const unitPrice = current.ItemUnitPrice && name === "UnitPrice" ? Number(value) : current.ItemUnitPrice || 0;
-  const total = quantity * unitPrice;
-  updated[index] = {
-    ...current,
-    [name]:  name === "ItemName" ? value : Number(value),
-    ItemQuantity: quantity,
-    ItemTotal: total,
-    ItemUnitPrice: unitPrice, 
-    EndingInventory : endingInventory || 0
+       //UPDATE CHANGES 
+       update[index][field] = value; 
+       return update; 
+    })
   }
-  //console.log(`Current Item Info: ${JSON.stringify(itemInfo[index])}`);
-  //console.log('updated', updated); 
- // console.log(`Item Quantity:  ${updated[index].ItemQuantity}\n Item  Price: ${updated[index].ItemUnitPrice} \n Item Total: ${updated[index].ItemUnitPrice * updated[index].ItemQuantity}\n another total : ${updated[index].ItemTotal}`);
-  setItemInfo(updated);
- }
-
+  useEffect(()=>{
+     updatePurchase(itemInfo); 
+  }, [itemInfo])
+ 
 
   return (
     <>
-    
+     
     <div className='max-h-125 scrollbar-custom overflow-y-auto'>
        <table className="border border-gray-300 w-full ">
                 <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
@@ -147,96 +121,44 @@ const handleChangeInfo = async ( name,index, value, updated) => {
                               <td className='px-4 py-2'>{parseInt(index + 1) } 
                               </td>
                               <td className='px-4 py-2'>
-                               {
-                                // if item is new, show input fields for new item details 
-                                NewItem[index]?.isNew?(
-                                  <div className='flex flex-row gap-2'>
-                                    <input type="text" className='border border-gray-300 bg-gray-200 text-black flex-1 
-                                    print:border-0 print:outline-none print:bg-transparent'  placeholder="Item Name" 
-                                    onChange ={(e) => handleChange(index, e.target.value, e)} name="ItemName"
-                                    />
-                                     {/* button back to select item */} 
-                                     <button className='p-1 px-2 bg-[#FF8C8C] md:text-sm text-white font-bold  border border-darkRed' onClick={() => setNewItem(prev => {
-                                       const updated = [...prev];
-                                       updated[index] = {isNew: false};
-                                       return updated;
-                                     })}>
-                                       Select
-                                     </button>
-                                  </div>
-                                ):
-                              <select name="ItemName" id="" 
-                              className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold 
-                              print:border-0 print:outline-none print:bg-transparent' 
-                              value={itemIds[index] || ""}
-                              onChange={(e) => {
-                                handleChange(index, e.target.value, e);
-                              }}>
-                                <option value="">Select an item</option>
-                              {props.item?.filter(dataItem => {
-                             // allow current selected item in this row
-                                  return !itemIds.includes(dataItem.ItemsID) || itemIds[index] === dataItem.ItemsID;
-                              })
-                               .map((dataItem, i) => (
-                                <option key={i} value={dataItem.ItemsID}>
-                                 {dataItem.ItemName}
-                                </option>
-                               ))} 
-                              </select>
-                               }
-
+                                <AutoSuggestInput item  = {listItem} index = {index} onChange = {handleChange} name = {"ItemName"} data = {item}/>
                               </td>
+                              { 
+                               user.role === "Admin" && (
+                               <div>
                               <td className='px-4 py-2'>
                                 { NewItem[index]?.isNew?(
                                   <div className='flex flex-row gap-2'>
                                     <input type="number" name='ItemRequiredBalance' className='border border-gray-300 bg-gray-200 text-black 
                                     print:border-0 print:outline-none print:bg-transparent'
-                                     onChange={(e)=> handleChange(index, e.target.value, e)}
+                                    onChange={{}}
                                     />
                                      {/* button back to select item */} 
                                   </div>
-                                ):( getItemInfo(Number(itemIds[index]), props.item)?.requiredBalance || 0 )}
+                                ):( 0 )}
                                  {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item.RequiredBalance} readOnly= {true} /> */}
                               </td>
                               <td className='px-4 py-2'>
                                  <input className="bg-gray-200 min-w-30 border border-gray-300 outline-1 outline-gray-200
                                  print:border-0 print:outline-none print:bg-transparent" name='EndingInventory' type="number"
                                  value={ itemInfo[index]?.EndingInventory || 0} 
-                                 onChange={(e) => handleChange(index, e.target.value,e)}
+                                 onChange={{}}
                                  min={0}
                                  max={itemInfo[index]?.ItemRequiredBalance || 0}
                                  />
                               </td>
+                                 </div>
+                               )
+                              }
                               <td className='px-4 py-2'>
                                  <h5>{itemInfo[index]?.ItemQuantity || 0}</h5>
                               </td>
                               <td className='px-4 py-2' name="Unit">
-                                { NewItem[index]?.isNew?(
-                                 <select name="item" id="" 
-                                     className='px-2 py-1 border border-darkRed w-full text-white bg-[#FF8C8C] font-bold' 
-                                     value={itemIds[index] || ""}
-                                     onChange={(e) => {
-                                     handleChange(index, e.target.value, e);
-                                  }}>
-                                  <option value="bxs">bxs</option>
-                                  <option value="can">can</option>
-                                  <option value="pcks">pcks</option>
-                                  <option value="kilo">kilo</option>
-                                  <option value="btls">btls</option>
-                                  <option value="pcs">pcs</option>
-                              </select>
-                               /*
-                               'bxs','can', 'pcks', 'kilo','btls','pcs'
-                               */
-                                ):
-                                getItemInfo(Number(itemIds[index]), props.item)?.unit||""}
+                                   <AutoSuggestInput itemInfo = {itemInfo} item = {unit} index = {index} onChange = {handleChange} name = {"Unit"} data= {item}/>
                               </td>
                               <td className='px-4 py-2'>
                                  <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 
-                                 print:border-0 print:outline-none print:bg-transparent"  type="text" value={(getItemInfo(Number(itemIds[index]), props.item)?.unitPrice || 0)} onChange={(e)=>{ 
-                                 handleChange(index, e.target.value,e)
-                                 }} readOnly= {false} />
-                              </td>
+                                 print:border-0 print:outline-none print:bg-transparent"  type="number"  readOnly= {true}/>                            </td>
                               <td className='px-4 py-2 '>
                                  <h4 className="px-2 py-1 w-full my-1 bg-darkRed text-white" >{formatMoney(itemInfo[index]?.ItemTotal || 0, 'PHP', 'en-PH')}</h4>    
                               </td> 

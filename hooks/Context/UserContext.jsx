@@ -17,7 +17,6 @@ export function UserContextProvider({children}){
          localStorage.setItem("user", JSON.stringify(newUser));
        };
 
-
   const fetchUser = async () => {
     const res = await axios.get("/api/cookies")
     if(res.status === 200){

@@ -13,7 +13,11 @@ const UpdateUserModal  = React.memo((props) => {
                 <div className="mt-25 ml-10 mr-10">
                    <h4 className="text-xl mb-2">ID: </h4>
                     <div className="w-full h-120 bg-white rounded-md grid grid-rows-8 gap-2 px-10" > 
-                        <div className="border-b border-gray-200 py-3" ><input className="bg-modalFace"/></div>
+                         <div className="border-b border-gray-200 py-3 flex flex-row">
+                           <label className="flex-1">Name: </label>
+                           <input className="bg-modalFace"/>
+                    
+                         </div>
                         <div className="border-b border-gray-200"></div>
                         <div className="border-b border-gray-200"></div>
                         <div className="border-b border-gray-200"></div>

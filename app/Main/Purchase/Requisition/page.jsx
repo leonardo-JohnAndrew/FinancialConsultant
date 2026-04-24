@@ -6,18 +6,18 @@ import PurchaseSubmitTable from '@/app/components/Tables/purchase-submit-table';
 import { formatDates } from '@/functions/formattDate';
 import { FiMinus , FiPlus } from 'react-icons/fi';
 import { formatMoney } from '@/functions/formatCurrency';
+import useUserContext from '@/hooks/Context/UserContext';
 const CreateRequisition = () => {
   const [data, setData] =  useState([]); 
   const [row , setRow] = useState([]); 
   const [itemIds, setItemIds] = useState([]);
   //const [totalRow, setTotalRow] = useState(0);
   const [itemInfo, setItemInfo] = useState([{
-    EndingInventory:0, 
     ItemRequiredBalance:0, 
     ItemUnitPrice:0, 
-    ItemQuantity:0, 
-    EndingInventoryDate: null 
+    ItemQuantity:0
   }]);
+  const {user } = useUserContext(); 
   const [endindInventoryDate, setEndingInventoryDate] = useState(null);
   let fetch ; 
 
@@ -25,7 +25,7 @@ const CreateRequisition = () => {
      try{ 
        const response = await axios.get('/api/purchase/items');
        setData(response.data.items); 
-       //  console.log(response.data);
+        console.log(response.data);
      }catch(error){ 
        console.error("Error fetching data:", error); 
      }
@@ -44,7 +44,7 @@ const CreateRequisition = () => {
 
    const handleSubmitInfo = useCallback(async () => { 
      // map through itemInfo to add ending inventory date
-      
+      console.log(itemInfo); 
 
      if(itemInfo.length === 0) return ;     
      // alert(`row length: ${row.length}, itemInfo length: ${itemInfo.length}`);
@@ -54,7 +54,6 @@ const CreateRequisition = () => {
        setItemIds(prev => prev.slice(0, row.length));
       }
       
-    
       const filterize = itemInfo.filter(item => item.ItemName !== undefined || item.ItemTotal > 0)
       // 
       const itemInfoWithDate = filterize.map(item => ({
@@ -63,12 +62,12 @@ const CreateRequisition = () => {
       }));
     
    // console.log("Info pURCHASE", itemInfoWithDate); 
-    try{ 
-      const response = await axios.post('/api/purchase', { purchaseItem: itemInfoWithDate });
-      //console.log("Response from server:", response.data);
-    } catch (error) {
-      console.error("Error submitting purchase requisition:", error);
-    }
+    // try{ 
+    //   const response = await axios.post('/api/purchase', { purchaseItem: itemInfoWithDate });
+    //   //console.log("Response from server:", response.data);
+    // } catch (error) {
+    //   console.error("Error submitting purchase requisition:", error);
+    // }
    }, [itemInfo])
 
 
@@ -127,6 +126,11 @@ const CreateRequisition = () => {
     setItemIds([]);
     addTableRow(5)
    }
+   if(!user){
+     return (
+     <div>Please Wait....</div>
+     )
+   }
   return (
    <> 
       <div className="flex relative mb-5 w-auto">
@@ -160,7 +164,7 @@ const CreateRequisition = () => {
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
-       tableHeader={["NO", "ITEM DESCRIPTION", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
+       tableHeader={user?.role !== "Admin "?  ["NO","ITEM DESCRIPTION","QUANTITY","UNIT","UNIT PRICE","TOTAL"] :  ["NO", "ITEM DESCRIPTION", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
        setData={setData}
        setItemInfo={setItemInfo}
        itemInfo={itemInfo}
