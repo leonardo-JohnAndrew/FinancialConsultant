@@ -10,7 +10,8 @@ export async function  POST(request){
     const requiredFields = [ 
         "ItemName", 
         "Unit", 
-        "UnitPrice"
+        "UnitPrice",
+        "UserID"
     ]
     const body = await request.json(); 
     console.log(body); 
@@ -77,6 +78,7 @@ export async function  POST(request){
         const codeID = generatePurchaseId();
         const purchase = await  Purchase.create({ 
             PurchaseID: codeID,
+             UserID: body?.purchaseItem[0]?.UserID,
             timeStamp: new Date(),
         }); 
         const purchaseItemsData = body.purchaseItem.map(item => ({ 

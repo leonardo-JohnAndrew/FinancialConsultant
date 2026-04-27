@@ -12,60 +12,72 @@ const Login = () => {
   const idRef = useRef();  
   const passRef = useRef(); 
   const router = useRouter(); 
-  const [error , setError ] = useState(); 
+  
+  const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState({
+  userID: false,
+  password: false,
+  });
   // handleSubmit
-   const handleSubmit =useCallback(async(e)=>{
-    const id =   validation(idRef); 
-    const password = validation(passRef);  
-     if(id === false || password === false){ 
-       // console.log("unable");
-        return; 
-     }else { 
-         //console.log(data);
-          
-        try{ 
-          const response = await axios.post('/api/login',data); 
-          if(response.status === 200){
-            router.push('/Main/Home')
-            user
-          }else{ 
-             setError(response.data?.error_message); 
-          }
+const handleSubmit = async () => {
+  const isValid = validation();
+  if (!isValid) return;
 
-        }catch(error){ 
-    const message =
-    error.response?.data?.error_message || "Something went wrong";
+  try {
+    const response = await axios.post("/api/login", data);
 
-    setError(message); // ADD THIS
-    console.error(message);
+    if (response.status === 200) {
+      updateUser(response.data);
+      router.push("/Main/Home");
+    } else {
+      setError(response.data?.error_message);
+
+      setFieldError({
+        userID: true,
+        password: true,
+      });
     }
-  } 
-   },[data]); 
+  } catch (err) {
+    const message =
+      err.response?.data?.error_message || "Something went wrong";
 
-  const handleChange = (e) => {
+    setError(message);
+
+    setFieldError({
+      userID: true,
+      password: true,
+    });
+  }
+};
+
+const handleChange = (e) => {
   const { name, value } = e.target;
+
   setData((prev) => ({
     ...prev,
     [name]: value,
   }));
+
+  // clear errors while typing
+  setError("");
+  setFieldError((prev) => ({
+    ...prev,
+    [name]: false,
+  }));
 };
   
    //ref functions
-  const validation = (input) => {
-  if (!input.current) return;
-  const name = input.current.name;
-  const value = data[name];
-  if (!value || error) {
-    input.current.focus();
-    input.current.style.outline = "red";
-    input.current.style.border = "3px solid red";
-    return false; 
-  } else {
-    input.current.style.outline = "#FF8C8C";
-    input.current.style.border = "1px solid #FF8C8C";
-    return true; 
-  }
+ const validation = () => {
+  const errors = {
+    userID: !data.userID.trim(),
+    password: !data.password.trim(),
+  };
+
+  setFieldError(errors);
+
+  return !errors.userID && !errors.password;
 };
+
   return (
   <>
     <div className='flex items-center justify-center h-screen relative'>
@@ -93,12 +105,15 @@ const Login = () => {
               <div className='flex flex-col flex-1 p-4  pr-10 gap-2' > 
                    <div>
                      <h1 className='font-semibold text-xl mb-2'>UserID: </h1>
-                     <input type="text"  name="userID" className="border-lightRed border rounded-md w-full h-10" ref={idRef}
+                     <input type="text"  name="userID"className={`border-black border rounded-md w-full h-10 ${
+  fieldError.userID ? "border-red-500 text-red-500" : ""}`} ref={idRef}
                      onChange={(e)=> handleChange(e)} />
                    </div>
                    <div>
                      <h1 className='font-semibold text-xl mb-2'>Password: </h1>
-                     <input type="password" name="password"  className="border-lightRed border rounded-md w-full h-10" ref={passRef} 
+                     <input type="password" name="password" className={`border-black border rounded-md w-full h-10 ${
+  fieldError.password ? "border-red-500 text-red-500" : ""
+}`} ref={passRef} 
                      onChange={(e)=> handleChange(e)} />
                    </div>
                     <div className="relative m-1">

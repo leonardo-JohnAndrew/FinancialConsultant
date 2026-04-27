@@ -54,13 +54,13 @@ const CreateRequisition = () => {
 
     setItemInfo(limitedItemInfo);
     setItemIds(limitedItemIds);
-
     const filtered = limitedItemInfo.filter(
     (item) => item.ItemName !== undefined || item.ItemTotal > 0
     );
 
     const itemInfoWithDate = filtered.map((item) => ({
     ...item,
+    UserID:user.id,
     EndingInventoryDate: endindInventoryDate,
     }));
 
@@ -68,8 +68,10 @@ const CreateRequisition = () => {
       const response = await axios.post("/api/purchase", {
       purchaseItem: itemInfoWithDate,
     });
-      if(response.status === 200 ){ 
+      if(response.status === 200 || response.status === 201 ){ 
         showSuccess(response?.data?.message); 
+        resetTable(); 
+        addTableRow(5); 
       }
     }catch (error) {
      const data = error?.response?.data;

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-
+import {FiCheck, FiX} from "react-icons/fi"
 const BannerContext = createContext(null);
 
 export function BannerProvider({ children }) {
@@ -18,7 +18,7 @@ export function BannerProvider({ children }) {
   };
 
   return (
-    <BannerContext.Provider value={{ showSuccess, showError }}>
+    <BannerContext.Provider value={{ showSuccess, showError ,banner}}>
       {children}
 
       {/* GLOBAL BANNER UI */}
@@ -28,13 +28,13 @@ export function BannerProvider({ children }) {
           ${banner.type === "success" ? "bg-blue-500" : "bg-red-500"}`}
         >
           <div className="flex items-center gap-3">
-            <span>{banner.type === "success" ? "✔️" : "❌"}</span>
+            <span>{banner.type === "success" ? <FiCheck/> : <FiX/>}</span>
             <p>{banner.message}</p>
             <button
               onClick={() => setBanner(null)}
               className="ml-4 font-bold"
             >
-              ×
+              x
             </button>
           </div>
         </div>

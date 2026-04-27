@@ -136,7 +136,13 @@ const PurchaseSubmitTable = React.memo((props) => {
                               <td className='px-4 py-2'>{parseInt(index + 1) } 
                               </td>
                               <td className='px-4 py-2'>
-                                <AutoSuggestInput item  = {listItem} index = {index} onChange = {handleChange} name = {"ItemName"} data = {item}/>
+                                <AutoSuggestInput
+                              item={listItem}
+                              index={index}
+                              onChange={handleChange}
+                              name="ItemName"
+                              value={itemInfo[index]?.ItemName || ""} //add this
+                              />
                               </td>
                               { 
                                user.role === "Admin" && (
@@ -181,7 +187,7 @@ const PurchaseSubmitTable = React.memo((props) => {
                                   name="UnitPrice" 
                                   readOnly= {false} 
                                   onChange={(e)=> {handleChange(index, "UnitPrice", e.target.value)}}
-                                  value={itemInfo[index]?.UnitPrice}
+                                  value={itemInfo[index]?.UnitPrice||0}
                                   />       
                                                       </td>
                               <td className='px-4 py-2 '>
