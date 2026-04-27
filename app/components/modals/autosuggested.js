@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 const AutoSuggestInput = React.memo((props) => {
  const {item, index , onChange, name, data} = props; 
   const [value, setValue] = useState('');
-  const {purchase} = usePurchaseContext(); 
+ 
   const [filtered, setFiltered] = useState([]);
   const [show, setShow] = useState(false);
   
@@ -25,11 +25,6 @@ const AutoSuggestInput = React.memo((props) => {
     }
 };
 
-useEffect(() => { 
-  if (name !== "ItemName") return;
-     const array = purchase; 
-    
-}, [purchase]);
 const handleSelect = (item) => {
     setValue(item);
     setShow(false);

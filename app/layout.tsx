@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserContextProvider } from "@/hooks/Context/UserContext";
-import { ModalContextProvider} from "@/hooks/Context/modal"
+import { ModalContextProvider} from "@/hooks/Context/modal"; 
+import {BannerProvider} from "@/hooks/Context/banner"; 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,11 +29,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
        >
+       <BannerProvider>
         <UserContextProvider>
           <ModalContextProvider>
           <main>{children}</main>
           </ModalContextProvider>
         </UserContextProvider>
+       </BannerProvider>
       </body>
     </html>
   );

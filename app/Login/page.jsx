@@ -9,9 +9,10 @@ const Login = () => {
     password :""
   }); 
   const {updateUser ,user} = useUserContext(); 
-  const idRef = useRef(); 
+  const idRef = useRef();  
   const passRef = useRef(); 
   const router = useRouter(); 
+  const [error , setError ] = useState(); 
   // handleSubmit
    const handleSubmit =useCallback(async(e)=>{
     const id =   validation(idRef); 
@@ -28,16 +29,17 @@ const Login = () => {
             router.push('/Main/Home')
             user
           }else{ 
-             return; 
+             setError(response.data?.error_message); 
           }
 
         }catch(error){ 
-            const message =
+    const message =
     error.response?.data?.error_message || "Something went wrong";
 
-  console.error(message);
-        }
-     } 
+    setError(message); // ADD THIS
+    console.error(message);
+    }
+  } 
    },[data]); 
 
   const handleChange = (e) => {
@@ -53,7 +55,7 @@ const Login = () => {
   if (!input.current) return;
   const name = input.current.name;
   const value = data[name];
-  if (!value) {
+  if (!value || error) {
     input.current.focus();
     input.current.style.outline = "red";
     input.current.style.border = "3px solid red";
@@ -79,8 +81,12 @@ const Login = () => {
               <div className='flex-1 p-3 '>
                  <h2 className='text-5xl font-medium block'>Welcome to Financial</h2>
                  <h2 className='text-5xl font-semibold text-lightRed mt-4'>Consultant !</h2>
-                  <div className='items-center justify-center flex mt-5'>
+                  <div className='items-center justify-center flex flex-col mt-5'>
                       <h4 className='font-semibold text-black opacity-50'>Please Enter your UserID and Password</h4>
+                     {error && ( 
+                      <h4 className='text-lg font-semibold text-red-500'>{error}</h4>
+                      
+                     )}
                   </div>
               </div>
               {/* Input fields */}

@@ -60,7 +60,7 @@ const PurchaseSubmitTable = React.memo((props) => {
     const fetchUnit = async()=>{ 
       let array = []; 
        const res = await axios.get("/api/purchase/items/suggested"); 
-       console.log(res)
+       // console.log(res)
         if(res.status === 200 ){ 
           res?.data?.Unit?.map((u) => { 
               array.push(u.Unit)
@@ -68,33 +68,48 @@ const PurchaseSubmitTable = React.memo((props) => {
         }
         setUnit(array);
      }
-
      fetchUnit(); 
   },[])
  
-  const handleChange = (index, field, value)=>{
-    setItemInfo((prev)=> { 
-      const update = [...prev]; 
+  const handleChange = (index, field, value) => {
+  if (field === "ItemName") {
+   //  console.log(item)
+    const selectedItem = item.find(
+      (i) =>
+        i.ItemName.trim().toLowerCase() === value.trim().toLowerCase()
+    );
 
-     if(!update[index]){
-      update[index] = {
-          ItemName : "", 
-          Unit: "", 
-          ItemUnitPrice:0, 
-          ItemQuantity:0
-      }
+    if (selectedItem) {
+      setItemInfo((prev) => {
+        const update = [...prev];
 
+        update[index] = {
+          ...update[index],
+          ItemName: selectedItem.ItemName,
+          Unit: selectedItem.Unit,
+          UnitPrice: selectedItem.UnitPrice,
+        };
+
+        return update;
+      
+      });
+
+      return;
     }
-       //UPDATE CHANGES 
-       update[index][field] = value; 
-       return update; 
-    })
   }
-  useEffect(()=>{
-     updatePurchase(itemInfo); 
-  }, [itemInfo])
- 
 
+  setItemInfo((prev) => {
+    const update = [...prev];
+
+    if (!update[index]) {
+      update[index] = {};
+    }
+
+    update[index][field] = value;
+
+    return update;
+  });
+};
   return (
     <>
      
@@ -154,11 +169,21 @@ const PurchaseSubmitTable = React.memo((props) => {
                                  <h5>{itemInfo[index]?.ItemQuantity || 0}</h5>
                               </td>
                               <td className='px-4 py-2' name="Unit">
-                                   <AutoSuggestInput itemInfo = {itemInfo} item = {unit} index = {index} onChange = {handleChange} name = {"Unit"} data= {item}/>
+                                 <input type="text" className="bg-gray-200 min-w-30 border border-gray-300 outline-1 outline-gray-200
+                                 print:border-0 print:outline-none print:bg-transparent" 
+                                 onChange={(e) => {handleChange(index, "Unit",e.target.value)}} 
+                                 value={itemInfo[index]?.Unit || ""}/>
                               </td>
                               <td className='px-4 py-2'>
                                  <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 
-                                 print:border-0 print:outline-none print:bg-transparent"  type="number"  readOnly= {true}/>                            </td>
+                                 print:border-0 print:outline-none print:bg-transparent"
+                                  type="number" 
+                                  name="UnitPrice" 
+                                  readOnly= {false} 
+                                  onChange={(e)=> {handleChange(index, "UnitPrice", e.target.value)}}
+                                  value={itemInfo[index]?.UnitPrice}
+                                  />       
+                                                      </td>
                               <td className='px-4 py-2 '>
                                  <h4 className="px-2 py-1 w-full my-1 bg-darkRed text-white" >{formatMoney(itemInfo[index]?.ItemTotal || 0, 'PHP', 'en-PH')}</h4>    
                               </td> 

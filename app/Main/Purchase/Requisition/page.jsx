@@ -7,14 +7,17 @@ import { formatDates } from '@/functions/formattDate';
 import { FiMinus , FiPlus } from 'react-icons/fi';
 import { formatMoney } from '@/functions/formatCurrency';
 import useUserContext from '@/hooks/Context/UserContext';
+import { useBanner } from '@/hooks/Context/banner';
 const CreateRequisition = () => {
   const [data, setData] =  useState([]); 
-  const [row , setRow] = useState([]); 
+  const [row , setRow] = useState([]);
+  const {showError , showSuccess} = useBanner()
   const [itemIds, setItemIds] = useState([]);
   //const [totalRow, setTotalRow] = useState(0);
   const [itemInfo, setItemInfo] = useState([{
-    ItemRequiredBalance:0, 
-    ItemUnitPrice:0, 
+    ItemName : "", 
+    Unit: "", 
+    UnitPrice:0, 
     ItemQuantity:0
   }]);
   const {user } = useUserContext(); 
@@ -25,7 +28,7 @@ const CreateRequisition = () => {
      try{ 
        const response = await axios.get('/api/purchase/items');
        setData(response.data.items); 
-        console.log(response.data);
+       //   console.log(response.data);
      }catch(error){ 
        console.error("Error fetching data:", error); 
      }
@@ -36,53 +39,59 @@ const CreateRequisition = () => {
     // console.log(data); 
   },[])
 
-  // useEffect(() => { 
-  //   console.log(itemInfo); 
-  // },[itemInfo])
+ const handleSubmitInfo = useCallback(async () => {
+   if (itemInfo.length === 0) return;
 
+    const limitedItemInfo =
+    itemInfo.length > row.length
+      ? itemInfo.slice(0, row.length)
+      : itemInfo;
 
+    const limitedItemIds =
+    itemIds.length > row.length
+      ? itemIds.slice(0, row.length)
+      : itemIds;
 
-   const handleSubmitInfo = useCallback(async () => { 
-     // map through itemInfo to add ending inventory date
-      console.log(itemInfo); 
+    setItemInfo(limitedItemInfo);
+    setItemIds(limitedItemIds);
 
-     if(itemInfo.length === 0) return ;     
-     // alert(`row length: ${row.length}, itemInfo length: ${itemInfo.length}`);
-     if(itemInfo.length > row.length) {      
-       // remove extra itemInfo if it exceeds the number of rows 
-       setItemInfo(prev => prev.slice(0, row.length));
-       setItemIds(prev => prev.slice(0, row.length));
+    const filtered = limitedItemInfo.filter(
+    (item) => item.ItemName !== undefined || item.ItemTotal > 0
+    );
+
+    const itemInfoWithDate = filtered.map((item) => ({
+    ...item,
+    EndingInventoryDate: endindInventoryDate,
+    }));
+
+   try {
+      const response = await axios.post("/api/purchase", {
+      purchaseItem: itemInfoWithDate,
+    });
+      if(response.status === 200 ){ 
+        showSuccess(response?.data?.message); 
       }
-      
-      const filterize = itemInfo.filter(item => item.ItemName !== undefined || item.ItemTotal > 0)
-      // 
-      const itemInfoWithDate = filterize.map(item => ({
-        ...item,
-        EndingInventoryDate: endindInventoryDate
-      }));
-    
-   // console.log("Info pURCHASE", itemInfoWithDate); 
-    // try{ 
-    //   const response = await axios.post('/api/purchase', { purchaseItem: itemInfoWithDate });
-    //   //console.log("Response from server:", response.data);
-    // } catch (error) {
-    //   console.error("Error submitting purchase requisition:", error);
-    // }
-   }, [itemInfo])
+    }catch (error) {
+     const data = error?.response?.data;
+    if (data?.errors) {
+     const errorMessages = Object.entries(data.errors)
+      .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
+      .join(" | ");
 
-
-
-  //  const handleQuantity = (e) => { 
-  //   console.log(calculateQuantity(itemInfo.ItemRequiredBalance, 15)); 
-  //  }
-
-   const addTableRow = (added = 1) => {
+     showError(`${data.message} ${'->' + errorMessages}`);
+    } else {
+     showError(data?.message || "Something went wrong");
+    }
+ }
+  }, [itemInfo, itemIds, row, endindInventoryDate]);
+ 
+     const addTableRow = (added = 1) => {
     // adding multiple rows based on the input value
       for(let i = 0; i < added; i++){
         setRow(prevData => [...prevData, {id: prevData.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}]);
       }  
      //setData([...data, {id: data.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}])
-   } 
+    } 
        // console.log("Row changed:", value); 
        // setRow(prevData => prevData.map(row => row.id === value.id ? {...row, ...value} : row)); 
     const handleRowChange = (value) => {
@@ -131,6 +140,7 @@ const CreateRequisition = () => {
      <div>Please Wait....</div>
      )
    }
+
   return (
    <> 
       <div className="flex relative mb-5 w-auto">

@@ -4,21 +4,14 @@ import { NextResponse } from "next/server";
 import { generatePurchaseId } from "@/functions/autogenerate";
 import { DATE, Op } from "sequelize";
 
-
 // insert 
 export async function  POST(request){ 
     await sequelize.sync(); 
-
     const requiredFields = [ 
         "ItemName", 
-        "ItemQuantity",  
-        "ItemTotal",  
-        "ItemRequiredBalance",
-        "EndingInventory", 
-        "EndingInventoryDate",
-        "ItemUnitPrice", 
+        "Unit", 
+        "UnitPrice"
     ]
-
     const body = await request.json(); 
     console.log(body); 
     if(!body.purchaseItem){ 
@@ -27,9 +20,7 @@ export async function  POST(request){
             {status: 400}
         ); 
     }
-
-     let missingFields  = {}; 
-     
+     let missingFields  = {};      
     //item valdation 
     for(const item of body.purchaseItem){ 
       let missing  =[]; 
@@ -49,14 +40,39 @@ export async function  POST(request){
             {status: 400}
         ); 
     }  
-
-
-
-
-
+   
 
      // insert data 
     try{ 
+        let list = []
+        //ItemList Databse 
+     for (const item of body.purchaseItem){
+        const { ItemName, Unit, UnitPrice } = item;
+
+       // Check if item exists
+        const existingItem = await ItemsLists.findOne({
+            attributes: ['ItemName', 'UnitPrice'], 
+        where: { ItemName }
+     });
+
+     if (!existingItem) {
+     // Create new item
+       await ItemsLists.create({
+       ItemName,
+       Unit,
+       UnitPrice
+     });
+    } else {
+     // Check if UnitPrice is different
+    //  if (existingItem.UnitPrice !== UnitPrice) {
+    //     await existingItem.update({
+    //     UnitPrice,
+    //     Unit
+    //   });
+    // }
+  }
+}
+ 
         // get name of purchase items  
         const codeID = generatePurchaseId();
         const purchase = await  Purchase.create({ 
@@ -66,16 +82,12 @@ export async function  POST(request){
         const purchaseItemsData = body.purchaseItem.map(item => ({ 
             PurchaseID: purchase.PurchaseID, 
             ItemName: item.ItemName,
-            ItemsID: item.ItemId,
-            Quantity: item.ItemQuantity,
-            UnitPrice: item.ItemUnitPrice,
-            Total: item.ItemTotal,
-            EndingInventory: item.EndingInventory,
-            RequiredBalance: item.ItemRequiredBalance,
-            EndingInventoryDate: item.EndingInventoryDate || null 
+            Unit: item.Unit, 
+            UnitPrice: item.UnitPrice
         })); 
        const items =   await sequelize.models.purchaseItems.bulkCreate(purchaseItemsData);
-      
+       // check if 
+
        if(!items || items.length === 0 || items === undefined ){
           await purchase.destroy({
               where: {PurchaseID: purchase.PurchaseID}

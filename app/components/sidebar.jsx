@@ -39,7 +39,6 @@ export default function Sidebar(){
     <aside className="min-w-54 min-h-270 relative  bg-darkRed text-white flex flex-col p-4 print:hidden">
         {/* profile picture and then name */}
         <div className="mt-7 flex flex-col justify-center items-center">
-          <h1 className="text-red-100 opacity-80 text-sm">{user?.role}</h1>
           <img src={`${!user?.profile||user?.profile === null ? "/profile/Generic avatar.png": user?.profile }`} alt="profile" 
            className="w-20 h-20 mt-2 mb-3"
           />
