@@ -11,7 +11,7 @@ import crypto from 'crypto';
     }
 } 
 
-export function calculateQuantity(requiredBalance, endingInventory){
+export function calculateQuantity(requiredBalance = 0, endingInventory = 0){
     const quantity = requiredBalance - endingInventory; 
     return quantity > 0 ? quantity : 0;
 }

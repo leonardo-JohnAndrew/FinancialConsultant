@@ -29,7 +29,7 @@ const AutoSuggestInput = React.memo((props) => {
   };
 
   return (
-    <div className="relative w-52">
+    <div className="relative w-52 items-center justify-center">
       <input
         type="text"
         value={value} //controlled
@@ -39,7 +39,7 @@ const AutoSuggestInput = React.memo((props) => {
       />
 
       {show && filtered.length > 0 && (
-        <ul className="absolute z-10 w-full bg-white border mt-1 max-h-40 overflow-y-auto">
+        <ul className="absolute z-20 w-full bg-white border mt-1 max-h-40 overflow-y-auto">
           {filtered.map((item, i) => (
             <li
               key={i}

@@ -67,7 +67,7 @@ export default function Sidebar(){
                 <div className="ml-4 flex flex-col gap-1">
                     {item.subItem?.map((sub, i)=>(
                       <Link key={i} href={`${sub.path}`}  className={`p-2 rounded hover:bg-red-300 ${
-    pathname === sub.path ? "bg-white text-black font-semibold hover:bg-white" : ""
+    pathname.startsWith(sub.path) ? "bg-white text-black font-semibold hover:bg-white" : ""
   }`}>
                         {sub.label}
                       </Link>

@@ -15,11 +15,15 @@ export default function PurchaseDetails() {
      const [is404 , setIs404] = useState(false);
      const [isfetching , setIsFetching] = useState(true);
     const [formatted, setFormatted] = useState("");
+    const [items, setItems] = useState([]); 
+    const [EndingInventoryDate , setEndingInventoryDate] = useState(); 
     const [formattedEnding , setFormattedEnding]  = useState(); 
      const fetchPurchaseDetails = useCallback( async () => {
          try{ 
              const response = await axios.get(`/api/purchase/${params.purchaseID}`);
              setPurchaseDetails(response.data);
+             setItems(response.data.purchase.purchaseItems); 
+             console.log(response.data)
              setIsFetching(false);
              setFormatted(formatDates(response.data.purchase.createdAt)); 
              setFormattedEnding(formatDates(response.data.purchase.purchaseItems[0].EndingInventoryDate));
@@ -38,7 +42,21 @@ export default function PurchaseDetails() {
         useEffect(()=> { 
             fetchPurchaseDetails();
      }, [fetchPurchaseDetails]) 
-       
+        useEffect(() => {
+      if (!items || items.length === 0) return;
+
+       const newTotal = items.reduce((sum, item) => {
+       const quantity = Number(item.Quantity || 0);
+       const price = Number(item.UnitPrice || 0);
+       return sum + (quantity * price);
+      }, 0);
+
+     setTotal(newTotal);
+    }, [items]);
+    
+    useEffect(()=>{
+       console.log(items); 
+    }, [items])
      if(is404){ 
         notFound();
      } 
@@ -47,7 +65,6 @@ export default function PurchaseDetails() {
      }
      //update functions by id role based access control 
      // add attachement  
-
 
   
 return ( 
@@ -72,7 +89,8 @@ return (
       </div>     
        <div className="scrollbar-custom overflow-y-auto">       
        <Table tableHeader={['NO.','ITEM DESCRIPTION', 'REQUIRED BALANCE', 'ENDING INVENTORY', 'QUANTITY', 'UNIT', 'UNIT PRICE', 'TOTAL']} data = {purchaseDetails || isfetching === false? purchaseDetails : []} Ending = {formattedEnding} 
-       purchaseID = {params.purchaseID} /> 
+       purchaseID = {params.purchaseID} items = {items} setItems = {setItems}   EndingInventoryDate={EndingInventoryDate}
+  setEndingInventoryDate={setEndingInventoryDate}/> 
        </div> 
          <div className="relative "> 
              <div className="absolute right-8 flex flex-row gap-0 mt-10">
@@ -84,7 +102,7 @@ return (
                    <div className = 'flex flex-col gap-4 px-2 '>
                      <h5 className = "m-2">Requisitionist </h5>
                      <div className="flex flex-row">
-                     <h5 className ="m-2">Surname , Lastname Middle Initial </h5> 
+                     <h5 className ="m-2">{`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}</h5> 
                      <div className="flex items-center justify-center bg-gray-100">
                           <label className="flex flex-col">
                            <span className="text-base leading-normal px-2 ">
@@ -98,7 +116,7 @@ return (
                    <div className = 'flex flex-col gap-4'>
                      <h5 className ="m-2">Noted By</h5>
                      <div className="flex flex-row ">
-                     <h5 className ="m-2">Surname , Lastname Middle Initial </h5> 
+                     <h5 className ="m-2"> </h5> 
                      <div className="flex items-center justify-center bg-gray-100">
                           <label className="flex flex-col">
                            <span className="text-base leading-normal px-2 ">
@@ -112,7 +130,7 @@ return (
                    <div className = 'flex flex-col gap-4 px-6'>
                      <h5 className ="m-2">Noted By</h5>
                       <div className="flex flex-row ">
-                        <h5 className="m-2">Surname , Lastname Middle Initial </h5> 
+                        <h5 className="m-2"> Surname , Lastname Middle Initial </h5> 
                         <div className="flex items-center justify-center bg-gray-100">
                           <label className="flex flex-col">
                            <span className="text-base leading-normal px-2 ">
@@ -133,8 +151,10 @@ return (
                </div>
             </div>
          </div>
+             
 
-          <table className="border border-gray-300 w-full">
+             {/* accounting part claimable or non claimable  */}
+          {/* <table className="border border-gray-300 w-full">
              <thead className = "bg-black text-white border-3 border-darkRed sticky top-0 z-10 font-thin" >
                 <tr>
                     <th></th> 
@@ -166,7 +186,7 @@ return (
                       </td>
                   </tr>
               </tbody>
-          </table> 
+          </table>  */}
 
          {/* 2nd table */}
                 {/* <div className="grid grid-flow-col grid-rows-[auto_auto] mb-10 border border-gray-200 bg-gray-100">

@@ -113,12 +113,12 @@ const PurchaseSubmitTable = React.memo((props) => {
   return (
     <>
      
-    <div className='max-h-125 scrollbar-custom overflow-y-auto'>
+    <div className=''>
        <table className="border border-gray-300 w-full ">
                 <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
                   <tr> 
                     {props.tableHeader.map((header, index) => (
-                      <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold print:text-black '>
+                      <th key={index} className={`border-b border-gray-300 text-left px-4 py-2 text-sm font-bold print:text-black `}>
                         {header}
                          {
                            header === "ENDING INVENTORY" && (
@@ -126,6 +126,7 @@ const PurchaseSubmitTable = React.memo((props) => {
                               props.data.purchase?.purchaseItems[0]?.EndingInventoryDate ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split('T')[0] : ""
                           }/> </div>
                         )}
+                       
                       </th>
                     ))}
                   </tr>
@@ -135,7 +136,7 @@ const PurchaseSubmitTable = React.memo((props) => {
                           <tr key={index} className='border-b border-gray-300'>
                               <td className='px-4 py-2'>{parseInt(index + 1) } 
                               </td>
-                              <td className='px-4 py-2'>
+                              <td className='px-1 py-2'>
                                 <AutoSuggestInput
                               item={listItem}
                               index={index}

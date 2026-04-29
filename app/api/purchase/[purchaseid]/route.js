@@ -1,5 +1,5 @@
 import sequelize  from "@/db/connection"; 
-import { Purchase  , PurchaseItems, ItemsLists} from "@/db/models"; 
+import { Purchase  , PurchaseItems, ItemsLists, User} from "@/db/models"; 
 import { NextResponse } from "next/server"; 
 
 // get purchase by id 
@@ -11,14 +11,14 @@ export async function GET( request, {params}){
              include: [
                 {
                     model: PurchaseItems, 
-                    include: [ 
-                        { 
-                          model: ItemsLists , 
-                          attributes: ['ItemName']
-                        }
-                    ]
+                    
+                }, {
+                    model:User, 
+                    required:true 
                 }
-            ]
+            ], 
+         
+
         }) 
          if(!purchase){ 
             return NextResponse.json({ 
@@ -40,3 +40,7 @@ export async function GET( request, {params}){
 // PurchaseItems: fields EndingInventoryDate , EndingInventory ,UnitPrice , updatedAt
 // Purchase: fields EmployeeSign , ChiefSign , ProjectDirectorSign 
 // remark , isClaimable 
+
+export async function PATCH(request , {params}) {
+    
+}

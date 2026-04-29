@@ -28,19 +28,6 @@ Purchase.belongsTo(User, {
     onUpdate: 'CASCADE'
 });
 
-
-ItemsLists.hasMany(PurchaseItems, {
-    foreignKey: 'ItemsID',
-    sourceKey: 'ItemsID',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-});
-PurchaseItems.belongsTo(ItemsLists, {
-    foreignKey: 'ItemsID',
-    targetKey: 'ItemsID',
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
-});
 export { 
     Purchase, 
     PurchaseItems, 

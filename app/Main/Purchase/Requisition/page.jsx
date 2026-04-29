@@ -176,7 +176,7 @@ const CreateRequisition = () => {
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
-       tableHeader={user?.role !== "Admin "?  ["NO","ITEM DESCRIPTION","QUANTITY","UNIT","UNIT PRICE","TOTAL"] :  ["NO", "ITEM DESCRIPTION", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
+       tableHeader={user?.role !== "Admin "?  ["NO","ITEM CATALOG # COMPLETE ITEM DESCRIPTION","QUANTITY","UNIT","UNIT PRICE","TOTAL"] :  ["NO", "ITEM", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
        setData={setData}
        setItemInfo={setItemInfo}
        itemInfo={itemInfo}
@@ -193,13 +193,13 @@ const CreateRequisition = () => {
               
               submit button               
        */}
-         <div className ='mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto'>
+         {/* <div className ='mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto'>
                            <div className='grid-cols-[auto_auto_auto] place-content-end'>
                                <div className='w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white'>
                                    <h4>Total: {formatMoney(itemInfo.reduce((sum, item) => sum + (item.ItemTotal || 0), 0), 'PHP', 'en-PH')}</h4>
                                </div>
                            </div>
-                        </div>
+                        </div> */}
           <div className='mt-10 flex relative flex-row place-content-end mb-5 w-auto'>
           <div className='grid-cols-[auto_auto_auto] place-content-end'>  
         <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black'  onClick={(e) => handleSubmitInfo()}>Submit</button>

@@ -11,7 +11,8 @@ export async function  POST(request){
         "ItemName", 
         "Unit", 
         "UnitPrice",
-        "UserID"
+        "UserID", 
+      
     ]
     const body = await request.json(); 
     console.log(body); 
@@ -73,12 +74,23 @@ export async function  POST(request){
     // }
   }
 }
- 
+    // userDepartment 
+        const userDprt = await User.findByPk(body.purchaseItem[0]?.UserID, { 
+           attributes: ["department"]
+        })       
+        if (!userDprt) {
+            return NextResponse.json( 
+            {message: "Internal Server Error"},
+            {status: 500}
+        ); 
+        }
+     
         // get name of purchase items  
         const codeID = generatePurchaseId();
         const purchase = await  Purchase.create({ 
             PurchaseID: codeID,
              UserID: body?.purchaseItem[0]?.UserID,
+             RequestorDepartment: userDprt?.department || "", 
             timeStamp: new Date(),
         }); 
         const purchaseItemsData = body.purchaseItem.map(item => ({ 
@@ -120,7 +132,6 @@ export async function GET(request){
     const searchParams = url.searchParams; 
     const page = parseInt(searchParams.get("page")) || 1 
     const limit = parseInt(searchParams.get("limit"))|| 10; 
-     
     const offset = (page-1)*limit // skip page 
   try {
      await sequelize.sync(); 
@@ -149,7 +160,6 @@ export async function GET(request){
     { model: User },
     { 
       model: PurchaseItems,
-      include: [{ model: ItemsLists }]
     }
   ]
        

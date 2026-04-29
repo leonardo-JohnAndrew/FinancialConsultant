@@ -3,6 +3,7 @@ import { use, useCallback, useEffect , useState} from "react";
 import Link from "next/link";
 import Table from "@/app/components/table";
 import axios from "axios";
+import Header from "@/app/components/header";
 import { FiSearch ,FiChevronLeft , FiChevronRight } from "react-icons/fi";
 import {formDates} from "@/functions/formattDate";
 export default function PurchaseDetails() {
@@ -35,8 +36,8 @@ export default function PurchaseDetails() {
             const response = await axios.get(`/api/purchase?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`);
             setPurchaseDetails(response.data.data);
             setTotalPages(response.data.totalPages); 
-            setDateStartDefault(response.data.rangeStart.split("T")[0]) 
-            setDateEndDefault(response.data.rangeEnd.split("T")[0]); 
+            setDateStartDefault(response.data.rangeStart?.split("T")[0]) 
+            setDateEndDefault(response.data.rangeEnd?.split("T")[0]); 
             console.log(response.data);
            //  setFormatted(formatDates(response.data.purchases[0].createdAt));
         }catch(error){
@@ -86,7 +87,7 @@ export default function PurchaseDetails() {
     
 return ( 
        <>
-    
+     <Header title = {"Requisition List"} />
     <div className="flex relative mb-5 w-auto">
   
     </div>
