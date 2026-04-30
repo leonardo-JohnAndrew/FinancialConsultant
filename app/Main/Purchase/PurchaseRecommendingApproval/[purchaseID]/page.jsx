@@ -166,6 +166,7 @@ return (
 
     <tr className="text-center">
       <td className="p-2 relative w-1/3">
+      
         <img
           src={purchaseDetails?.purchase?.user?.signature ? " " : "/uploads/SampleSign.png"}
           alt="Signature"
@@ -177,25 +178,29 @@ return (
       </td>
 
       <td className="p-2 relative w-1/3">
-        <img
-          src={`${Chiefsignature}`}
-          alt="Signature"
-          className={`absolute left-1/2 -translate-x-1/2 ${
-            Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
-          } object-contain pointer-events-none`}
-        />
-        <span>Chief Name</span>
+        {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null || user.role === "Chief Administrator Manager" ) && ( 
+          <img
+            src={`${Chiefsignature}`}
+            alt="Signature"
+            className={`absolute left-1/2 -translate-x-1/2 ${
+              Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
+            } object-contain pointer-events-none`}
+          />
+        )}
+        <span>Kai Sumitomo</span>
       </td>
 
       <td className="p-2 relative w-1/3">
-        <img
-          src={`${PDirectorsignature}`}
-          alt="Signature"
-          className={`absolute left-1/2 -translate-x-1/2 ${
-            PDirectorsignature ? "-top-15 h-25" : "-top-8 h-12"
-          } object-contain pointer-events-none`}
-        />
-        <span>Project Director Name</span>
+       {(purchaseDetails?.purchase?.ProjectDirectorSign !== null || user.role === "Project Director" ) && ( 
+          <img
+            src={`${Chiefsignature}`}
+            alt="Signature"
+            className={`absolute left-1/2 -translate-x-1/2 ${
+              Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
+            } object-contain pointer-events-none`}
+          />
+        )}
+        <span>Jorge Müller</span>
       </td>
     </tr>
 
