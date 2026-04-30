@@ -2,7 +2,7 @@ import { useBanner } from '@/hooks/Context/banner';
 
 import React, { useEffect, useState } from 'react';
 const AutoSuggestInput = React.memo((props) => {
-  const { item, index, onChange, name, value } = props;
+  const { item, index, onChange, name, value , readOnly } = props;
 
   const [filtered, setFiltered] = useState([]);
   const [show, setShow] = useState(false);
@@ -36,6 +36,8 @@ const AutoSuggestInput = React.memo((props) => {
         onChange={handleChange}
         onFocus={() => value && setShow(true)}
         className="border border-gray-300 bg-gray-200 text-black"
+        readOnly = {readOnly}
+        disabled = {readOnly}
       />
 
       {show && filtered.length > 0 && (

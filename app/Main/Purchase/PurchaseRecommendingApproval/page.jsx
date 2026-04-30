@@ -5,6 +5,7 @@ import Table from "@/app/components/table";
 import axios from "axios";
 import { FiSearch ,FiChevronLeft , FiChevronRight } from "react-icons/fi";
 import {formDates} from "@/functions/formattDate";
+import useUserContext from "@/hooks/Context/UserContext";
 export default function RecommendingApproval() {
      const [purchaseDetails, setPurchaseDetails ] = useState();
      const [fomatted, setFormatted] = useState();
@@ -12,6 +13,7 @@ export default function RecommendingApproval() {
     //  const [itemsPerPage] = useState(15); //10 
      const [purchaseID  ,setPurchaseId] = useState(); 
      const [limit] = useState(15); 
+     const {user} = useUserContext()
      const [search , setSearch] = useState(false); 
      const [page , setPage] = useState(1); 
      const [dateStart , setDateStart] = useState(''); 
@@ -120,7 +122,7 @@ return (
       <hr className = 'border-t border-gray-300' />
       </div>     
       <div className="max-h-200 overflow-hidden">
-         <Table tableHeader={['REQUEST ID','REQUESTOR NAME', 'DEPARTMENT', 'ITEMS', 'TOTAL','REMARK', 'REQUISITION DATE', 'ACTION']} list = {
+         <Table tableHeader= {['REQUEST ID','REQUESTOR NAME', 'DEPARTMENT', 'ITEMS', 'TOTAL','REMARK', 'REQUISITION DATE', 'ACTION']} list = {
           search? purchaseDetails.filter(e => e.PurchaseID === purchaseID) : purchaseDetails||[]} /> 
       </div>
       {/* paginations */}

@@ -7,15 +7,17 @@ import { DATE, Op } from "sequelize";
 // insert 
 export async function  POST(request){ 
     await sequelize.sync(); 
+    
     const requiredFields = [ 
         "ItemName", 
         "Unit", 
         "UnitPrice",
         "UserID", 
-      
+        "Quantity", 
+        "Total"
     ]
     const body = await request.json(); 
-    console.log(body); 
+    console.log(JSON.stringify(body)); 
     if(!body.purchaseItem){ 
         return NextResponse.json( 
             {message: "Data is required"},
@@ -50,29 +52,23 @@ export async function  POST(request){
         //ItemList Databse 
      for (const item of body.purchaseItem){
         const { ItemName, Unit, UnitPrice } = item;
-
        // Check if item exists
-        const existingItem = await ItemsLists.findOne({
-            attributes: ['ItemName', 'UnitPrice'], 
-        where: { ItemName }
-     });
+       const existingItem = await ItemsLists.findOne({
+  where: { ItemName }
+});
 
-     if (!existingItem) {
-     // Create new item
-       await ItemsLists.create({
-       ItemName,
-       Unit,
-       UnitPrice
-     });
-    } else {
-     // Check if UnitPrice is different
-    //  if (existingItem.UnitPrice !== UnitPrice) {
-    //     await existingItem.update({
-    //     UnitPrice,
-    //     Unit
-    //   });
-    // }
-  }
+if (!existingItem) {
+  await ItemsLists.create({
+    ItemName,
+    Unit,
+    UnitPrice
+  });
+} else if (existingItem.UnitPrice !== UnitPrice) {
+  await existingItem.update({
+    UnitPrice,
+    Unit
+  });
+}
 }
     // userDepartment 
         const userDprt = await User.findByPk(body.purchaseItem[0]?.UserID, { 
@@ -92,12 +88,18 @@ export async function  POST(request){
              UserID: body?.purchaseItem[0]?.UserID,
              RequestorDepartment: userDprt?.department || "", 
             timeStamp: new Date(),
+            Total: body.TotalItem 
         }); 
         const purchaseItemsData = body.purchaseItem.map(item => ({ 
             PurchaseID: purchase.PurchaseID, 
             ItemName: item.ItemName,
             Unit: item.Unit, 
-            UnitPrice: item.UnitPrice
+            UnitPrice: item.UnitPrice, 
+            Quantity: item.Quantity, 
+            Total: item.Total,  
+            EndingInventoryDate: item.EndingInventoryDate || null , 
+            EndingInventory: item.EndingInventory || 0, 
+            RequiredBalance: item.RequiredBalance || 0 
         })); 
        const items =   await sequelize.models.purchaseItems.bulkCreate(purchaseItemsData);
        // check if 

@@ -13,16 +13,95 @@ const CreateRequisition = () => {
   const [row , setRow] = useState([]);
   const {showError , showSuccess} = useBanner()
   const [itemIds, setItemIds] = useState([]);
+  const  [total, setTotal ] = useState(); 
+  const [isRendered , setRendered] = useState(false)
+  const [disable , setDisable] =  useState(true); 
+   let count = 0 ; 
   //const [totalRow, setTotalRow] = useState(0);
   const [itemInfo, setItemInfo] = useState([{
     ItemName : "", 
     Unit: "", 
     UnitPrice:0, 
-    ItemQuantity:0
+   Quantity:0, 
+    Total: 0 
   }]);
   const {user } = useUserContext(); 
   const [endindInventoryDate, setEndingInventoryDate] = useState(null);
   let fetch ; 
+  
+   const handleSubmitInfo = useCallback(async () => {
+    console.log(itemInfo); 
+     if (itemInfo.length === 0) {
+         showError("No Items Inputed") 
+         return
+     }
+  
+      const limitedItemInfo =
+      itemInfo.length > row.length
+        ? itemInfo.slice(0, row.length)
+        : itemInfo;
+  
+      const limitedItemIds =
+      itemIds.length > row.length
+        ? itemIds.slice(0, row.length)
+        : itemIds;
+  
+      setItemInfo(limitedItemInfo);
+      setItemIds(limitedItemIds);
+     const filtered = limitedItemInfo.filter(
+    (item) =>
+      item.ItemName &&
+      parseFloat(item.Total) > 0
+  );
+  // user Role permission 
+  if( user.role === "Admin" &&  !endindInventoryDate){
+      showError("Ending Inventory Date is Required")
+      return
+  }
+  
+      const itemInfoWithDate = filtered.map((item) => ({
+      ...item,
+      UserID:user.id,
+      EndingInventoryDate: endindInventoryDate,
+      }));
+
+
+      
+  
+      if (itemInfoWithDate.length === 0) { 
+        showError("Total must be greater than 0")
+        return
+      }
+     
+      const forms = { 
+        TotalItem : total, 
+        purchaseItem: itemInfoWithDate
+      }
+      
+
+     try {
+        const response = await axios.post("/api/purchase", forms ,{
+    
+      });
+        if(response.status === 200 || response.status === 201 ){ 
+          showSuccess(response?.data?.message); 
+          resetTable(); 
+          addTableRow(5); 
+        }
+      }catch (error) {
+       const data = error?.response?.data;
+      if (data?.errors) {
+       const errorMessages = Object.entries(data.errors)
+        .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
+        .join(" | ");
+  
+       showError(`${data.message} ${'->' + errorMessages}`);
+      } else {
+       showError(data?.message || "Something went wrong");
+      }
+   }
+    }, [itemInfo, itemIds, row, endindInventoryDate]);
+   
 
   const fetchData = async () =>{ 
      try{ 
@@ -37,56 +116,7 @@ const CreateRequisition = () => {
     //  alert('fetch')
     fetchData(); 
     // console.log(data); 
-  },[])
-
- const handleSubmitInfo = useCallback(async () => {
-   if (itemInfo.length === 0) return;
-
-    const limitedItemInfo =
-    itemInfo.length > row.length
-      ? itemInfo.slice(0, row.length)
-      : itemInfo;
-
-    const limitedItemIds =
-    itemIds.length > row.length
-      ? itemIds.slice(0, row.length)
-      : itemIds;
-
-    setItemInfo(limitedItemInfo);
-    setItemIds(limitedItemIds);
-    const filtered = limitedItemInfo.filter(
-    (item) => item.ItemName !== undefined || item.ItemTotal > 0
-    );
-
-    const itemInfoWithDate = filtered.map((item) => ({
-    ...item,
-    UserID:user.id,
-    EndingInventoryDate: endindInventoryDate,
-    }));
-
-   try {
-      const response = await axios.post("/api/purchase", {
-      purchaseItem: itemInfoWithDate,
-    });
-      if(response.status === 200 || response.status === 201 ){ 
-        showSuccess(response?.data?.message); 
-        resetTable(); 
-        addTableRow(5); 
-      }
-    }catch (error) {
-     const data = error?.response?.data;
-    if (data?.errors) {
-     const errorMessages = Object.entries(data.errors)
-      .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
-      .join(" | ");
-
-     showError(`${data.message} ${'->' + errorMessages}`);
-    } else {
-     showError(data?.message || "Something went wrong");
-    }
- }
-  }, [itemInfo, itemIds, row, endindInventoryDate]);
- 
+  },[handleSubmitInfo])
      const addTableRow = (added = 1) => {
     // adding multiple rows based on the input value
       for(let i = 0; i < added; i++){
@@ -110,7 +140,21 @@ const CreateRequisition = () => {
         // setItemIds(prev => prev.slice(0, value));
   }
 };
-    
+
+// handle able disable 
+useEffect(() => { 
+   const fillable =  itemInfo.filter(
+  (item) =>
+    item.ItemName &&
+    parseFloat(item.Total) > 0
+);
+if(!fillable || fillable.length === 0 ){ 
+   setDisable(true); 
+}else {
+   setTotal(fillable.reduce( (sum, item) => sum + (parseFloat(item?.Total) || 0), 0))
+   setDisable(false); 
+}
+}, [itemInfo])
 
  const handleDeleteRow = () => {  
     setRow(prevData => prevData.filter((_, i) => i !== row.length - 1));
@@ -128,14 +172,18 @@ const CreateRequisition = () => {
     // setData(prevData => prevData.filter((_, i) => i !== index));
   }
    useEffect(() => { 
-      addTableRow(5);
+     if(!isRendered){
+       setRendered(!isRendered)
+       addTableRow(3);
+     } else return
+
    },[])
 
    const resetTable = () => { 
     setRow([]);
     setItemInfo([]);
     setItemIds([]);
-    addTableRow(5)
+    addTableRow(3)
    }
    if(!user){
      return (
@@ -148,7 +196,7 @@ const CreateRequisition = () => {
       <div className="flex relative mb-5 w-auto">
         <div className="w-1/2 flex flex-row gap-2">
         {/* {formatMoney(parseFloat(total), 'PHP', 'en-PH')} */}
-          <h5 className="text-xl font-bold">Requestor Department:</h5> <h5 className = 'display-inline text-red-950 text-xl font-extrabold'></h5>
+          <h5 className="text-xl font-bold">Requestor Department:  </h5> <h5 className = 'display-inline text-red-950 text-xl font-extrabold'>{user?.department}</h5>
         </div>
         <div className="w-1/2 flex flex-row gap-2 place-content-end">
           {/* <h5 className= 'place-self-end font-bold text-xl'>Requisition Date:</h5><h5 className = 'display-inline text-red-950 text-xl font-extrabold'></h5> */}
@@ -176,7 +224,7 @@ const CreateRequisition = () => {
        <PurchaseSubmitTable 
        data={row} 
        item={data} 
-       tableHeader={user?.role !== "Admin "?  ["NO","ITEM CATALOG # COMPLETE ITEM DESCRIPTION","QUANTITY","UNIT","UNIT PRICE","TOTAL"] :  ["NO", "ITEM", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
+       tableHeader={user?.role !== "Admin"?  ["NO","ITEM CATALOG # COMPLETE ITEM DESCRIPTION","QUANTITY","UNIT","UNIT PRICE","TOTAL"] :  ["NO", "ITEM", "REQUIRED BALANCE", "ENDING INVENTORY", "QUANTITY","UNIT" , "UNIT PRICE", "TOTAL"]}    
        setData={setData}
        setItemInfo={setItemInfo}
        itemInfo={itemInfo}
@@ -193,16 +241,23 @@ const CreateRequisition = () => {
               
               submit button               
        */}
-         {/* <div className ='mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto'>
+         <div className ='mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto'>
                            <div className='grid-cols-[auto_auto_auto] place-content-end'>
                                <div className='w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white'>
-                                   <h4>Total: {formatMoney(itemInfo.reduce((sum, item) => sum + (item.ItemTotal || 0), 0), 'PHP', 'en-PH')}</h4>
+                                   <h4>
+                                      Total: { formatMoney(
+                                            (parseFloat(total) || 0),
+                                           'PHP',
+                                           'en-PH'
+                                           )
+                                           }
+                                       </h4> 
                                </div>
                            </div>
-                        </div> */}
+                        </div>
           <div className='mt-10 flex relative flex-row place-content-end mb-5 w-auto'>
           <div className='grid-cols-[auto_auto_auto] place-content-end'>  
-        <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black'  onClick={(e) => handleSubmitInfo()}>Submit</button>
+        <button className='bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:outline disabled:outline-white disabled:hover:text-white' disabled = {disable}  onClick={(e) => handleSubmitInfo()}>Submit</button>
          {/* <button onClick={() => window.print()} className="print:hidden">
   Print
 </button> */}

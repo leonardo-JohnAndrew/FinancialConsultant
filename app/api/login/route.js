@@ -40,6 +40,8 @@ export async function POST(request) {
          userID: userAccount.userID,
          role: userAccount.role,
          profile: userAccount.profile_pic, 
+         department: userAccount.department, 
+         e_sign : userAccount.e_signature, 
          name: `${userAccount.lastname}, ${userAccount.firstname} ${!userAccount.middle || userAccount.middle === 'N/A' || userAccount.middle === null? "": userAccount.middle}`
        });
     

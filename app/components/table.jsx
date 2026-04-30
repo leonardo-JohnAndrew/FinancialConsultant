@@ -1,9 +1,10 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link  from "next/link";
 import { formatMoney } from "@/functions/formatCurrency";
 
 const Table = (props) => { 
+const {role }  = props
 const handleChange = (index, field, value) => {
   props.setItems(prev => {
     const updated = [...prev];
@@ -29,26 +30,41 @@ const handleChange = (index, field, value) => {
     return updated;
   });
 };
+useEffect(()=>{
+console.log(props.items)
+},[])
   return (
 <> 
-      <div className='table-container w-full '>
+      <div className='table-container w-full'>
         <table className="border border-gray-300 w-full ">
           <thead  className="bg-black text-white border-3 border-darkRed sticky top-0 z-10"> 
-            <tr> 
-              {props.tableHeader.map((header, index) => (
-                <th key={index} className='border-b border-gray-300 text-left px-4 py-2 text-sm font-bold'>
-                  {header}
-                  {header === "ENDING INVENTORY" && (
-                    <div className='w-auto pr-10'> <input
-                     className="bg-gray-300 text-red-500 w-full"
-                     type="date"
-                     value={props.EndingInventoryDate || ""}
-                     onChange={(e) => props.setEndingInventoryDate(e.target.value)}
-                  /> </div>
-                  )}
-                </th>
-              ))}
-            </tr>
+           <tr>
+  {props.tableHeader.map((header, index) => (
+    <th
+      key={index}
+      className="border-b border-gray-300 text-left px-4 py-2 text-sm font-bold"
+    >
+      {header}
+
+      {header === "ENDING INVENTORY" && (
+        <div className="w-auto pr-10">
+          <input
+            className="bg-gray-300 text-red-500 w-full"
+            type="date"
+            value={
+              props.items[0]?.EndingInventoryDate
+                ? props.items[0].EndingInventoryDate.slice(0, 10)
+                : ""
+            }
+            onChange={(e) =>
+              props.setEndingInventoryDate(e.target.value)
+            }
+          />
+        </div>
+      )}
+    </th>
+  ))}
+</tr>
           </thead>
             <tbody>
                 {props.items?.map((item, index) => (
@@ -59,12 +75,19 @@ const handleChange = (index, field, value) => {
                           {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200 -"  type="text" defaultValue={item.ItemName} readOnly= {true} /> */}
                           {item.ItemName}
                         </td>
+                          {role === "Admin" && (
+                            <>
                         <td className='px-4 py-2'>
-                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="number" value={props.items[index]?.RequiredBalance || 0} onChange={(e) => handleChange(index, "RequiredBalance" , e.target.value)} readOnly= {false} min={0} />
+                           {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="number" value={props.items[index]?.RequiredBalance || 0} onChange={(e) => handleChange(index, "RequiredBalance" , e.target.value)} readOnly= {false} min={0} /> */}
+                          {item.RequiredBalance} 
                         </td>
                         <td className='px-4 py-2'>
-                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="number" value={props.items[index]?.EndingInventory || 0} onChange={(e) => handleChange(index, "EndingInventory", e.target.value)} readOnly= {false} min={0} />
+                           {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="number" value={props.items[index]?.EndingInventory || 0} onChange={(e) => handleChange(index, "EndingInventory", e.target.value)} readOnly= {false} min={0} /> */}
+                         {item.EndingInventory}
                         </td>
+                            </>
+                          )}
+
                         <td className='px-4 py-2'>
                             {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="number" value={props.items[index]?.Quantity} readOnly= {false} /> */}
                             {props.items[index]?.Quantity}
@@ -72,10 +95,11 @@ const handleChange = (index, field, value) => {
                         <td className='px-4 py-2'>{item.Unit}
                         </td>
                         <td className='px-4 py-2'>
-                           <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.UnitPrice} readOnly= {true} />
+                           {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.UnitPrice} readOnly= {true} /> */}
+                            {item?.UnitPrice}
                         </td>
                         <td className='px-4 py-2 '>
-                           <h4 className="px-2 py-1 w-auto my-1 bg-darkRed text-white" >{formatMoney(item?.Quantity * item?.UnitPrice || 0, 'PHP', 'en-PH')}</h4>    
+                           <h4 className="px-4 py-1 w-fit my-1 bg-darkRed text-white" >{formatMoney(item?.Quantity * item?.UnitPrice || 0, 'PHP', 'en-PH')}</h4>    
                         </td> 
                  </tr>             
                 ))}

@@ -78,6 +78,20 @@ export default function Menus(role){
                 "My Requisition", 
                 "Profile", 
             ], 
+            "Chief Administrator Manager":[ 
+                "Dashboard", 
+                "Purchase Requisition Form", 
+                "Requisition List", 
+                "My Requisition", 
+                "Profile", 
+            ], 
+            "Project Director":[ 
+                "Dashboard", 
+                "Purchase Requisition Form", 
+                "Requisition List", 
+                "My Requisition", 
+                "Profile", 
+            ], 
             "SuperAdmin":[  
                 "Dashboard", 
                 "Purchase Requisition Form", 

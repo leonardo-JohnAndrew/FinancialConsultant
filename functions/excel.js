@@ -123,7 +123,7 @@ export async function  ExportExcelFile(dataField , model, name) {
          worksheet.getColumn(2).width =20 
          worksheet.getRow(2).height = 20
 
-        worksheet.addImage(imageId, { 
+         worksheet.addImage(imageId, { 
          tl:{col: 0.7 , row: 0}, 
          ext:{width: 120, height: 80}
         })

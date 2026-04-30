@@ -7,15 +7,20 @@ import axios from "axios";
 import Table from "@/app/components/table";
 import {formatDates} from "@/functions/formattDate";
 import {formatMoney} from "@/functions/formatCurrency";
+import useUserContext from "@/hooks/Context/UserContext";
 export default function PurchaseDetails() {
      const pathname = usePathname(); 
-     const params = useParams();  
+     const params = useParams();   
+     const {user} = useUserContext(); 
      const [total , setTotal] = useState(0);
      const [purchaseDetails, setPurchaseDetails ] = useState();
      const [is404 , setIs404] = useState(false);
      const [isfetching , setIsFetching] = useState(true);
     const [formatted, setFormatted] = useState("");
+    const [approving  , setApproving] = useState(false); 
     const [items, setItems] = useState([]); 
+    const [Chiefsignature , setChiefSignature] = useState(); 
+    const [PDirectorsignature , setPDirectorSignature] = useState(); 
     const [EndingInventoryDate , setEndingInventoryDate] = useState(); 
     const [formattedEnding , setFormattedEnding]  = useState(); 
      const fetchPurchaseDetails = useCallback( async () => {
@@ -65,8 +70,62 @@ export default function PurchaseDetails() {
      }
      //update functions by id role based access control 
      // add attachement  
+     // handle Approve 
+     const handleApprove = () => {
+        //set signature 
+        setApproving(true)
+        Signaturefunction(user.role ,user.e_sign,"add")
+     } 
+      const handleCancel = () => {
+        setApproving(false)
+        Signaturefunction(user.role ,user.e_sign,"remove")
+      }
 
-  
+      const handleConfirm = async() => { 
+        // role 
+        switch(user.role){ 
+          case "Chief Administrator Manager ": 
+                  // axios 
+                    // const response = await axios.post() ;
+                    return  
+          case "Project Director": 
+                  // const response = await axios.post(); 
+                    return
+          default: 
+               return   
+        }
+      }
+     
+      const Signaturefunction= (role, e_sign, action) => { 
+          switch(role) { 
+            case "Chief Administrator Manager": 
+                   if(action === "add"){ 
+                     setChiefSignature(e_sign)
+                    // axios  post 
+
+                     return
+                   } else if(action === "remove"){
+                      setChiefSignature(null); 
+                      return
+                   } 
+                    break; 
+
+            case "Project Director": 
+
+                    if(action === "add"){  
+                      setPDirectorSignature(e_sign)
+                      //axios post 
+                      return 
+                    }else if (action === "remove"){ 
+                      setPDirectorSignature(null)
+                      return
+                    }
+                    break
+            default : 
+                     break
+          }
+      }
+
 return ( 
     <>
     
@@ -88,71 +147,65 @@ return (
       <hr className = 'border-t border-gray-300'/>
       </div>     
        <div className="scrollbar-custom overflow-y-auto">       
-       <Table tableHeader={['NO.','ITEM DESCRIPTION', 'REQUIRED BALANCE', 'ENDING INVENTORY', 'QUANTITY', 'UNIT', 'UNIT PRICE', 'TOTAL']} data = {purchaseDetails || isfetching === false? purchaseDetails : []} Ending = {formattedEnding} 
+       <Table tableHeader={purchaseDetails?.purchase?.user?.role !== "Admin" ? ['NO.','ITEM DESCRIPTION', 'QUANTITY', 'UNIT', 'UNIT PRICE', 'TOTAL'] : ['NO.','ITEM DESCRIPTION', 'REQUIRED BALANCE', 'ENDING INVENTORY', 'QUANTITY', 'UNIT', 'UNIT PRICE', 'TOTAL']} data = {purchaseDetails || isfetching === false? purchaseDetails : []} Ending = {formattedEnding} 
        purchaseID = {params.purchaseID} items = {items} setItems = {setItems}   EndingInventoryDate={EndingInventoryDate}
-  setEndingInventoryDate={setEndingInventoryDate}/> 
+  setEndingInventoryDate={setEndingInventoryDate} role = {purchaseDetails?.purchase?.user?.role}/> 
        </div> 
          <div className="relative "> 
              <div className="absolute right-8 flex flex-row gap-0 mt-10">
                <h5 className="px-2 py-2 text-sm font-bold bg-black text-white display-inline">Total :</h5> <h5 className="px-2 py-2 text-sm font-bold bg-darkRed text-white display-inline ">{formatMoney(parseFloat(total), 'PHP', 'en-PH')}</h5>
              </div>
          </div> 
-         <div className="grid grid-flow-col grid-rows-[auto_auto] mt-25 mb-10 border border-gray-200 bg-gray-100">
-            <div className="grid grid-cols-3   ">
-                   <div className = 'flex flex-col gap-4 px-2 '>
-                     <h5 className = "m-2">Requisitionist </h5>
-                     <div className="flex flex-row">
-                     <h5 className ="m-2">{`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}</h5> 
-                     <div className="flex items-center justify-center bg-gray-100">
-                          <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
-                            <FiPaperclip/>
-                           </span>
-                           <input type="file" className="hidden" />
-                          </label>
-                        </div>
-                   </div>
-                     </div>
-                   <div className = 'flex flex-col gap-4'>
-                     <h5 className ="m-2">Noted By</h5>
-                     <div className="flex flex-row ">
-                     <h5 className ="m-2"> </h5> 
-                     <div className="flex items-center justify-center bg-gray-100">
-                          <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
-                            <FiPaperclip/>
-                           </span>
-                           <input type="file" className="hidden" />
-                          </label>
-                        </div>
-                     </div>
-                   </div>
-                   <div className = 'flex flex-col gap-4 px-6'>
-                     <h5 className ="m-2">Noted By</h5>
-                      <div className="flex flex-row ">
-                        <h5 className="m-2"> Surname , Lastname Middle Initial </h5> 
-                        <div className="flex items-center justify-center bg-gray-100">
-                          <label className="flex flex-col">
-                           <span className="text-base leading-normal px-2 ">
-                            <FiPaperclip/>
-                           </span>
-                           <input type="file" className="hidden" />
-                          </label>
-                        </div>
-                      </div>
-                   </div>
-            </div>          
-            <div className ="bg-black px-2 py-1 text-white border-3 border-darkRed flex justify-between w-auto h-auto">
-               <div className="grid grid-cols-3 gap-110  ">
-                 <div className = "px-10 w-auto">Employee Name</div>
-                 <div  className = "w-auto">Chief Administrator</div>
-                 <div className = "w-auto">Project Director</div>
-                  
-               </div>
-            </div>
-         </div>
-             
+<table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
+  <tbody>
+    <tr className="text-left">
+      <td className="p-2 w-1/3">Requisitionist:</td>
+      <td className="p-2 w-1/3">Noted By:</td>
+      <td className="p-2 w-1/3">Approved By:</td>
+    </tr>
 
+    <tr className="text-center">
+      <td className="p-2 relative w-1/3">
+        <img
+          src={purchaseDetails?.purchase?.user?.signature ? " " : "/uploads/SampleSign.png"}
+          alt="Signature"
+          className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
+        />
+        <span>
+          {`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}
+        </span>
+      </td>
+
+      <td className="p-2 relative w-1/3">
+        <img
+          src={`${Chiefsignature}`}
+          alt="Signature"
+          className={`absolute left-1/2 -translate-x-1/2 ${
+            Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
+          } object-contain pointer-events-none`}
+        />
+        <span>Chief Name</span>
+      </td>
+
+      <td className="p-2 relative w-1/3">
+        <img
+          src={`${PDirectorsignature}`}
+          alt="Signature"
+          className={`absolute left-1/2 -translate-x-1/2 ${
+            PDirectorsignature ? "-top-15 h-25" : "-top-8 h-12"
+          } object-contain pointer-events-none`}
+        />
+        <span>Project Director Name</span>
+      </td>
+    </tr>
+
+    <tr className="text-center">
+      <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
+      <td className="text-white bg-black py-2 w-1/3">Chief Administrator Manager</td>
+      <td className="text-white bg-black py-2 w-1/3">Project Director</td>
+    </tr>
+  </tbody>
+</table>
              {/* accounting part claimable or non claimable  */}
           {/* <table className="border border-gray-300 w-full">
              <thead className = "bg-black text-white border-3 border-darkRed sticky top-0 z-10 font-thin" >
@@ -228,6 +281,46 @@ return (
                    </div>
             </div>         
          </div> */}
+         {approving? (
+          <>
+          <div className="flex justify-end gap-4 mt-10 mb-10">
+      
+  <button
+    onClick={(e) => {handleCancel()}}
+    className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
+  >
+    Cancel
+  </button>
+
+  <button
+    className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
+  >
+    Confirm
+  </button>
+</div>
+          </>
+         ): (
+         <>
+
+         <div className="flex justify-end gap-4 mt-10 mb-10">
+      
+  <button
+    
+    className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
+  >
+    Reject
+  </button>
+
+  <button
+    onClick={(e) => {handleApprove()}}
+    className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
+  >
+    Accept
+  </button>
+</div>
+         </>
+
+         )}
     
     </>
 )

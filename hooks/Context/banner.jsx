@@ -24,7 +24,7 @@ export function BannerProvider({ children }) {
       {/* GLOBAL BANNER UI */}
       {banner && (
         <div
-          className={`fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white transition-all
+          className={`fixed top-4 left-1/2 -translate-x-1/2 px-5 py-5 rounded-lg shadow-lg text-white text-lg transition-all
           ${banner.type === "success" ? "bg-blue-500" : "bg-red-500"}`}
         >
           <div className="flex items-center gap-3">
