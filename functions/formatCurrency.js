@@ -1,4 +1,5 @@
 
+
 export function formatMoney(amount, currency = 'PHP', locale = 'en-PH') {
     if (typeof amount !== 'number' || isNaN(amount)) {
         throw new Error('Invalid amount: must be a number.');
