@@ -5,6 +5,7 @@ import { FaPlus , FaMinus } from 'react-icons/fa';
 import React, { useEffect, useState } from 'react'
 import { computeTotals } from '@/functions/budget';
 import { formatMoney } from '@/functions/formatCurrency';
+import { useBanner } from '@/hooks/Context/banner';
 
 
   const Row = React.memo(function Row({ 
@@ -283,6 +284,7 @@ const BudgetComponentTable = (props) => {
     const [isSave , setSave] = useState(false);  
     // const [total , setTotal] = useState(); 
     const total =  computeTotals(items); 
+    const {showSuccess , showError} = useBanner(); 
 // renumber 
 // const renumber = (list) =>{ 
 //   return list.map((item, i) => {
@@ -411,8 +413,9 @@ const updateField = (id, field, value) => {
            cleanSave 
        }) 
        if(res.status === 200 || res.status === 201){
-         console.log("response :" , res.data); 
+           showSuccess("Successfully Save")
        }else { 
+          showError("Failed to Save"); 
          console.log("error: ",res.error_message); 
        }
    }
@@ -520,7 +523,7 @@ const updateField = (id, field, value) => {
              ))}
               
              <tr className='text-center border-t-2' >
-              <td className='font-semibold' colSpan= "2">TOTAL REMBURSABLES</td>
+              <td className='font-semibold' colSpan= "2">TOTAL REIMBURSABLES</td>
                <td></td>
                <td></td>
                <td></td>

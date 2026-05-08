@@ -26,7 +26,6 @@ export async function PUT(request, { params }) {
             } ,
             transaction
           })
-
           // delete old items 
           await BudgetItems.destroy({ 
             where : { 
@@ -76,7 +75,7 @@ export async function PUT(request, { params }) {
                         remaining_amount: item.values.remaining_amount,
                         budget_item_id:created.id 
                      },{
-                        transaction
+                        transaction 
                      });
                  }
                  //save children
