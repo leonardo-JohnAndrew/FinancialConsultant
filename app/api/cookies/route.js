@@ -2,7 +2,6 @@ import { signToken } from "@/lib/auth";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-
 const secret = new TextEncoder().encode(process.env.JWT_SECRET)
 export async function GET(req) {
    try {
@@ -21,13 +20,11 @@ export async function GET(req) {
 }
 export async function POST(request) {
     const body = await request.json(); 
-
     // validate 
     const newPayload = { 
-        id: body.id , 
+        id: body.id, 
         role: body.role
     }
-    
     try{
        await signToken(newPayload); 
     }catch(err){

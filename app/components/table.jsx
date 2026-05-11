@@ -4,7 +4,7 @@ import Link  from "next/link";
 import { formatMoney } from "@/functions/formatCurrency";
 
 const Table = (props) => { 
-const {role }  = props
+const {role , approvalType}  = props
 const handleChange = (index, field, value) => {
   props.setItems(prev => {
     const updated = [...prev];
@@ -114,7 +114,7 @@ console.log(props.items)
                         <td className='px-4 py-3'>{purchase.Remark}</td>
                         <td className='px-4 py-3'>{new Date(purchase.createdAt).toLocaleDateString()}</td>
                         <td className='px-4 py-3'>
-                          <Link href={`/Main/Purchase/PurchaseRecommendingApproval/${purchase.PurchaseID}`}  className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm"  >View
+                          <Link href={`/Main/Purchase/PurchaseRecommendingApproval/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm"  >View                        
                           </Link>
                           {/* <a href={`/Main/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm" >
                             View

@@ -21,6 +21,8 @@ export default function RecommendingApproval() {
      const [dateStartDefault , setDateStartDefault] = useState(); 
      const [dateEndDefault, setDateEndDefault] = useState(); 
      const [totalPages , setTotalPages] = useState(); 
+     const [approvalType, setApprovalType] = useState("Admin");
+
     //  const indexOfLastItem = currentPage * itemsPerPage; // 1 * 10  = 10  ,  2 * 10  = 20 
     //   const indexOfFirstItem = indexOfLastItem - itemsPerPage; // 10 - 10 = 0 , 20 - 10 = 10    
     //  const currentItems = purchaseDetails?.purchases?.slice(
@@ -45,7 +47,10 @@ export default function RecommendingApproval() {
                      response = await axios.get(`/api/purchase/Approvals/ProjectDirectorApproval?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`);
                      break;
               case "Admin": 
-                     response = await axios.get(`/api/purchase/Approvals/AdminApproval?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`);
+                      // dynamic API
+                     response = await axios.get(
+                       `/api/purchase/Approvals/AdminApproval?approval=${approvalType}&page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`
+                     );
                      break;
               default:
                       return (
@@ -75,7 +80,7 @@ export default function RecommendingApproval() {
      }, [purchaseDetails]) 
       useEffect(()=>{
           fetchPurchaseDetails(); 
-      }, [page])
+      }, [page, approvalType])
       useEffect(() => {
          if (dateStart || dateEnd) {
            fetchPurchaseDetails();
@@ -106,13 +111,11 @@ export default function RecommendingApproval() {
           break;
       } 
      }
-     
-  
+
 return ( 
        <>
     
     <div className="flex relative mb-5 w-auto">
-  
     </div>
       <div className = "grid grid-row-3 mb-10">  
       <hr className = 'border-t border-gray-300'/>
@@ -142,10 +145,39 @@ return (
          </div>
       </div> 
       <hr className = 'border-t border-gray-300' />
-      </div>     
+      </div>      
+        {/* filter  */} 
+        <div className="flex justify-end items-end mb-3">
+      <div className="border-t w-60 border-gray-300 grid grid-cols-[auto_auto]">
+
+        <button
+          onClick={() => setApprovalType("Admin")}
+          className={`border border-darkRed  ${
+            approvalType === "Admin"
+              ? "bg-darkRed text-white"
+              : "bg-white"
+          }`}
+        >
+          Admin
+        </button>
+
+        <button
+          onClick={() => setApprovalType("ChiefApproval")}
+          className={`border border-darkRed  ${
+            approvalType === "ChiefApproval"
+              ? "bg-darkRed text-white"
+              : "bg-white"
+          }`}
+        >
+          Chief Administrator
+        </button>
+
+      </div>
+    </div>
+
       <div className="max-h-200 overflow-hidden">
          <Table tableHeader= {['REQUEST ID','REQUESTOR NAME', 'DEPARTMENT', 'ITEMS', 'TOTAL','REMARK', 'REQUISITION DATE', 'ACTION']} list = {
-          search? purchaseDetails.filter(e => e.PurchaseID === purchaseID) : purchaseDetails||[]} /> 
+          search? purchaseDetails.filter(e => e.PurchaseID === purchaseID) : purchaseDetails||[]} approvalType = {approvalType} /> 
       </div>
       {/* paginations */}
       <div className="flex justify-center items-center mt-5 ">
@@ -169,7 +201,6 @@ return (
       {index + 1}
     </button>
   ))}
-
   <button
     onClick={() =>
       setPage(prev => Math.min(prev + 1, totalPages))

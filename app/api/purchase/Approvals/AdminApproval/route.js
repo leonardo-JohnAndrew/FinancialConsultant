@@ -5,13 +5,21 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
     const url = new URL(request.url); 
     const searchParams = url.searchParams; 
+    const approval = searchParams.get("approval")|| "Admin"; 
+    // return NextResponse.json(JSON.stringify(searchParams)); 
     const page = parseInt(searchParams.get("page")) || 1; 
     const limit = parseInt(searchParams.get("limit")) || 10;  
+    if(approval === "ChiefApproval"){ 
+        return await GetSpecificRequest("Chief Administrator Manager", searchParams.get('dateStart'), searchParams.get("dateEnd"), page , limit);
+    }else if(approval === "Admin"){ 
     return await GetSpecificRequest("Admin",searchParams.get('dateStart'), searchParams.get("dateEnd"), page, limit); 
+    }else{ 
+        return NextResponse.json({error_message : "UnAuthorized"} ,{status: 401} )
+    }a
 }
 export async function POST(request) {
     try{ 
-    
+        
         const url = new URL(request.url); 
         const searchParams = url.searchParams; 
         const body = await request.json(); 

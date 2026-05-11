@@ -14,6 +14,7 @@ import { useBanner } from '@/hooks/Context/banner';
   updateField,
   addSub,
   deleteItem,
+  deleteMain, 
   isLast = false
 
   }) {
@@ -28,7 +29,7 @@ import { useBanner } from '@/hooks/Context/banner';
           {item.code}
         </td>
 
-        <td className="border-r-2 p-1 text-left">
+        <td className="border-r-2 p-1 text-left flex">
           <input
             type="text"
             value={item.description || ""}
@@ -38,6 +39,16 @@ import { useBanner } from '@/hooks/Context/banner';
             style={{ width: `${(item.description || "").length}ch` }}
             className= ' border-r-2 border-gray-300 w-full   bg-gray-100'
           />
+          {isMain && ( 
+            <div className='flex w-full justify-end items-end'>
+             <button
+              onClick={() => addSub(item.id)}
+              className="bg-black hover:bg-white hover:text-black border border-black text-white px-2 py-1 rounded text-xs "
+              >
+              <FaPlus  size={10}/>
+            </button>
+            </div>
+          )}
         </td>
    {/* Approved */}
         <td className='border-r-2 text-left'>
@@ -240,18 +251,28 @@ import { useBanner } from '@/hooks/Context/banner';
             />
           )}
         </td>
-
+          
 
         
  <td>
-  {isMain && (
+  {/* {isMain && (
     <button
       onClick={() => addSub(item.id)}
       className="bg-black hover:bg-white hover:text-black border border-black text-white px-2 py-1 rounded text-xs"
     >
       <FaPlus  size={10}/>
     </button>
-  )}
+  )} */} 
+   { isMain && ( 
+      //delete button only show if main item has no sub items
+        <button
+    onClick={() => deleteMain(item.id)}
+    className="bg-darkRed border border-darkRed text-white  hover:bg-white hover:text-black px-2 py-1 rounded text-xs"
+  >
+    <FaMinus size={10} />
+  </button>
+      )
+    }
   {!isMain && (
   <button
     onClick={() => deleteItem(item.id, item.parent_id)}
@@ -272,6 +293,7 @@ import { useBanner } from '@/hooks/Context/banner';
     updateField={updateField}
     addSub={addSub}
     deleteItem={deleteItem}
+    deleteMain={deleteMain}
     isLast={idx === arr.length - 1}
   />
 ))}
@@ -405,7 +427,11 @@ const updateField = (id, field, value) => {
     }
     setItems(renumber(update)); 
    }
-
+   // delete Main 
+   const deleteMain = (mainId) => {
+   const updated = items.filter(item => item.id !== mainId);
+   setItems(renumber(updated));
+};
     // handle update 
    const handlesave = async() => {
          const  cleanSave =  cleanItems(items); 
@@ -519,7 +545,8 @@ const updateField = (id, field, value) => {
             </thead>
             <tbody>
             {items.map((item) => (
-             <Row key={item.id} item={item} updateField={updateField}  addSub = {addSub} deleteItem = {deleteItem}/>
+             <Row key={item.id} item={item} updateField={updateField} 
+              addSub = {addSub} deleteItem = {deleteItem} deleteMain = {deleteMain}/>
              ))}
               
              <tr className='text-center border-t-2' >

@@ -29,6 +29,11 @@ export default function PurchaseDetails() {
     const [EndingInventoryDate , setEndingInventoryDate] = useState(); 
     const [formattedEnding , setFormattedEnding]  = useState(); 
     const {showError, showSuccess} = useBanner()
+   const userRole =
+  user?.role === "Admin" &&
+  purchaseDetails?.purchase?.AdminSign != null
+    ? "Chief Administrator Manager"
+    : user?.role;
      const fetchPurchaseDetails = useCallback( async () => {
          try{ 
              const response = await axios.get(`/api/purchase/${params.purchaseID}`);
@@ -51,6 +56,7 @@ export default function PurchaseDetails() {
 
    useEffect(() => {
   fetchPurchaseDetails();
+  
 }, [fetchPurchaseDetails]);
 
 useEffect(() => {
@@ -88,17 +94,19 @@ useEffect(() => {
      const handleApprove = () => {
         //set signature 
         setApproving(true)
-        Signaturefunction(user.role ,user.e_sign,"add")
+
+      //    alert(userRole)
+        Signaturefunction(userRole ,user.e_sign,"add")
      } 
       const handleCancel = () => {
         setApproving(false)
-        Signaturefunction(user.role ,user.e_sign,"remove")
+        Signaturefunction(userRole ,user.e_sign,"remove")
       }
-
+      
       const handleConfirm = async() => {
          let response;  
-        // role 
-        switch(user.role){ 
+    // userRole
+        switch(userRole){ 
           case "Chief Administrator Manager": 
                   // axios                       
                       response = await axios.post(`/api/purchase/Approvals/ChiefApproval?PRID=${params.purchaseID}`, {
@@ -124,10 +132,11 @@ useEffect(() => {
                      }
                     break; 
           case "Admin": 
-                    // const response = await axios.post(); 
+                    // const response = await axios.post();                    
                      response = await axios.post(`/api/purchase/Approvals/AdminApproval?PRID=${params.purchaseID}`, {
                       e_sign: user?.e_sign
                      }); 
+                      
                      if(response.status === 200 || response.status === 201 ){ 
                        showSuccess(response.data?.message)
                      }else { 
@@ -243,7 +252,7 @@ return (
       </td>
 
       <td className="p-2 relative w-1/3">
-        {(purchaseDetails?.purchase?.AdminSign !== null || user.role === "Admin" ) && ( 
+        {(purchaseDetails?.purchase?.AdminSign !== null || userRole === "Admin" ) && ( 
           <img
             src={`${AdminSignature}`}
             alt="Signature"
@@ -255,7 +264,7 @@ return (
         <span>Admin</span>
       </td>
       <td className="p-2 relative w-1/3">
-        {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null || user.role === "Chief Administrator Manager" ) && ( 
+        {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null || userRole === "Chief Administrator Manager" ) && ( 
           <img
             src={`${Chiefsignature}`}
             alt="Signature"
@@ -264,11 +273,13 @@ return (
             } object-contain pointer-events-none`}
           />
         )}
-        <span>Kai Sumitomo</span>
+        <span>{  purchaseDetails?.purchase?.AdminSign != null
+    ?  `${user?.name}`
+    : "Kai Sumitomo"}</span>
       </td>
 
       <td className="p-2 relative w-1/3">
-       {(purchaseDetails?.purchase?.ProjectDirectorSign !== null || user.role === "Project Director" ) && ( 
+       {(purchaseDetails?.purchase?.ProjectDirectorSign !== null || userRole === "Project Director" ) && ( 
           <img
             src={`${PDirectorsignature}`}
             alt="Signature"
@@ -284,7 +295,8 @@ return (
     <tr className="text-center">
       <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
       <td className="text-white bg-black py-2 w-1/3">Admin</td>
-      <td className="text-white bg-black py-2 w-1/3">Chief Administrator Manager</td>
+    <td className="text-white bg-black py-2 w-1/3">{  purchaseDetails?.purchase?.AdminSign != null
+    ? "Admin" : "Chief Administrator Manager"}</td>
       <td className="text-white bg-black py-2 w-1/3">Project Director</td>
     </tr>
   </tbody>
