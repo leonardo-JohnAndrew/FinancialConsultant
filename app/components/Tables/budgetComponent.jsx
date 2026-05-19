@@ -98,6 +98,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.approved_rate || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -116,6 +117,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.approved_qty || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -134,6 +136,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{
                 width: `${String(v.approved_amount || "").length + 3}ch`,
               }}
@@ -155,6 +158,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.revision_rate || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -173,6 +177,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.revision_qty || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -191,6 +196,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.revision_cost || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -205,6 +211,7 @@ const Row = React.memo(function Row({
               onChange={(e) =>
                 updateField(item.id, "prev_qty", e.target.value, item.parent_id)
               }
+              min={0}
               style={{ width: `${String(v.prev_qty || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -223,6 +230,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.prev_amount || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -242,6 +250,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.month_qty || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -260,6 +269,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.month_amount || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -299,6 +309,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{
                 width: `${String(v.cumulative_amount || "").length + 3}ch`,
               }}
@@ -320,6 +331,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{ width: `${String(v.remaining_qty || "").length + 3}ch` }}
               className="border border-gray-300 px-1 bg-gray-100"
             />
@@ -338,6 +350,7 @@ const Row = React.memo(function Row({
                   item.parent_id,
                 )
               }
+              min={0}
               style={{
                 width: `${String(v.remaining_amount || "").length + 3}ch`,
               }}
@@ -671,6 +684,7 @@ const BudgetComponentTable = (props) => {
             <td className="font-semibold" colSpan="2">
               TOTAL REIMBURSABLES
             </td>
+            <td></td>
             <td></td>
             <td></td>
             <td></td>

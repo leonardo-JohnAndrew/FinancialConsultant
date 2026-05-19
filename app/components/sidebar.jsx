@@ -21,6 +21,15 @@ export default function Sidebar() {
     ? Menus(user.role).filter((i) => i.section === "footer")
     : [];
 
+  const [openMenus, setOpenMenus] = useState({});
+
+  const toggleMenu = (label) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [label]: !prev[label],
+    }));
+  };
+
   useEffect(() => {
     fetchUser();
   }, []);
@@ -53,56 +62,36 @@ export default function Sidebar() {
       {/* Main Menu */}
       <h3 className="text-red-100 text-sm ml-2 mt-5 opacity-70">Main menu</h3>
       <nav className="flex flex-col gap-2 ">
-        {menu?.map(
-          (item, index) => (
-            item.label === "Vouchers" && (
-              <Link
-                key={index}
-                href={`${item.path}`}
-                className={`p-2 rounded hover:bg-red-300 ${
-                  pathname === item.path
-                    ? "bg-white text-black font-semibold hover:bg-white"
-                    : ""
-                }`}
-              >
-                {item.label}
-              </Link>
-            ),
-            item.label !== "Requisition List" ? (
-              <Link
-                key={index}
-                href={`${item.path}`}
-                className={`p-2 rounded hover:bg-red-300 ${
-                  pathname.startsWith(item.path)
-                    ? "bg-white text-black font-semibold hover:bg-white"
-                    : ""
-                }`}
-              >
-                {item.label}
-              </Link>
-            ) : (
+        {menu?.map((item, index) => {
+          // MENU WITH SUBMENU
+          if (item.hasDropdown) {
+            return (
               <div key={index}>
                 <button
-                  onClick={() => setOpenPurchase(!openPurchase)}
-                  className="text-left w-full hover:bg-red-300 p-2 rounded flex justify-between"
+                  onClick={() => toggleMenu(item.label)}
+                  className={`text-left w-full p-2 rounded flex justify-between items-center hover:bg-red-300 ${
+                    item.subItem?.some((sub) => pathname.startsWith(sub.path))
+                      ? "bg-white text-black font-semibold hover:bg-white"
+                      : ""
+                  }`}
                 >
-                  {item.label}
-                  {item.hasDropdown && (
-                    <span>
-                      {openPurchase ? (
-                        <FiChevronUp size={21} />
-                      ) : (
-                        <FiChevronDown size={21} />
-                      )}
-                    </span>
-                  )}
+                  <span>{item.label}</span>
+
+                  <span>
+                    {openMenus[item.label] ? (
+                      <FiChevronUp size={21} />
+                    ) : (
+                      <FiChevronDown size={21} />
+                    )}
+                  </span>
                 </button>
-                {openPurchase && (
-                  <div className="ml-4 flex flex-col gap-1">
+
+                {openMenus[item.label] && (
+                  <div className="ml-4 mt-1 flex flex-col gap-1">
                     {item.subItem?.map((sub, i) => (
                       <Link
                         key={i}
-                        href={`${sub.path}`}
+                        href={sub.path}
                         className={`p-2 rounded hover:bg-red-300 ${
                           pathname.startsWith(sub.path)
                             ? "bg-white text-black font-semibold hover:bg-white"
@@ -115,9 +104,24 @@ export default function Sidebar() {
                   </div>
                 )}
               </div>
-            )
-          ),
-        )}
+            );
+          }
+
+          // NORMAL MENU
+          return (
+            <Link
+              key={index}
+              href={item.path}
+              className={`p-2 rounded hover:bg-red-300 ${
+                pathname.startsWith(item.path)
+                  ? "bg-white text-black font-semibold hover:bg-white"
+                  : ""
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
         {/* others */}
 
         <h3 className="text-red-100 text-sm ml-2 mt-5 opacity-70">

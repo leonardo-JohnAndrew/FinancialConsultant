@@ -1,12 +1,10 @@
 "use client";
 import { use, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import Table from "@/app/components/table";
 import axios from "axios";
 import { FiSearch, FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { formDates } from "@/functions/formattDate";
 import useUserContext from "@/hooks/Context/UserContext";
-export default function RecommendingApproval() {
+import BudgetConfirmationTable from "@/app/components/Tables/budgetConfirmationTable";
+export default function BudgetConfirmation() {
   const [purchaseDetails, setPurchaseDetails] = useState();
   const [fomatted, setFormatted] = useState();
   //  const [currentPage, setCurrentPage] = useState(1);
@@ -39,36 +37,10 @@ export default function RecommendingApproval() {
       let response;
 
       // swith role to fetch data
-      switch (user?.role) {
-        case "Chief Administrator Manager":
-          response = await axios.get(
-            `/api/purchase/Approvals/ChiefApproval?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`,
-          );
-          break;
-        case "Project Director":
-          response = await axios.get(
-            `/api/purchase/Approvals/ProjectDirectorApproval?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`,
-          );
-          break;
-        case "Admin":
-          // dynamic API
-          response = await axios.get(
-            `/api/purchase/Approvals/AdminApproval?approval=${approvalType}&page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`,
-          );
-          break;
-        default:
-          return (
-            <>
-              <h1 className="text-2xl font-bold text-center mt-10">
-                Unauthorized Access
-              </h1>
-              <p className="text-center mt-4">
-                You do not have permission to view this page.
-              </p>
-            </>
-          );
-      }
-      // response = await axios.get(`/api/purchase?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`);
+
+      response = await axios.get(
+        `/api/purchase/Approvals/BudgetConfirmation?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`,
+      );
       setPurchaseDetails(response.data.data);
       setTotalPages(response.data.totalPages);
       setDateStartDefault(response.data.rangeStart.split("T")[0]);
@@ -168,39 +140,35 @@ export default function RecommendingApproval() {
         </div>
         <hr className="border-t border-gray-300" />
       </div>
-      {user?.role === "Admin" && ( 
-        <>
       {/* filter  */}
+      {}
       <div className="flex justify-end items-end mb-3">
         <div className="border-t w-60 border-gray-300 grid grid-cols-[auto_auto]">
           <button
             onClick={() => setApprovalType("Admin")}
             className={`border border-darkRed  ${
               approvalType === "Admin"
-              ? "bg-white text-black"
-              : "bg-darkRed text-white"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
-            >
+          >
             Admin
           </button>
           <button
             onClick={() => setApprovalType("ChiefApproval")}
             className={`border border-darkRed  ${
               approvalType === "ChiefApproval"
-              ? "bg-white text-black"
-              : "bg-darkRed text-white"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
-            >
+          >
             Chief Administrator
           </button>
         </div>
       </div>
-            </>
-
-      )}
 
       <div className="max-h-200 overflow-hidden">
-        <Table
+        <BudgetConfirmationTable
           tableHeader={[
             "REQUEST ID",
             "REQUESTOR NAME",

@@ -20,6 +20,12 @@ export default function Menus(role) {
       path: "/Main/Vouchers",
     },
     {
+      label: "Budget Confirmation",
+      icon: "□",
+      section: "menu",
+      path: "/Main/BudgetConfirmation",
+    },
+    {
       label: "Requisition List",
       icon: "□",
       section: "menu",
@@ -35,6 +41,24 @@ export default function Menus(role) {
         //      icon: "□",
         //      path: "/Main/Purchase/RequisitionHistory"
         //   }
+      ],
+    },
+    {
+      label: "Submitted Requisition",
+      icon: "□",
+      section: "menu",
+      hasDropdown: true,
+      subItem: [
+        {
+          label: "Budget Confirmation",
+          icon: "□",
+          path: "/Main/SubmittedRequisition/BudgetConfirmation",
+        },
+        {
+          label: "Approved Purchase Requesition",
+          icon: "□",
+          path: "/Main/Purchase/RequisitionHistory",
+        },
       ],
     },
 
@@ -61,10 +85,14 @@ export default function Menus(role) {
       //  "My Requisition",
       //  "Profile",
     ],
+    Accountant: [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "Submitted Requisition",
+    ],
     "Chief Administrator Manager": [
       "Dashboard",
       "Purchase Requisition Form",
-      "Requisition List",
       //  "My Requisition",
       //  "Profile",
     ],

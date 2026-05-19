@@ -3,27 +3,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/functions/formatCurrency";
 
-const Table = (props) => {
+const BudgetConfirmationTable = (props) => {
   const { role, approvalType } = props;
   const handleChange = (index, field, value) => {
     props.setItems((prev) => {
       const updated = [...prev];
 
+      const numericFields = ["RequiredBalance", "EndingInventory"];
+
       const item = {
         ...updated[index],
-        [field]: Number(value),
+        [field]: numericFields.includes(field) ? Number(value) : value,
         EndingInventoryDate: props.EndingInventoryDate,
       };
 
-      const required =
-        field === "RequiredBalance"
-          ? Number(value)
-          : Number(item.RequiredBalance || 0);
-
-      const ending =
-        field === "EndingInventory"
-          ? Number(value)
-          : Number(item.EndingInventory || 0);
+      const required = Number(item.RequiredBalance || 0);
+      const ending = Number(item.EndingInventory || 0);
 
       item.Quantity = Math.max(required - ending, 0);
 
@@ -96,6 +91,39 @@ const Table = (props) => {
                   {/* <input className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"  type="text" defaultValue={item?.UnitPrice} readOnly= {true} /> */}
                   {item?.UnitPrice}
                 </td>
+                <td className="px-4 py-2">
+                  <input
+                    className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"
+                    type="checkbox"
+                    checked={item?.Claimable || false}
+                    onChange={(e) =>
+                      handleChange(index, "Claimable", e.target.checked)
+                    }
+                  />
+                  {/* {item?.UnitPrice} */}
+                </td>
+                <td className="px-4 py-2">
+                  <input
+                    className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"
+                    type="text"
+                    value={item.TypeOfExpenses || ""}
+                    onChange={(e) =>
+                      handleChange(index, "TypeOfExpenses", e.target.value)
+                    }
+                  />
+                  {/* {item?.UnitPrice} */}
+                </td>
+                <td className="px-4 py-2">
+                  <input
+                    className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"
+                    type="text"
+                    value={item.Remarks || ""}
+                    onChange={(e) =>
+                      handleChange(index, "Remarks", e.target.value)
+                    }
+                  />
+                  {/* {item?.UnitPrice} */}
+                </td>
                 <td className="px-4 py-2 ">
                   <h4 className="px-4 py-1 w-fit my-1 bg-darkRed text-white">
                     {formatMoney(
@@ -133,7 +161,7 @@ const Table = (props) => {
                 </td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/Main/Purchase/PurchaseRecommendingApproval/${purchase.PurchaseID}`}
+                    href={`/Main/SubmittedRequisition/BudgetConfirmation/${purchase.PurchaseID}`}
                     className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm"
                   >
                     View
@@ -151,4 +179,4 @@ const Table = (props) => {
   );
 };
 
-export default Table;
+export default BudgetConfirmationTable;

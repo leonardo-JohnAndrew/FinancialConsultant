@@ -1,29 +1,33 @@
+"use server";
+import sequelize from "@/db/connection";
+import { Purchase, PurchaseItems, User } from "@/db/models";
+import { Sequelize } from "sequelize";
+import { NextResponse } from "next/server";
 
-'use server'
-import sequelize from '@/db/connection';
-import { Purchase, PurchaseItems, User } from '@/db/models';
-import { Sequelize } from 'sequelize';
-import { NextResponse } from 'next/server';
-
- export async function getItemInfo( item_id , items){ 
-    const requiredBalance = items.find(item => item.ItemsID === item_id)?.RequiredBalance || 0;
-    const unitPrice = items.find(item => item.ItemsID === item_id)?.UnitPrice || 0;
-    const unit = items.find(item => item.ItemsID === item_id)?.Unit || " ";
-    return { 
-        requiredBalance, 
-        unitPrice, 
-        unit 
-    }
-} 
-export async function calculateQuantity(requiredBalance = 0, endingInventory = 0){
-    const quantity = requiredBalance - endingInventory; 
-    return quantity > 0 ? quantity : 0;
+export async function getItemInfo(item_id, items) {
+  const requiredBalance =
+    items.find((item) => item.ItemsID === item_id)?.RequiredBalance || 0;
+  const unitPrice =
+    items.find((item) => item.ItemsID === item_id)?.UnitPrice || 0;
+  const unit = items.find((item) => item.ItemsID === item_id)?.Unit || " ";
+  return {
+    requiredBalance,
+    unitPrice,
+    unit,
+  };
+}
+export async function calculateQuantity(
+  requiredBalance = 0,
+  endingInventory = 0,
+) {
+  const quantity = requiredBalance - endingInventory;
+  return quantity > 0 ? quantity : 0;
 }
 
 //matching the item id with the item info to get the required balance, unit price, and unit for the purchase submit table
 //if item is found return the required balance, unit price, and unit, otherwise return 0 for required balance and unit price, and empty string for unit
-export async function getItemInfoForPurchaseSubmit(itemsID, items){
-/* 
+export async function getItemInfoForPurchaseSubmit(itemsID, items) {
+  /* 
    itemsID = ['11','13']
    items = [
 0: {ItemRequiredBalance: 0, ItemUnitPrice: 0, EndingInventory: 0, ItemQuantity: 0, ItemTotal: 0, …},
@@ -43,19 +47,25 @@ export async function getItemInfoForPurchaseSubmit(itemsID, items){
 ]
 */
 
-    return itemsID.map(id => {
-        const item = items.find(item => item.ItemsID === Number(id));
-        return {
-            ItemRequiredBalance: item ? item.ItemRequiredBalance : 0,
-            ItemUnitPrice: item ? item.ItemUnitPrice : 0,
-            EndingInventory: item ? item.EndingInventory : 0,
-            ItemQuantity: item ? item.ItemQuantity : 0,
-            ItemTotal: item ? item.ItemTotal : 0
-        }
-    });
+  return itemsID.map((id) => {
+    const item = items.find((item) => item.ItemsID === Number(id));
+    return {
+      ItemRequiredBalance: item ? item.ItemRequiredBalance : 0,
+      ItemUnitPrice: item ? item.ItemUnitPrice : 0,
+      EndingInventory: item ? item.EndingInventory : 0,
+      ItemQuantity: item ? item.ItemQuantity : 0,
+      ItemTotal: item ? item.ItemTotal : 0,
+    };
+  });
 }
 
-export async function GetSpecificRequest(role, startParam, endParam, page, limit) {
+export async function GetSpecificRequest(
+  role,
+  startParam,
+  endParam,
+  page,
+  limit,
+) {
   const offset = (page - 1) * limit;
 
   const isProjectDirector = role === "Project Director";
@@ -68,12 +78,12 @@ export async function GetSpecificRequest(role, startParam, endParam, page, limit
   const roleConditionMap = {
     "Chief Administrator Manager": {
       ProjectDirectorSign: null,
-      ChiefAdminManageSign:null
+      ChiefAdminManageSign: null,
     },
     "Project Director": {
       ProjectDirectorSign: null,
     },
-    "Admin": {
+    Admin: {
       AdminSign: null,
       ProjectDirectorSign: null,
     },
@@ -83,8 +93,8 @@ export async function GetSpecificRequest(role, startParam, endParam, page, limit
 
   if (!baseCondition) {
     return NextResponse.json(
-      { error_message: "UnAuthorized Access"},
-      { status: 401 }
+      { error_message: "UnAuthorized Access" },
+      { status: 401 },
     );
   }
 
@@ -102,13 +112,9 @@ export async function GetSpecificRequest(role, startParam, endParam, page, limit
     const earliestDate = date?.dataValues?.earliestDate || new Date();
     const latestDate = date?.dataValues?.latestDate || new Date();
 
-    const rangeStart = startParam
-      ? `${startParam} 00:00:00`
-      : earliestDate;
+    const rangeStart = startParam ? `${startParam} 00:00:00` : earliestDate;
 
-    const rangeEnd = endParam
-      ? `${endParam} 23:59:59`
-      : latestDate;
+    const rangeEnd = endParam ? `${endParam} 23:59:59` : latestDate;
 
     // -----------------------------
     // 3. WHERE CLAUSE (CORE RULES)
@@ -123,24 +129,25 @@ export async function GetSpecificRequest(role, startParam, endParam, page, limit
       createdAt: {
         [Sequelize.Op.between]: [rangeStart, rangeEnd],
       },
+      isOnTheBudget: 1,
     };
 
     // -----------------------------
     // 4. CHIEF ADMIN / DIRECTOR FLOW RULE
     // -----------------------------
     if (isProjectDirector) {
-      whereClause.AdminSign = { 
-        [Sequelize.Op.not] : null
-      }
+      whereClause.AdminSign = {
+        [Sequelize.Op.not]: null,
+      };
       whereClause.ChiefAdminManageSign = {
-          [Sequelize.Op.not]: null,
-        };
+        [Sequelize.Op.not]: null,
+      };
     } else if (isAdmin) {
-        whereClause.ChiefAdminManageSign = null;
+      whereClause.ChiefAdminManageSign = null;
     } else if (isChiefAdmin) {
-        whereClause.AdminSign = { 
-          [Sequelize.Op.not] : null
-        }
+      whereClause.AdminSign = {
+        [Sequelize.Op.not]: null,
+      };
       whereClause.ChiefAdminManageSign = null;
     }
 
@@ -167,14 +174,15 @@ export async function GetSpecificRequest(role, startParam, endParam, page, limit
         totalPages: Math.ceil(count / limit),
         message: `${role} purchase request fetched successfully`,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
+    console.log(error.message);
     return NextResponse.json(
       {
         error_message: error.message || "Internal Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
