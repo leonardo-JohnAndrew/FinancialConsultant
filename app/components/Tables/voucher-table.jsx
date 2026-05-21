@@ -37,7 +37,7 @@ const VoucherTable = (props) => {
                   <td className="px-4 py2">{item.createdAt.split("T")[0]}</td>
                   <td className="px-4 py-2">
                     <Link
-                      href={`/Main/Vouchers/${item.checkId}`}
+                      href={`/Main/Vouchers/${item.id}`}
                       className="bg-lightRed rounded-md py-1 px-3 text-white font-bold border  
                  hover:bg-white hover:text-black  hover:border  hover:border-darkRed"
                     >

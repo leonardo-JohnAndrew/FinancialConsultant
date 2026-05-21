@@ -37,6 +37,9 @@ const CheckItem = sequelize.define(
     cash: {
       type: DataTypes.INTEGER,
     },
+    payee_name: {
+      type: DataTypes.STRING,
+    },
   },
   {},
 );

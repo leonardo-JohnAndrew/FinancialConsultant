@@ -1,147 +1,336 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import VourcherComponent from "@/app/components/vouchers";
 import axios from "axios";
+import VoucherComponent from "@/app/components/vouchers";
 import { useParams } from "next/navigation";
-
+import { FiEdit } from "react-icons/fi";
 const PaymentVouchers = () => {
-  const [checks, setCheck] = useState();
-  const [files, setFiles] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null);
   const params = useParams();
-  const [vouchers, setVouchers] = useState([
-    { description1: "", description2: "", amount1: "", amount2: "", total: "" },
-  ]);
+  // EXISTING VOUCHERS
+  const [checks, setChecks] = useState([]);
 
+  // FORM DATA
+  const [formData, setFormData] = useState({
+    title: "",
+    cash: "",
+    payment_item: "",
+    job: "",
+    pm: "",
+    children: [
+      {
+        title: "",
+        amount: "",
+      },
+    ],
+  });
+
+  // FETCH EXISTING VOUCHERS
   useEffect(() => {
-    const fetchChecks = async () => {
-      try {
-        const response = await axios.get(`/api/vouchers/${params.voucherId}`);
-        setCheck(response.data?.specificCheck || []);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchChecks();
+    fetchVouchers();
   }, []);
 
-  // ADD VOUCHER
-  const handleAdd = () => {
-    setVouchers((prev) => [
-      ...prev,
-      {
-        voucherNo: "",
-        amount: "",
-        description: "",
-        amount1: "",
-        amount2: "",
-        total: "",
-      },
-    ]);
+  const fetchVouchers = async () => {
+    try {
+      const response = await axios.get(`/api/vouchers/${params.voucherId}`);
+      setChecks(response.data?.specificCheck || []);
+      console.log("response", response.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  // REMOVE VOUCHER
-  const handleRemoveVoucher = (indexToRemove) => {
-    setVouchers((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
-
-  // HANDLE CHANGE
-  const handleChange = (index, e) => {
+  // HANDLE PARENT
+  const handleParentChange = (e) => {
     const { name, value } = e.target;
 
-    setVouchers((prev) =>
-      prev.map((voucher, i) =>
-        i === index ? { ...voucher, [name]: value } : voucher,
-      ),
-    );
-  };
-  // HANDLE FILE CHANGE
-  const handleFileChange = (e) => {
-    if (!e.target.files) return;
-    const selectedFiles = Array.from(e.target.files);
-    setFiles((prev) => [...prev, ...selectedFiles]);
-    // reset input
-    e.target.value = "g";
-  };
-  // REMOVE FILE
-  const handleRemoveFile = (indexToRemove) => {
-    setFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
+  // HANDLE CHILD ROW
+  const handleRowChange = (index, e) => {
+    const { name, value } = e.target;
+
+    const updatedRows = [...formData.children];
+
+    updatedRows[index][name] = value;
+
+    setFormData((prev) => ({
+      ...prev,
+      children: updatedRows,
+    }));
+  };
+
+  // ADD ROW
+  const handleAddRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      children: [
+        ...prev.children,
+        {
+          title: "",
+          amount: "",
+        },
+      ],
+    }));
+  };
+
+  // DELETE ROW
+  const handleDeleteRow = (index) => {
+    const filtered = formData.children.filter((_, i) => i !== index);
+
+    setFormData((prev) => ({
+      ...prev,
+      children: filtered,
+    }));
+  };
+
+  // SAVE
+  const handleSubmit = async () => {
+    try {
+      if (isEdit) {
+        // UPDATE
+        await axios.put(`/api/vouchers/${editId}`, {
+          check_id: params.voucherId,
+          ...formData,
+        });
+
+        alert("Voucher Updated");
+      } else {
+        // CREATE
+        await axios.post(`/api/vouchers/${params.voucherId}`, {
+          check_id: params.voucherId,
+          ...formData,
+        });
+
+        alert("Voucher Created");
+      }
+
+      fetchVouchers();
+
+      // RESET
+      setFormData({
+        title: "",
+        cash: "",
+        payment_item: "",
+        job: "",
+        pm: "",
+        children: [
+          {
+            title: "",
+            amount: "",
+          },
+        ],
+      });
+
+      setEditId(null);
+      setIsEdit(false);
+
+      setOpenModal(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEdit = (voucher) => {
+    setIsEdit(true);
+
+    setEditId(voucher.id);
+
+    setFormData({
+      title: voucher.title || "",
+      cash: voucher.cash || "",
+      payment_item: voucher.payment_item || "",
+      job: voucher.job || "",
+      pm: voucher.pm || "",
+
+      children:
+        voucher.children?.length > 0
+          ? voucher.children.map((child) => ({
+              id: child.id,
+              title: child.title,
+              amount: child.amount,
+            }))
+          : [
+              {
+                title: "",
+                amount: "",
+              },
+            ],
+    });
+
+    setOpenModal(true);
+  };
   return (
-    <>
+    <div className="p-5">
       {/* ADD BUTTON */}
-      <div className="flex justify-end items-end">
+      <div className="flex justify-end mb-5">
         <button
-          onClick={handleAdd}
-          className="px-4 py-2 mb-5 text-white rounded font-semibold bg-lightRed hover:bg-gray-400"
+          onClick={() => setOpenModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          Add
+          Add Voucher
         </button>
       </div>
 
-      {/* VOUCHERS */}
-      {checks &&
-        checks?.items?.map((check, index) => (
-          <div key={index} className="mb-2 border p-2 rounded">
-            <VourcherComponent
-              key={check.id}
-              voucher={check}
-              index={index}
-              handleChange={handleChange}
-            />
+      {/* EXISTING VOUCHERS */}
+      <div className="space-y-5">
+        {checks?.items?.map((voucher, index) => (
+          <div key={index} className="relative border rounded-lg p-3">
+            {/* EDIT BUTTON */}
+            <button
+              onClick={() => handleEdit(voucher)}
+              className="absolute top-3 right-3 bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded"
+            >
+              <FiEdit />
+            </button>
 
-            {/* DELETE BUTTON */}
-            <div className="flex justify-end mt-3">
-              {/* <button
-                onClick={() => handleRemoveVoucher(index)}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-              >
-                Delete Voucher
-              </button> */}
-            </div>
+            <VoucherComponent key={voucher.id || index} voucher={voucher} />
           </div>
         ))}
-
-      {/* FILE INPUT */}
-      <div className="mt-5 flex justify-end items-end">
-        <input
-          type="file"
-          multiple
-          onChange={handleFileChange}
-          className="border p-2 w-50 rounded  text-white bg-lightRed text-sm hover:bg-black"
-        />
       </div>
 
-      {/* FILE LIST */}
-      <div className="flex justify-end items-end">
-        <div className="mt-5">
-          <h2 className="font-bold text-lg mb-2">Uploaded Files</h2>
-          {files.length === 0 && <p>No files selected</p>}
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center border p-2 mb-2"
-            >
-              <div>
-                <p>{file.name}</p>
-
-                <p className="text-sm text-gray-500">
-                  {(file.size / 1024).toFixed(2)} KB
-                </p>
-              </div>
+      {/* MODAL */}
+      {openModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white w-full max-w-3xl rounded-lg p-6">
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-2xl font-bold">
+                {isEdit ? "Edit Payment Voucher" : "Create Payment Voucher"}
+              </h2>
 
               <button
-                onClick={() => handleRemoveFile(index)}
-                className="px-3 py-1 bg-red-500 text-white rounded"
+                onClick={() => setOpenModal(false)}
+                className="text-red-500 text-xl"
               >
-                Remove
+                ✕
               </button>
             </div>
-          ))}
+
+            {/* PARENT */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <input
+                type="text"
+                name="title"
+                placeholder="Title"
+                value={formData.title}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="number"
+                name="cash"
+                placeholder="Cash No."
+                value={formData.cash}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="text"
+                name="payment_item"
+                placeholder="Payment Item"
+                value={formData.payment_item}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="text"
+                name="job"
+                placeholder="Job"
+                value={formData.job}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="text"
+                name="pm"
+                placeholder="PM"
+                value={formData.pm}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+            </div>
+
+            {/* CHILDREN */}
+            <div className="border rounded-lg p-4">
+              <div className="flex justify-between mb-4">
+                <h3 className="font-bold">Rows</h3>
+
+                <button
+                  onClick={handleAddRow}
+                  className="bg-green-600 text-white px-3 py-2 rounded"
+                >
+                  + Add Rows
+                </button>
+              </div>
+
+              {formData.children.map((row, index) => (
+                <div key={index} className="grid grid-cols-12 gap-3 mb-3">
+                  <div className="col-span-6">
+                    <input
+                      type="text"
+                      name="title"
+                      placeholder="Title"
+                      value={row.title}
+                      onChange={(e) => handleRowChange(index, e)}
+                      className="w-full border p-2 rounded"
+                    />
+                  </div>
+
+                  <div className="col-span-4">
+                    <input
+                      type="number"
+                      name="amount"
+                      placeholder="Amount"
+                      value={row.amount}
+                      onChange={(e) => handleRowChange(index, e)}
+                      className="w-full border p-2 rounded"
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <button
+                      onClick={() => handleDeleteRow(index)}
+                      className="w-full bg-red-500 text-white p-2 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* FOOTER */}
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={() => setOpenModal(false)}
+                className="border px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSubmit}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                {isEdit ? "Update Voucher" : "Save Voucher"}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 

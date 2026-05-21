@@ -1,3 +1,4 @@
+import { formatMoney } from "@/functions/formatCurrency";
 import React from "react";
 
 const VourcherComponent = (props) => {
@@ -75,7 +76,7 @@ const VourcherComponent = (props) => {
             <h4 className="font-bold">AMOUNT</h4>
           </div>
           <div className="grid grid-cols-9">
-            <h4 className=" flex justify-center items-center border-r">16</h4>
+            <h4 className=" flex justify-center items-center border-r ">16</h4>
             <h4 className=" flex justify-center items-center border-r">17</h4>
             <h4 className=" flex justify-center items-center border-r">18</h4>
             <h4 className=" flex justify-center items-center border-r">19</h4>
@@ -89,7 +90,7 @@ const VourcherComponent = (props) => {
       </div>
       {/* 3RD ROWS */}
       <div className="flex flex-row">
-        <div className="flex justify-center items-center border-2 border-t-0 p-10 w-87.5">
+        <div className="flex justify-center items-center border-2 border-r-2 border-t-0 p-10 w-87.5">
           <h4>9665R7268</h4>
         </div>
         <div className="flex-2 flex-col ">
@@ -99,8 +100,8 @@ const VourcherComponent = (props) => {
               key={i}
               className="flex-1 border-b-2  p-3.5 flex justify-center items-center"
             >
-              {/* <h4 className='italic'>Purchase of Various medicines for Office Consumption with SI#125269</h4> */}
-              <input
+              <h4 className="italic">{item.title || ""}</h4>
+              {/* <input
                 type="text"
                 className="w-full text-center italic"
                 name="description1"
@@ -109,32 +110,31 @@ const VourcherComponent = (props) => {
                   "Purchase of Various medicines for Office Consumption with SI#125269"
                 }
                 onChange={(e) => handleChange(index, e)}
-              />
+              /> */}
             </div>
           ))}
         </div>
-        <div className="w-87.5 flex-col">
+        <div className="w-87.5 flex-col border-2 border-t-0 border-b-0">
           {/*iteration amounts */}
           {voucher?.children?.map((amt, i) => (
             <div
               key={i}
-              className="flex flex-row border-2 border-t-0 justify-start"
+              className="flex flex-row border-b-2 border-t-0 justify-start"
             >
-              <div
-                className="p-3 pr-7 
-                              border-r-2"
-              >
+              <div className="p-3 pr-7  border-l-0 border-r-2">
                 <h4 className="text-lg">PHP</h4>
               </div>
               <div className="flex-2 p-2 flex justify-end items-center">
-                {/* <h4 className='text-lg'>13.195.09</h4> */}
-                <input
+                <h4 className="text-lg">
+                  {formatMoney(Number(amt.amount), "PHP")}
+                </h4>
+                {/* <input
                   type="number"
                   className="text-lg text-end"
                   name="amount1"
                   value={parseFloat(amt.amount) || 13195.09}
                   onChange={(e) => handleChange(index, e)}
-                />
+                /> */}
               </div>
             </div>
           ))}
@@ -182,10 +182,7 @@ const VourcherComponent = (props) => {
       </div>
       {/* 6th rows */}
       <div className="flex flex-row ">
-        <div
-          className="w-87.5
-                       grid grid-cols-10"
-        >
+        <div className="w-87.5 grid grid-cols-10">
           <div className="border-r-2 border-b-2 p-4 py-5 border-l-2 "></div>
           <div className="border-r-2 border-b-2 p-4 py-5"></div>
           <div className="border-r-2 border-b-2 p-4 py-5"></div>
@@ -225,7 +222,13 @@ const VourcherComponent = (props) => {
               <h4 className="text-lg pl-3 pt-3">PHP</h4>
             </div>
             <div className="flex-2 p-3 flex justify-end items-center">
-              <input
+              <h4 className="text-lg">
+                {voucher?.children?.reduce(
+                  (store, current) => store + current.amount,
+                  0,
+                ) || 0}
+              </h4>
+              {/* <input
                 type="number"
                 className="text-lg text-end"
                 name="total"
@@ -236,7 +239,7 @@ const VourcherComponent = (props) => {
                   ) || 0
                 }
                 onChange={(e) => handleChange(index, e)}
-              />
+              /> */}
             </div>
           </div>
         </div>
