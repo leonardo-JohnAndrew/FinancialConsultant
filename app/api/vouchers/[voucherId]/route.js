@@ -104,3 +104,33 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error_message: err.message }, { status: 500 });
   }
 }
+
+// delete check item and its children
+export async function DELETE(request, { params }) {
+  const { voucherId } = await params;
+  const transaction = await sequelize.transaction();
+  try {
+    // delete children first
+    await CheckItem.destroy({
+      where: {
+        parent_id: voucherId,
+      },
+      transaction,
+    });
+    // delete parent
+    await CheckItem.destroy({
+      where: {
+        id: voucherId,
+      },
+      transaction,
+    });
+    await transaction.commit();
+    return NextResponse.json(
+      { message: "Check item and its children deleted successfully" },
+      { status: 200 },
+    );
+  } catch (err) {
+    await transaction.rollback();
+    return NextResponse.json({ error_message: err.message }, { status: 500 });
+  }
+}

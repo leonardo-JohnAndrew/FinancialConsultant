@@ -1,5 +1,7 @@
 import sequelize from "@/db/connection";
 import { Check, CheckItem } from "@/db/models";
+import { validateFields } from "@/functions/validations";
+
 import { NextResponse } from "next/server";
 import { Op } from "sequelize";
 export async function GET(request) {
@@ -64,6 +66,50 @@ export async function GET(request) {
       { status: 200 },
     );
   } catch (err) {
+    return NextResponse.json({ error_message: err.message }, { status: 500 });
+  }
+}
+export async function POST(request) {
+  const transaction = await sequelize.transaction();
+  try {
+    //payload =
+    const body = await request.json();
+    // validation
+    // VoucherID Number of payments voucher
+    const error_message = await validateFields(
+      ["VoucherID", "NoPayments"],
+      body,
+    );
+
+    if (Object.keys(error_message).length > 0) {
+      return NextResponse.json({ error_message }, { status: 400 });
+    }
+
+    // create
+    const parent = await Check.create({
+      checkId: body.VoucherID,
+    });
+
+    if (body.NoPayments > 0) {
+      // loops
+      const checkItemsData = Array.from(
+        { length: body.NoPayments },
+        (_, i) => ({
+          check_id: parent.id,
+          parent_id: null,
+          amount: 0,
+        }),
+      );
+      await CheckItem.bulkCreate(checkItemsData, { transaction });
+    }
+
+    await transaction.commit();
+    return NextResponse.json(
+      { message: "Successfully Created" },
+      { status: 200 },
+    );
+  } catch (err) {
+    await transaction.rollback();
     return NextResponse.json({ error_message: err.message }, { status: 500 });
   }
 }

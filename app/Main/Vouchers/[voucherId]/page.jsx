@@ -5,10 +5,16 @@ import axios from "axios";
 import VoucherComponent from "@/app/components/vouchers";
 import { useParams } from "next/navigation";
 import { FiEdit } from "react-icons/fi";
+import { useBanner } from "@/hooks/Context/banner";
 const PaymentVouchers = () => {
   const [openModal, setOpenModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
+  const { showError, showSuccess } = useBanner();
+  const [claimableStatus, setClaimableStatus] = useState({
+    claimable: false,
+    nonClaimable: false,
+  });
   const params = useParams();
   // EXISTING VOUCHERS
   const [checks, setChecks] = useState([]);
@@ -38,11 +44,51 @@ const PaymentVouchers = () => {
       const response = await axios.get(`/api/vouchers/${params.voucherId}`);
       setChecks(response.data?.specificCheck || []);
       console.log("response", response.data);
+      setClaimableStatus({
+        claimable: response.data?.specificCheck?.claimable || false,
+        nonClaimable: response.data?.specificCheck?.nonClaimable || false,
+      });
     } catch (error) {
       console.log(error);
     }
   };
 
+  // HANDLE CLAIMABLE STATUS
+  const handleClaimableChange = async (type) => {
+    setClaimableStatus({
+      claimable: type === "claimable",
+      nonClaimable: type === "nonClaimable",
+    });
+    try {
+      // make api call to update claimable status
+      await axios.put(`/api/vouchers/claimable/${params.voucherId}`, {
+        claimable: type === "claimable",
+      });
+
+      showSuccess(` ${type} status updated`);
+    } catch (error) {
+      showError("Failed to update claimable status");
+      console.log(error);
+    }
+  };
+
+  //DELETE VOUCHER
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/vouchers/${id}`);
+      //  console.log("delete id", id);
+      setChecks((prev) => ({
+        ...prev,
+        items: prev.items.filter((v) => v.id !== id),
+      }));
+
+      showSuccess(`Voucher ${id} deleted successfully`);
+      fetchVouchers(); // Refresh the list after deletion
+    } catch (error) {
+      showError("Failed to delete voucher");
+      console.log(error);
+    }
+  };
   // HANDLE PARENT
   const handleParentChange = (e) => {
     const { name, value } = e.target;
@@ -101,7 +147,7 @@ const PaymentVouchers = () => {
           ...formData,
         });
 
-        alert("Voucher Updated");
+        showSuccess(`Voucher ${editId} updated successfully`);
       } else {
         // CREATE
         await axios.post(`/api/vouchers/${params.voucherId}`, {
@@ -109,7 +155,7 @@ const PaymentVouchers = () => {
           ...formData,
         });
 
-        alert("Voucher Created");
+        showSuccess("Voucher created successfully");
       }
 
       fetchVouchers();
@@ -134,6 +180,7 @@ const PaymentVouchers = () => {
 
       setOpenModal(false);
     } catch (error) {
+      showError("Failed to save voucher");
       console.log(error);
     }
   };
@@ -183,15 +230,26 @@ const PaymentVouchers = () => {
       <div className="space-y-5">
         {checks?.items?.map((voucher, index) => (
           <div key={index} className="relative border rounded-lg p-3">
-            {/* EDIT BUTTON */}
-            <button
-              onClick={() => handleEdit(voucher)}
-              className="absolute top-3 right-3 bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded"
-            >
-              <FiEdit />
-            </button>
+            {/* ACTION BUTTONS */}
+            <div className="absolute top-3 right-3 flex gap-2">
+              {/* EDIT */}
+              <button
+                onClick={() => handleEdit(voucher)}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded"
+              >
+                <FiEdit />
+              </button>
 
-            <VoucherComponent key={voucher.id || index} voucher={voucher} />
+              {/* DELETE */}
+              <button
+                onClick={() => handleDelete(voucher.id)}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 rounded"
+              >
+                Delete
+              </button>
+            </div>
+
+            <VoucherComponent voucher={voucher} />
           </div>
         ))}
       </div>
@@ -330,6 +388,28 @@ const PaymentVouchers = () => {
           </div>
         </div>
       )}
+
+      {/* add checkbox claimable and not
+       */}
+      <div className="flex justify-center mt-6 gap-6">
+        <label className="flex items-center gap-2 text-xl ">
+          <input
+            type="checkbox"
+            checked={claimableStatus.claimable}
+            onChange={() => handleClaimableChange("claimable")}
+          />
+          Claimable
+        </label>
+
+        <label className="flex items-center gap-2 text-xl ">
+          <input
+            type="checkbox"
+            checked={claimableStatus.nonClaimable}
+            onChange={() => handleClaimableChange("nonClaimable")}
+          />
+          Non-Claimable
+        </label>
+      </div>
     </div>
   );
 };

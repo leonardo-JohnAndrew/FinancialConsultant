@@ -9,6 +9,11 @@ const Purchase = sequelize.define(
       allowNull: true,
       primaryKey: true,
     },
+    PRCode: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
     RequestorDepartment: {
       type: DataTypes.STRING,
       allowNull: true,

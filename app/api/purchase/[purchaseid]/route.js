@@ -49,7 +49,7 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   const { purchaseid } = await params;
-
+  const body = await request.json();
   try {
     const pr = await Purchase.findOne({
       where: {
@@ -67,7 +67,7 @@ export async function PATCH(request, { params }) {
     }
 
     pr.isOnTheBudget = true;
-
+    pr.PRCode = body.prcode;
     // call function
     const statusResult = await updateStatus("PR Approval", purchaseid);
 

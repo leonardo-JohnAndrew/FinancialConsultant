@@ -1,6 +1,10 @@
 "use client";
 import VoucherTable from "@/app/components/Tables/voucher-table";
+import { validateRequiredFields } from "@/functions/validations";
+import { useBanner } from "@/hooks/Context/banner";
+
 import axios from "axios";
+import { type } from "node:os";
 import React, { useCallback, useEffect, useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiSearch } from "react-icons/fi";
 
@@ -12,9 +16,15 @@ const VouchersList = () => {
   const [voucherId, setVoucherId] = useState();
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
+  const { showError, showSuccess } = useBanner();
   const [search, setSearch] = useState("");
   const [dateStartDefault, setDateStartDefault] = useState();
   const [dateEndDefault, setDateEndDefault] = useState();
+  const [showModal, setShowModal] = useState(false);
+  const [newVoucher, setNewVoucher] = useState({
+    VoucherID: "",
+    NoPayments: "",
+  });
   const fetchVouchers = async () => {
     try {
       const response = await axios.get(
@@ -61,6 +71,54 @@ const VouchersList = () => {
         break;
     }
   };
+  // handle add
+  const handleVoucherChange = (e) => {
+    const { name, value } = e.target;
+
+    setNewVoucher((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAddVoucher = async () => {
+    // validation
+    try {
+      const validation = validateRequiredFields(newVoucher, [
+        {
+          name: "VoucherID",
+          label: "Voucher ID",
+          required: true,
+          type: "text",
+        },
+        {
+          name: "NoPayments",
+          label: "Number of Payments",
+          required: true,
+          type: "number",
+          min: 1,
+        },
+      ]);
+      if (!validation.isValid) {
+        showError(Object.values(validation.errors).join("\n"));
+        return;
+      }
+      const response = await axios.post("/api/vouchers", newVoucher);
+      setShowModal(false);
+      showSuccess(`Sucessfully Added ${newVoucher.VoucherID}`);
+      setNewVoucher({
+        VoucherID: "",
+        NoPayments: "",
+      });
+      fetchVouchers();
+    } catch (error) {
+      console.error("Error adding voucher", error);
+
+      error.response?.data?.error_message || error.message || "Failed";
+
+      showError(message);
+    }
+  };
   return (
     <div className="relative mb-5 w-auto">
       <div className="grid grid-row-3 mb-10">
@@ -105,6 +163,18 @@ const VouchersList = () => {
         </div>
         <hr className="border-t border-gray-300" />
       </div>
+
+      {/* handle add  */}
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-btnRed text-white px-4 py-2 rounded hover:bg-black"
+        >
+          + Add Voucher
+        </button>
+      </div>
+
       <div>
         <VoucherTable
           data={
@@ -149,6 +219,66 @@ const VouchersList = () => {
           <FiChevronRight size={22} />
         </button>
       </div>
+
+      {/* modal  */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-[350px] p-6">
+            <h2 className="text-xl font-bold mb-4 text-black">
+              Add New Voucher
+            </h2>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Voucher ID
+                </label>
+                <input
+                  type="text"
+                  name="VoucherID"
+                  value={newVoucher.VoucherID}
+                  required={true}
+                  onChange={handleVoucherChange}
+                  className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-darkRed"
+                  placeholder="Enter Voucher ID"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Numbert Payment Vouchers
+                </label>
+                <input
+                  type="number"
+                  name="NoPayments"
+                  min={0}
+                  required={true}
+                  value={newVoucher.NoPayments}
+                  onChange={handleVoucherChange}
+                  className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-darkRed"
+                  placeholder="Enter number of payments"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleAddVoucher}
+                className="px-4 py-2 bg-btnRed text-white rounded hover:bg-black"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

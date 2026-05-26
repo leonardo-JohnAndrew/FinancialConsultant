@@ -25,6 +25,7 @@ export default function ApprovePurchaseDetails() {
   const [EndingInventoryDate, setEndingInventoryDate] = useState();
   const [formattedEnding, setFormattedEnding] = useState();
   const { showError, showSuccess } = useBanner();
+  const [prCode, setPRCode] = useState("");
 
   const fetchPurchaseDetails = useCallback(async () => {
     try {
@@ -87,7 +88,9 @@ export default function ApprovePurchaseDetails() {
   const handleConfirm = async () => {
     let response;
     try {
-      response = await axios.patch(`/api/purchase/${params.purchaseID}`);
+      response = await axios.patch(`/api/purchase/${params.purchaseID}`, {
+        prCode,
+      });
       if (response.status === 200 || response.status === 201) {
         showSuccess(`Budget Confirm: ${params.purchaseID}`);
       }
@@ -132,7 +135,19 @@ export default function ApprovePurchaseDetails() {
         </div>
         <hr className="border-t border-gray-300" />
       </div>
-
+      <div className="flex justify-start my-3">
+        <div className="flex flex-row gap-1">
+          <h5 className="p-1 px-2 bg-black text-white font-semibold">
+            PR CODE:{" "}
+          </h5>
+          <input
+            type="text"
+            className="border border-gray-300 p-1"
+            value={prCode}
+            onChange={(e) => setPRCode(e.target.value)}
+          />
+        </div>
+      </div>
       <div className="scrollbar-custom overflow-y-auto">
         <BudgetConfirmationTable
           approve={true}
