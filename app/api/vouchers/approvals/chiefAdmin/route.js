@@ -32,6 +32,11 @@ export async function POST(request) {
       );
     }
     await voucher.update({ ChiefAdminSignature: body.e_sign });
+
+    // adding in the cashbooks
+    // parents table cashbook
+    // field  { PROJECT , CURRENCY , ID , CASHBOOKTYPE }
+    // ADD IN Child or the designated CASHBOOKTYPE
     return NextResponse.json({ message: `You Approve Voucher` });
   } catch (err) {
     return NextResponse.json({ error_message }, { status: 500 });

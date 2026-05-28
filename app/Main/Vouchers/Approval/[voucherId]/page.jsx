@@ -3,19 +3,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import VoucherComponent from "@/app/components/vouchers";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { FiEdit } from "react-icons/fi";
-import ConfirmBox from "@/app/components/modals/confirmbox";
 import { useBanner } from "@/hooks/Context/banner";
 import useUserContext from "@/hooks/Context/UserContext";
-const PaymentVouchers = () => {
+const ApprovalPaymentVouchers = () => {
   const [openModal, setOpenModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
   const { user } = useUserContext();
-  const router = useRouter();
   const { showError, showSuccess } = useBanner();
-  const [DisplayedAmount, setDisplayedAmount] = useState(false);
   const [isApproving, setApproving] = useState(false);
   const [ChiefAdminSignature, setChiefAdminSignature] = useState(null);
   const [ChiefAccountSignature, setChiefAccountSignature] = useState(null);
@@ -33,10 +30,7 @@ const PaymentVouchers = () => {
     title: "",
     cash: "",
     payment_item: "",
-    payment_voucher_date: new Date().toISOString().split("T")[0],
-    voucherType: "CASH USD",
-    slipNo: "",
-    job: "9665R7268",
+    job: "",
     pm: "",
     children: [
       {
@@ -45,6 +39,7 @@ const PaymentVouchers = () => {
       },
     ],
   });
+
   // FETCH EXISTING VOUCHERS
   useEffect(() => {
     fetchVouchers();
@@ -56,8 +51,8 @@ const PaymentVouchers = () => {
       setChecks(response.data?.specificCheck || []);
       console.log("response", response.data);
       setClaimableStatus({
-        claimable: response.data?.specificCheck?.claimable === true,
-        nonClaimable: response.data?.specificCheck?.claimable === false,
+        claimable: response.data?.specificCheck?.claimable || false,
+        nonClaimable: response.data?.specificCheck?.nonClaimable || false,
       });
     } catch (error) {
       console.log(error);
@@ -158,7 +153,7 @@ const PaymentVouchers = () => {
           ...formData,
         });
 
-        showSuccess(`Voucher updated successfully`);
+        showSuccess(`Voucher ${editId} updated successfully`);
       } else {
         // CREATE
         await axios.post(`/api/vouchers/${params.voucherId}`, {
@@ -176,9 +171,6 @@ const PaymentVouchers = () => {
         title: "",
         cash: "",
         payment_item: "",
-        payment_voucher_date: new Date().toISOString().split("T")[0],
-        voucherType: "CASH USD",
-        slipNo: "",
         job: "",
         pm: "",
         children: [
@@ -208,13 +200,6 @@ const PaymentVouchers = () => {
       title: voucher.title || "",
       cash: voucher.cash || "",
       payment_item: voucher.payment_item || "",
-      payment_voucher_date:
-        voucher.payment_voucher_date?.split("T")[0] ||
-        voucher.createdAt?.split("T")[0],
-
-      voucherType: voucher.voucherType || "CASH USD",
-      slipNo: voucher.slipNo || "",
-
       job: voucher.job || "",
       pm: voucher.pm || "",
 
@@ -232,28 +217,20 @@ const PaymentVouchers = () => {
               },
             ],
     });
+
     setOpenModal(true);
   };
 
   // handle approve
-  const handleSubmitForApproval = async () => {
-    try {
-      //axios
-      const submit = await axios.patch(`/api/vouchers/${params.voucherId}`);
-      if (submit.status !== 200 && submit.status !== 201) {
-        showError("Failed to Submit");
-      } else {
-        showSuccess("Successfully Forwarded to Chief Account");
-        setTimeout(() => {
-          router.push("/Main/Vouchers");
-        }, 3000);
-      }
-      setApproving(false);
-    } catch (err) {
-      showError("Failed to Submit");
-      console.log(err.response.data.error_message);
-      setApproving(true);
-    }
+  const handleApprove = () => {
+    setApproving(true);
+
+    // signature
+  };
+  const handleCancel = () => {
+    setApproving(false);
+
+    // signature
   };
 
   return (
@@ -299,11 +276,7 @@ const PaymentVouchers = () => {
               </button>
             </div>
 
-            <VoucherComponent
-              voucher={voucher}
-              index={index}
-              checkAmount={checks.checkAmount}
-            />
+            <VoucherComponent voucher={voucher} />
           </div>
         ))}
       </div>
@@ -329,35 +302,6 @@ const PaymentVouchers = () => {
             {/* PARENT */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <input
-                type="date"
-                name="payment_voucher_date"
-                value={formData.payment_voucher_date}
-                onChange={handleParentChange}
-                className="border p-2 rounded"
-              />
-
-              <select
-                name="voucherType"
-                value={formData.voucherType}
-                onChange={handleParentChange}
-                className="border p-2 rounded"
-              >
-                <option value="CASH USD">CASH USD</option>
-                <option value="BANK USD">BANK USD</option>
-                <option value="CASH PHP">CASH PHP</option>
-                <option value="BANK PHP">BANK PHP</option>
-              </select>
-
-              <input
-                type="number"
-                name="slipNo"
-                placeholder="Slip No"
-                value={formData.slipNo}
-                onChange={handleParentChange}
-                className="border p-2 rounded"
-              />
-
-              <input
                 type="text"
                 name="title"
                 placeholder="Title"
@@ -369,7 +313,7 @@ const PaymentVouchers = () => {
               <input
                 type="number"
                 name="cash"
-                placeholder={`${formData.voucherType.includes("CASH") ? "Cash No." : "Bank No."}`}
+                placeholder="Cash No."
                 value={formData.cash}
                 onChange={handleParentChange}
                 className="border p-2 rounded"
@@ -495,25 +439,15 @@ const PaymentVouchers = () => {
       </div>
       {/* approving */}
       {isApproving && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <ConfirmBox
-            title="Submit For Approval"
-            content={"Are you sure you want to submit"}
-            id={"for Approval"}
-            handleclose={() => setApproving(false)}
-            handleConfirm={handleSubmitForApproval}
-          />
-        </div>
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50"></div>
       )}
       {/* buttons  */}
       <div className="flex justify-end  mt-3">
         <button
-          title="Total Amount not must be zero"
           onClick={(e) => {
             setApproving(true);
           }}
-          className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
-          disabled={checks.checkAmount > 0 ? false : true}
+          className="bg-btnRed text-white px-5 py-2 rounded mr-2 hover:bg-black"
         >
           Submit
         </button>
@@ -522,4 +456,4 @@ const PaymentVouchers = () => {
   );
 };
 
-export default PaymentVouchers;
+export default ApprovalPaymentVouchers;

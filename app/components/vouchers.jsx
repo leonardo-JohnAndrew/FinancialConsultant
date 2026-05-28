@@ -1,21 +1,28 @@
 import { formatMoney } from "@/functions/formatCurrency";
+import { formatVoucherDate } from "@/functions/formattDate";
 import React from "react";
 
 const VourcherComponent = (props) => {
-  const { voucher, index, handleChange } = props;
+  const { voucher, index, checkAmount } = props;
 
   return (
     <div className="mt-10">
+      <div className="mb-3 flex justify-end">
+        <h4 className="text-lg">Slip#: {voucher.slipNo || "_______"}</h4>
+      </div>
       <div className="flex flex-row">
         <div className="flex flex-2 flex-col">
           <h4 className="text-xl font-semibold">PAYMENT VOUCHER</h4>
           <h4 className="text-lg font-bold">Date</h4>
-          <h4>26 YR 0 4 MO 2 0 Day </h4>
+          <h4>
+            {voucher.payment_voucher_formatted_date ||
+              formatVoucherDate(voucher.createdAt)}
+          </h4>
         </div>
         <div className="self-end-safe border-2 h-auto border-black">
           <div className="flex flex-col ">
             <h4 className="border-b-2 p-3 px-5 border-black font-bold">Cash</h4>
-            <h4 className="p-3">00111</h4>
+            <h4 className="p-3">{voucher.cash || 0}</h4>
           </div>
         </div>
         <div className="border-2 h-auto border-black border-l-0">
@@ -26,20 +33,26 @@ const VourcherComponent = (props) => {
         </div>
       </div>
       {/* table start  */}
-      <div className="flex justify-center items-center">
-        <h4 className="font-bold">Amount-Php 24,999.50</h4>
+      <div className="flex justify-center items-center h-5">
+        <h4 className="font-bold text-lg">
+          {index === 0
+            ? `Amount - ${formatMoney(parseFloat(checkAmount) || 0)}`
+            : ``}
+        </h4>
       </div>
       {/* flex rows FIrst Part */}
       <div className="flex flex-row">
-        <div className="border-2 p-2 border-black">
-          <h4 className="font-semibold"> PAYMENT ITEM</h4>
-        </div>
-        <div className="border-2 p-2 px-5.5 border-l-0 border-black">
-          <h4>515</h4>
-          <h4>515B</h4>
-        </div>
-        <div className="border-2 p-2 border-l-0">
-          <h4 className="font-semibold">PAYEE (NAME)</h4>
+        <div className="w-87.5 flex border-2">
+          <div className=" p-2 border-black">
+            <h4 className="font-semibold"> PAYMENT ITEM</h4>
+          </div>
+
+          <div className="border-x-2 p-2 px-5.5  border-black">
+            <h4>{voucher.payment_item}</h4>
+          </div>
+          <div className=" p-2 border-l-0 border-r-0">
+            <h4 className="font-semibold">PAYEE (NAME)</h4>
+          </div>
         </div>
         <div className="flex-2 flex justify-center items-center border-2 border-l-0 border-r-0">
           {/* Payee Name */}
@@ -91,7 +104,7 @@ const VourcherComponent = (props) => {
       {/* 3RD ROWS */}
       <div className="flex flex-row">
         <div className="flex justify-center items-center border-2 border-r-2 border-t-0 p-10 w-87.5">
-          <h4>9665R7268</h4>
+          <h4>{voucher.job}</h4>
         </div>
         <div className="flex-2 flex-col ">
           {/* description iteration  */}
@@ -122,11 +135,13 @@ const VourcherComponent = (props) => {
               className="flex flex-row border-b-2 border-t-0 justify-start"
             >
               <div className="p-3 pr-7  border-l-0 border-r-2">
-                <h4 className="text-lg">PHP</h4>
+                <h4 className="text-lg">{voucher.voucherType.split(" ")[1]}</h4>
               </div>
               <div className="flex-2 p-2 flex justify-end items-center">
                 <h4 className="text-lg">
-                  {formatMoney(Number(amt.amount), "PHP")}
+                  {voucher.voucherType.includes("PHP")
+                    ? formatMoney(Number(amt.amount), "PHP")
+                    : formatMoney(Number(amt.amount), "USD", "en-US")}
                 </h4>
                 {/* <input
                   type="number"
@@ -219,7 +234,9 @@ const VourcherComponent = (props) => {
               className="pr-7 
                               border-r-2"
             >
-              <h4 className="text-lg pl-3 pt-3">PHP</h4>
+              <h4 className="text-lg pl-3 pt-3">
+                {voucher.voucherType.split(" ")[1]}
+              </h4>
             </div>
             <div className="flex-2 p-3 flex justify-end items-center">
               <h4 className="text-lg">

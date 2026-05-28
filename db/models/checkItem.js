@@ -1,4 +1,4 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, DATE } = require("sequelize");
 const sequelize = require("../connection");
 
 const CheckItem = sequelize.define(
@@ -8,6 +8,10 @@ const CheckItem = sequelize.define(
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
+    },
+    slipNo: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     check_id: {
       type: DataTypes.INTEGER,
@@ -30,15 +34,28 @@ const CheckItem = sequelize.define(
     },
     job: {
       type: DataTypes.STRING,
+      defaultValue: "9665R7268",
     },
     payment_item: {
       type: DataTypes.STRING,
     },
-    cash: {
-      type: DataTypes.INTEGER,
+    voucherTypeNumber: {
+      type: DataTypes.STRING,
+    },
+    voucherType: {
+      type: DataTypes.ENUM,
+      values: ["CASH USD", "BANK USD", "CASH PHP", "BANK PHP"],
+      defaultValue: "CASH PHP",
     },
     payee_name: {
       type: DataTypes.STRING,
+    },
+    payment_voucher_formatted_date: {
+      type: DataTypes.STRING,
+    },
+    payment_vourcher_date: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
     },
   },
   {},
