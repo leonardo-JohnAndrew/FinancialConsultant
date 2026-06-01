@@ -136,7 +136,6 @@ const PaymentVouchers = () => {
       ],
     }));
   };
-
   // DELETE ROW
   const handleDeleteRow = (index) => {
     const filtered = formData.children.filter((_, i) => i !== index);
@@ -252,6 +251,89 @@ const PaymentVouchers = () => {
       showError("Failed to Submit");
       console.log(err.response.data.error_message);
       setApproving(true);
+    }
+  };
+  // cancel handle
+  const handleCancel = () => {
+    setApproving(false);
+    Signaturefunction(userRole, user.e_sign, "remove");
+  };
+
+  // handle confirm
+  const handleConfirm = async () => {
+    let response;
+    // userole switch
+    switch (userRole) {
+      case "Chief Administrator Manager":
+        //axios
+        response = await axios.post(
+          `/api/vouchers/approvals/chiefAdmin?VRID=${params.voucherId}`,
+          {
+            e_sign: user?.e_sign,
+          },
+        );
+        if (response.status === 200 || response.status === 201) {
+          showSuccess(response.data?.message);
+        } else {
+          showError("Failed Vouchers Approval");
+          return;
+        }
+        break;
+      case "Chief Accountant":
+        //axios
+        response = await axios.post(
+          `/api/vouchers/approvals/chiefAccountant?VRID=${params.voucherId}`,
+          {
+            e_sign: user?.e_sign,
+          },
+        );
+        if (response.status === 200 || response.status === 201) {
+          showSuccess(response.data?.message);
+        } else {
+          showError("Failed Vouchers Approval");
+          return;
+        }
+        break;
+      default:
+        break;
+    }
+    setTimeout(() => {
+      router.push("/Main/Vouchers");
+    }, 1000);
+  };
+
+  //handle Approving
+  const handleApprove = () => {
+    setApproving(true);
+    // set signature
+    Signaturefunction(userRole, user.e_sign, "add");
+  };
+  const Signaturefunction = (role, e_sign, action) => {
+    switch (role) {
+      case "Chief Accountant":
+        if (action === "add") {
+          setChiefAccountSignature(e_sign);
+          // axios  post
+
+          return;
+        } else if (action === "remove") {
+          setChiefAccountSignature(null);
+          return;
+        }
+        break;
+
+      case "Chief Administrator Manager":
+        if (action === "add") {
+          setChiefAdminSignature(e_sign);
+          //axios post
+          return;
+        } else if (action === "remove") {
+          setChiefAdminSignature(null);
+          return;
+        }
+        break;
+      default:
+        break;
     }
   };
 
@@ -492,31 +574,125 @@ const PaymentVouchers = () => {
           Non-Claimable
         </label>
       </div>
-      {/* approving */}
-      {isApproving && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <ConfirmBox
-            title="Submit For Approval"
-            content={"Are you sure you want to submit"}
-            id={"for Approval"}
-            handleclose={() => setApproving(false)}
-            handleConfirm={handleSubmitForApproval}
-          />
-        </div>
+
+      {/* table  */}
+      {/* e-signature*/}
+      {(user?.role === "Chief Accountant" ||
+        user?.role === "Chief Administrator Manager") && (
+        <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
+          <tbody>
+            <tr className="text-left">
+              <td className="p-2 w-1/3">Chief Accountant:</td>
+              <td className="p-2 w-1/3">Chief Administrator Manager:</td>
+            </tr>
+
+            <tr className="text-center">
+              <td className="p-2 relative w-1/3">
+                {(checks?.ChiefAccountSignature !== null ||
+                  userRole === "Chief Accountant") && (
+                  <img
+                    src={ChiefAccountSignature}
+                    alt="Signature"
+                    className={`absolute left-1/2 -translate-x-1/2 ${
+                      ChiefAccountSignature ? "-top-15 h-25" : "-top-8 h-12"
+                    } object-contain pointer-events-none`}
+                  />
+                )}
+                <span>Admin</span>
+              </td>
+
+              <td className="p-2 relative w-1/3">
+                {(checks?.ChiefAdminSignature !== null ||
+                  userRole === "Chief Administrator Manager") && (
+                  <img
+                    src={ChiefAdminSignature}
+                    alt="Signature"
+                    className={`absolute left-1/2 -translate-x-1/2 ${
+                      ChiefAdminSignature ? "-top-15 h-25" : "-top-8 h-12"
+                    } object-contain pointer-events-none`}
+                  />
+                )}
+                <span>Chief Administrator Manager</span>
+              </td>
+            </tr>
+
+            <tr className="text-center">
+              <td className="text-white bg-black py-2 w-1/3">
+                Chief Accountant
+              </td>
+              <td className="text-white bg-black py-2 w-1/3">
+                Chief Administrator Manager
+              </td>
+            </tr>
+          </tbody>
+        </table>
       )}
+      {/* approving */}
+      {isApproving &&
+        userRole !== "Chief Accountant" &&
+        userRole !== "Chief Administrator Manager" && (
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+            <ConfirmBox
+              title="Submit For Approval"
+              content={"Are you sure you want to submit"}
+              id={"for Approval"}
+              handleclose={() => setApproving(false)}
+              handleConfirm={handleSubmitForApproval}
+            />
+          </div>
+        )}
+
+      {(userRole === "Chief Accountant" ||
+        userRole === "Chief Administrator Manager") &&
+        (isApproving ? (
+          <div className="flex justify-end gap-4 mt-10 mb-10">
+            <button
+              onClick={(e) => {
+                handleCancel();
+              }}
+              className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={(e) => {
+                handleConfirm();
+              }}
+              className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
+            >
+              Confirm
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-4 mt-10 mb-10">
+            <button
+              onClick={(e) => {
+                handleApprove();
+              }}
+              className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
+            >
+              Accept
+            </button>
+          </div>
+        ))}
+
       {/* buttons  */}
-      <div className="flex justify-end  mt-3">
-        <button
-          title="Total Amount not must be zero"
-          onClick={(e) => {
-            setApproving(true);
-          }}
-          className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
-          disabled={checks.checkAmount > 0 ? false : true}
-        >
-          Submit
-        </button>
-      </div>
+      {userRole !== "Chief Accountant" &&
+        userRole !== "Chief Administrator Manager" && (
+          <div className="flex justify-end  mt-3">
+            <button
+              title="Total Amount not must be zero"
+              onClick={(e) => {
+                setApproving(true);
+              }}
+              className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
+              disabled={checks.checkAmount > 0 ? false : true}
+            >
+              Submit
+            </button>
+          </div>
+        )}
     </div>
   );
 };

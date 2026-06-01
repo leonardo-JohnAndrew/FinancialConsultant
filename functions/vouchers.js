@@ -11,20 +11,14 @@ export async function GetFilterizeVoucher(
   limit,
 ) {
   const offset = (page - 1) * limit;
-
   // permisions
   const isChiefAccountant = role === "Chief Accountant";
   const isChiefAdministrator = role === "Chief Admin";
 
   //role base condtions
   const roleConditionMap = {
-    "Chief Accountant": {
-      ChiefAccountSignature: null,
-      ChiefAdminSignature: null,
-    },
-    "Chief Admin": {
-      ChiefAdminSignature: null,
-    },
+    "Chief Accountant": {},
+    "Chief Admin": {},
   };
 
   const baseCondition = roleConditionMap[role];

@@ -39,6 +39,6 @@ export async function POST(request) {
     // ADD IN Child or the designated CASHBOOKTYPE
     return NextResponse.json({ message: `You Approve Voucher` });
   } catch (err) {
-    return NextResponse.json({ error_message }, { status: 500 });
+    return NextResponse.json({ error_message: err.message }, { status: 500 });
   }
 }

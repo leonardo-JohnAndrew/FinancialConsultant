@@ -61,15 +61,25 @@ export async function cashbooks(voucherType) {
     });
 
     const [category, currency] = voucherType.split(" ");
+    console.log(currency);
+
     let cashbook;
     let childCashbook;
     let childParent;
     switch (currency) {
       case "PHP":
+        // create cashbook
+        cashbook = await CashBooks.create(
+          {
+            PH,
+            category,
+          },
+          { transaction },
+        );
         if (vouchers?.length > 0) {
           vouchers.map((child) => {
             if (child.items?.length > 0) {
-              child.items.map((item) => {
+              child.items.map(async (item) => {
                 childCashbook = item.children?.map((ch) => ({
                   cashbook_id: 3,
                   date: item.payment_voucher_date,
@@ -78,20 +88,22 @@ export async function cashbooks(voucherType) {
                   payee_payer: item.title,
                   payment: item.amount,
                 }));
-                console.log(JSON.stringify(childCashbook));
+                if (vouchers?.length > 0) {
+                  childCashbook = vouchers.map((child) => ({
+                    cashbook_id: cashbook.cashbook_id,
+                    date: child.payment_voucher_date,
+                    job_No: child.job,
+                    payee_payer_no: child.payee_name,
+                    amount: child.amount,
+                  }));
+                  await US_Cash_Bank.bulkCreate(childCashbook, {
+                    transaction,
+                  });
+                }
               });
             }
           });
         }
-        return;
-        // create cashbook
-        cashbook = await CashBooks.create(
-          {
-            currency,
-            category,
-          },
-          { transaction },
-        );
 
         // create children
         break;
@@ -105,20 +117,8 @@ export async function cashbooks(voucherType) {
           },
           { transaction },
         );
-
         // create children
-        if (vouchers?.length > 0) {
-          childCashbook = vouchers.map((child) => ({
-            cashbook_id: cashbook.cashbook_id,
-            date: child.payment_voucher_date,
-            job_No: child.job,
-            payee_payer_no: child.payee_name,
-            amount: child.amount,
-          }));
-          await US_Cash_Bank.bulkCreate(childCashbook, {
-            transaction,
-          });
-        }
+
         break;
 
       default:
@@ -129,8 +129,6 @@ export async function cashbooks(voucherType) {
 
     return {
       success: true,
-      cashbook,
-      items: childCashbook,
     };
   } catch (error) {
     await transaction.rollback();

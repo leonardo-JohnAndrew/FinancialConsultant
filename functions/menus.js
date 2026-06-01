@@ -44,6 +44,24 @@ export default function Menus(role) {
         },
       ],
     },
+    {
+      label: "Requisition List",
+      icon: "□",
+      section: "menu",
+      hasDropdown: true,
+      subItem: [
+        {
+          label: "Recommending Approval",
+          icon: "□",
+          path: "/Main/Purchase/PurchaseRecommendingApproval",
+        },
+        {
+          label: "Requisition History",
+          icon: "□",
+          path: "/Main/Purchase/RequisitionHistory",
+        },
+      ],
+    },
     //  Reimbursable
     {
       label: "Reimbursable",
@@ -85,6 +103,8 @@ export default function Menus(role) {
     "Chief Administrator Manager": [
       "Dashboard",
       "Purchase Requisition Form",
+      "Requisition List",
+      "Vouchers",
       //  "My Requisition",
       //  "Profile",
     ],

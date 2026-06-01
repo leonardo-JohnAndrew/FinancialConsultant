@@ -6,10 +6,7 @@ export async function middleware(request) {
   const { method } = request;
 
   // Public auth routes
-  if (
-    pathname.startsWith("/api/login") ||
-    pathname.startsWith("/api/cookie")
-  ) {
+  if (pathname.startsWith("/api/login") || pathname.startsWith("/api/cookie")) {
     return NextResponse.next();
   }
 
@@ -35,10 +32,7 @@ export async function middleware(request) {
     if (!pathname.startsWith("/api")) {
       return NextResponse.redirect(new URL("/Login", request.url));
     }
-    return NextResponse.json(
-      { error_message: error.message },
-      { status: 401 }
-    );
+    return NextResponse.json({ error_message: error.message }, { status: 401 });
   }
 }
 
