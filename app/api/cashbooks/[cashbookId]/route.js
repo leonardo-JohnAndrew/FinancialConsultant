@@ -115,7 +115,19 @@ export async function GET(request, { params }) {
       where: {
         cashbook_id: cashbookId,
       },
-      attributes: ["currency", "category", "createdAt"],
+      attributes: [
+        "currency",
+        "category",
+        "createdAt",
+        "A_C_No",
+        "project_code",
+        "balance_brought_forward_from_previous_month",
+        "receipt_brought_forward_from_previous_month",
+        "payment_brought_forward_from_previous_month",
+        "balance_carried_forward_to_next_month",
+        "receipt_carried_forward_to_next_month",
+        "payment_carried_forward_to_next_month",
+      ],
     });
     // model
     const CashbookModel =
@@ -131,6 +143,22 @@ export async function GET(request, { params }) {
       currency: cashbookcurrency.currency,
       category: cashbookcurrency.category,
       createdAt: cashbookcurrency.createdAt,
+      A_C_No: cashbookcurrency.A_C_No,
+      project_code: cashbookcurrency.project_code,
+      balance_brought_forward_from_previous_month:
+        cashbookcurrency.balance_brought_forward_from_previous_month,
+
+      receipt_brought_forward_from_previous_month:
+        cashbookcurrency.receipt_brought_forward_from_previous_month,
+
+      payment_brought_forward_from_previous_month:
+        cashbookcurrency.payment_brought_forward_from_previous_month,
+      balance_carried_forward_to_next_month:
+        cashbookcurrency.balance_carried_forward_to_next_month,
+      receipt_carried_forward_to_next_month:
+        cashbookcurrency.receipt_carried_forward_to_next_month,
+      payment_carried_forward_to_next_month:
+        cashbookcurrency.payment_carried_forward_to_next_month,
     });
   } catch (err) {
     return NextResponse.json({ error_message: err.message }, { status: 500 });

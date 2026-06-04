@@ -201,15 +201,17 @@ const VouchersList = () => {
       </div>
 
       {/* handle add  */}
+      {user?.role !== "Chief Accountant" && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-btnRed text-white px-4 py-2 rounded hover:bg-black"
+          >
+            + Add Voucher
+          </button>
+        </div>
+      )}
 
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-btnRed text-white px-4 py-2 rounded hover:bg-black"
-        >
-          + Add Voucher
-        </button>
-      </div>
       <div className="flex justify-end items-end mb-3">
         <div className="border-t w-60 border-gray-300 grid grid-cols-[auto_auto]">
           <button
@@ -311,7 +313,7 @@ const VouchersList = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Numbert Payment Vouchers
+                  Number Payment Vouchers
                 </label>
                 <input
                   type="number"

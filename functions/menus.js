@@ -109,6 +109,14 @@ export default function Menus(role) {
       "Reimbursable",
       "Cashbooks",
     ],
+    Accounting: [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "Submitted Requisition",
+      "Vouchers",
+      "Reimbursable",
+      "Cashbooks",
+    ],
     "Chief Administrator Manager": [
       "Dashboard",
       "Purchase Requisition Form",

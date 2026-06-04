@@ -81,10 +81,6 @@ export async function POST(request) {
       body,
     );
 
-    if (Object.keys(error_message).length > 0) {
-      return NextResponse.json({ error_message }, { status: 400 });
-    }
-
     // create
     const parent = await Check.create({
       checkId: body.VoucherID,
