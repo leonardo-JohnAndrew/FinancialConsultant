@@ -36,7 +36,10 @@ const CheckItem = sequelize.define(
       type: DataTypes.STRING,
       defaultValue: "9665R7268",
     },
-    payment_item: {
+    accountCode: {
+      type: DataTypes.STRING,
+    },
+    glCode: {
       type: DataTypes.STRING,
     },
     voucherTypeNumber: {
@@ -47,7 +50,9 @@ const CheckItem = sequelize.define(
       values: ["CASH USD", "BANK USD", "CASH PHP", "BANK PHP"],
       defaultValue: "CASH PHP",
     },
-
+    receiptOrPayment: {
+      type: DataTypes.STRING,
+    },
     payment_voucher_formatted_date: {
       type: DataTypes.STRING,
     },

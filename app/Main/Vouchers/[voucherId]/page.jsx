@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { FiEdit } from "react-icons/fi";
 import ConfirmBox from "@/app/components/modals/confirmbox";
 import { useBanner } from "@/hooks/Context/banner";
+import { getSuppliers } from "@/functions/supplier";
 import useUserContext from "@/hooks/Context/UserContext";
 const PaymentVouchers = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -13,11 +14,14 @@ const PaymentVouchers = () => {
   const [editId, setEditId] = useState(null);
   const { user } = useUserContext();
   const router = useRouter();
+  const [suppliers, setSuppliers] = useState([]);
   const { showError, showSuccess } = useBanner();
   const [DisplayedAmount, setDisplayedAmount] = useState(false);
   const [isApproving, setApproving] = useState(false);
   const [ChiefAdminSignature, setChiefAdminSignature] = useState(null);
   const [ChiefAccountSignature, setChiefAccountSignature] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [claimableStatus, setClaimableStatus] = useState({
     claimable: false,
     nonClaimable: false,
@@ -31,12 +35,15 @@ const PaymentVouchers = () => {
   const [formData, setFormData] = useState({
     title: "",
     voucherTypeNumber: "",
-    payment_item: "",
+    // payment_item: "",
+    accountCode: "", // ✅ bago
+    glCode: "", // ✅ bago
     payment_voucher_date: new Date().toISOString().split("T")[0],
     voucherType: "CASH USD",
     slipNo: "",
     job: "9665R7268",
     pm: "",
+    receiptOrPayment: "", // ✅ dagdag dito
     children: [
       {
         title: "",
@@ -58,12 +65,11 @@ const PaymentVouchers = () => {
         claimable: response.data?.specificCheck?.claimable === true,
         nonClaimable: response.data?.specificCheck?.claimable === false,
       });
-      setChiefAccountSignature(
-        response.data?.specificCheck?.ChiefAccountSignature || null,
-      );
-      setChiefAdminSignature(
-        response.data?.specificCheck?.ChiefAdminSignature || null,
-      );
+      // supplier name
+      const payeeName = await getSuppliers();
+      console.log("payeeName", payeeName.data);
+
+      setSuppliers(payeeName.data);
     } catch (error) {
       console.log(error);
     }
@@ -114,7 +120,29 @@ const PaymentVouchers = () => {
       [name]: value,
     }));
   };
+  const handlePayeeChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, title: value }));
 
+    if (value.trim() === "") {
+      setFilteredSuppliers([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const matches = suppliers
+      .map((s) => s.supplierName)
+      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+
+    setFilteredSuppliers(matches);
+    setShowSuggestions(matches.length > 0);
+  };
+
+  const handleSelectSupplier = (name) => {
+    setFormData((prev) => ({ ...prev, title: name }));
+    setShowSuggestions(false);
+    setFilteredSuppliers([]);
+  };
   // HANDLE CHILD ROW
   const handleRowChange = (index, e) => {
     const { name, value } = e.target;
@@ -142,6 +170,7 @@ const PaymentVouchers = () => {
       ],
     }));
   };
+
   // DELETE ROW
   const handleDeleteRow = (index) => {
     const filtered = formData.children.filter((_, i) => i !== index);
@@ -156,20 +185,21 @@ const PaymentVouchers = () => {
   const handleSubmit = async () => {
     try {
       if (isEdit) {
-        // UPDATE
+        // UPDATE;
         await axios.put(`/api/vouchers/${editId}`, {
           check_id: params.voucherId,
           ...formData,
         });
 
+        // console.log("edit", formData));
         showSuccess(`Voucher updated successfully`);
       } else {
-        // CREATE
+        //CREATE;
         await axios.post(`/api/vouchers/${params.voucherId}`, {
           check_id: params.voucherId,
           ...formData,
         });
-
+        // console.log("add", formData);
         showSuccess("Voucher created successfully");
       }
 
@@ -179,12 +209,14 @@ const PaymentVouchers = () => {
       setFormData({
         title: "",
         voucherTypeNumber: "",
-        payment_item: "",
+        accountCode: "", // ✅
+        glCode: "", // ✅
         payment_voucher_date: new Date().toISOString().split("T")[0],
         voucherType: "CASH USD",
         slipNo: "",
         job: "",
         pm: "",
+        receiptOrPayment: "", // ✅ dagdag dito
         children: [
           {
             title: "",
@@ -207,18 +239,20 @@ const PaymentVouchers = () => {
     setIsEdit(true);
 
     setEditId(voucher.id);
+    // const splitItem = (voucher.payment_item || "").split(" ");
 
     setFormData({
       title: voucher.title || "",
       voucherTypeNumber: voucher.voucherTypeNumber || "",
-      payment_item: voucher.payment_item || "",
+      accountCode: voucher.accountCode || "", // ✅ direct na sa column
+      glCode: voucher.glCode || "", // ✅ direct na sa column
       payment_voucher_date:
         voucher.payment_voucher_date?.split("T")[0] ||
         voucher.createdAt?.split("T")[0],
 
       voucherType: voucher.voucherType || "CASH USD",
       slipNo: voucher.slipNo || "",
-
+      receiptOrPayment: voucher.receiptOrPayment || "",
       job: voucher.job || "",
       pm: voucher.pm || "",
 
@@ -257,89 +291,6 @@ const PaymentVouchers = () => {
       showError("Failed to Submit");
       console.log(err.response.data.error_message);
       setApproving(true);
-    }
-  };
-  // cancel handle
-  const handleCancel = () => {
-    setApproving(false);
-    Signaturefunction(userRole, user.e_sign, "remove");
-  };
-
-  // handle confirm
-  const handleConfirm = async () => {
-    let response;
-    // userole switch
-    switch (userRole) {
-      case "Chief Administrator Manager":
-        //axios
-        response = await axios.post(
-          `/api/vouchers/approvals/chiefAdmin?VRID=${params.voucherId}`,
-          {
-            e_sign: user?.e_sign,
-          },
-        );
-        if (response.status === 200 || response.status === 201) {
-          showSuccess(response.data?.message);
-        } else {
-          showError("Failed Vouchers Approval");
-          return;
-        }
-        break;
-      case "Chief Accountant":
-        //axios
-        response = await axios.post(
-          `/api/vouchers/approvals/chiefAccountant?VRID=${params.voucherId}`,
-          {
-            e_sign: user?.e_sign,
-          },
-        );
-        if (response.status === 200 || response.status === 201) {
-          showSuccess(response.data?.message);
-        } else {
-          showError("Failed Vouchers Approval");
-          return;
-        }
-        break;
-      default:
-        break;
-    }
-    setTimeout(() => {
-      router.push("/Main/Vouchers");
-    }, 1000);
-  };
-
-  //handle Approving
-  const handleApprove = () => {
-    setApproving(true);
-    // set signature
-    Signaturefunction(userRole, user.e_sign, "add");
-  };
-  const Signaturefunction = (role, e_sign, action) => {
-    switch (role) {
-      case "Chief Accountant":
-        if (action === "add") {
-          setChiefAccountSignature(e_sign);
-          // axios  post
-
-          return;
-        } else if (action === "remove") {
-          setChiefAccountSignature(null);
-          return;
-        }
-        break;
-
-      case "Chief Administrator Manager":
-        if (action === "add") {
-          setChiefAdminSignature(e_sign);
-          //axios post
-          return;
-        } else if (action === "remove") {
-          setChiefAdminSignature(null);
-          return;
-        }
-        break;
-      default:
-        break;
     }
   };
 
@@ -434,6 +385,16 @@ const PaymentVouchers = () => {
                 <option value="CASH PHP">CASH PHP</option>
                 <option value="BANK PHP">BANK PHP</option>
               </select>
+              <select
+                name="receiptOrPayment"
+                value={formData.receiptOrPayment}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              >
+                <option value="">-- Select Type --</option>
+                <option value="receipt">Receipt</option>
+                <option value="payment">Payment</option>
+              </select>
 
               <input
                 type="number"
@@ -444,14 +405,36 @@ const PaymentVouchers = () => {
                 className="border p-2 rounded"
               />
 
-              <input
-                type="text"
-                name="title"
-                placeholder="Title"
-                value={formData.title}
-                onChange={handleParentChange}
-                className="border p-2 rounded"
-              />
+              {/* auto suggest  payeename*/}
+              <div className="relative">
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Payee Name"
+                  value={formData.title}
+                  onChange={handlePayeeChange}
+                  onBlur={() =>
+                    setTimeout(() => setShowSuggestions(false), 150)
+                  }
+                  onFocus={() => {
+                    if (filteredSuppliers.length > 0) setShowSuggestions(true);
+                  }}
+                  className="border p-2 rounded w-full"
+                />
+                {showSuggestions && (
+                  <ul className="absolute z-50 top-full left-0 right-0 bg-white border border-gray-200 rounded shadow-lg max-h-48 overflow-y-auto mt-1">
+                    {filteredSuppliers.map((name, index) => (
+                      <li
+                        key={index}
+                        onMouseDown={() => handleSelectSupplier(name)}
+                        className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
+                      >
+                        {name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
               <input
                 type="text"
@@ -464,9 +447,18 @@ const PaymentVouchers = () => {
 
               <input
                 type="text"
-                name="payment_item"
-                placeholder="Payment Item"
-                value={formData.payment_item}
+                name="accountCode"
+                placeholder="Account Code"
+                value={formData.accountCode}
+                onChange={handleParentChange}
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="text"
+                name="glCode"
+                placeholder="GL Code"
+                value={formData.glCode}
                 onChange={handleParentChange}
                 className="border p-2 rounded"
               />
@@ -580,125 +572,31 @@ const PaymentVouchers = () => {
           Non-Claimable
         </label>
       </div>
-
-      {/* table  */}
-      {/* e-signature*/}
-      {(user?.role === "Chief Accountant" ||
-        user?.role === "Chief Administrator Manager") && (
-        <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
-          <tbody>
-            <tr className="text-left">
-              <td className="p-2 w-1/3">Chief Accountant:</td>
-              <td className="p-2 w-1/3">Chief Administrator Manager:</td>
-            </tr>
-
-            <tr className="text-center">
-              <td className="p-2 relative w-1/3">
-                {(checks?.ChiefAccountSignature !== null ||
-                  userRole === "Chief Accountant") && (
-                  <img
-                    src={ChiefAccountSignature}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      ChiefAccountSignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
-                  />
-                )}
-                <span>Admin</span>
-              </td>
-
-              <td className="p-2 relative w-1/3">
-                {(checks?.ChiefAdminSignature !== null ||
-                  userRole === "Chief Administrator Manager") && (
-                  <img
-                    src={ChiefAdminSignature}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      ChiefAdminSignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
-                  />
-                )}
-                <span>Chief Administrator Manager</span>
-              </td>
-            </tr>
-
-            <tr className="text-center">
-              <td className="text-white bg-black py-2 w-1/3">
-                Chief Accountant
-              </td>
-              <td className="text-white bg-black py-2 w-1/3">
-                Chief Administrator Manager
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      )}
       {/* approving */}
-      {isApproving &&
-        userRole !== "Chief Accountant" &&
-        userRole !== "Chief Administrator Manager" && (
-          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-            <ConfirmBox
-              title="Submit For Approval"
-              content={"Are you sure you want to submit"}
-              id={"for Approval"}
-              handleclose={() => setApproving(false)}
-              handleConfirm={handleSubmitForApproval}
-            />
-          </div>
-        )}
-
-      {(userRole === "Chief Accountant" ||
-        userRole === "Chief Administrator Manager") &&
-        (isApproving ? (
-          <div className="flex justify-end gap-4 mt-10 mb-10">
-            <button
-              onClick={(e) => {
-                handleCancel();
-              }}
-              className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={(e) => {
-                handleConfirm();
-              }}
-              className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
-            >
-              Confirm
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-end gap-4 mt-10 mb-10">
-            <button
-              onClick={(e) => {
-                handleApprove();
-              }}
-              className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
-            >
-              Accept
-            </button>
-          </div>
-        ))}
-
+      {isApproving && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <ConfirmBox
+            title="Submit For Approval"
+            content={"Are you sure you want to submit"}
+            id={"for Approval"}
+            handleclose={() => setApproving(false)}
+            handleConfirm={handleSubmitForApproval}
+          />
+        </div>
+      )}
       {/* buttons  */}
-      {userRole !== "Chief Accountant" &&
-        userRole !== "Chief Administrator Manager" && (
-          <div className="flex justify-end  mt-3">
-            <button
-              title="Total Amount not must be zero"
-              onClick={(e) => {
-                setApproving(true);
-              }}
-              className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
-              disabled={checks.checkAmount > 0 ? false : true}
-            >
-              Submit
-            </button>
-          </div>
-        )}
+      <div className="flex justify-end  mt-3">
+        <button
+          title="Total Amount not must be zero"
+          onClick={(e) => {
+            setApproving(true);
+          }}
+          className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
+          disabled={checks.checkAmount > 0 ? false : true}
+        >
+          Submit
+        </button>
+      </div>
     </div>
   );
 };

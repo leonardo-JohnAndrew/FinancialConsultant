@@ -4,7 +4,13 @@ import React from "react";
 
 const VourcherComponent = (props) => {
   const { voucher, index, checkAmount } = props;
-
+  if (!voucher) {
+    return (
+      <>
+        <h4>Loading</h4>
+      </>
+    );
+  }
   return (
     <div className="mt-10">
       <div className="mb-3 flex justify-end">
@@ -12,7 +18,7 @@ const VourcherComponent = (props) => {
       </div>
       <div className="flex flex-row">
         <div className="flex flex-2 flex-col">
-          <h4 className="text-xl font-semibold">PAYMENT VOUCHER</h4>
+          <h4 className="text-xl font-semibold">{`${voucher.receiptOrPayment === "payment" ? "PAYMENT" : "RECEIPT"} VOUCHER`}</h4>
           <h4 className="text-lg font-bold">Date</h4>
           <h4>
             {voucher.payment_voucher_formatted_date ||
@@ -48,7 +54,10 @@ const VourcherComponent = (props) => {
           </div>
 
           <div className="border-x-2 p-2 px-5.5  border-black">
-            <h4>{voucher.payment_item}</h4>
+            {/* <h4>{voucher.payment_item}</h4> */}
+            <h4>
+              {`${voucher.accountCode || ""} ${voucher.glCode || ""}`.trim()}
+            </h4>
           </div>
           <div className=" p-2 border-l-0 border-r-0">
             <h4 className="font-semibold">PAYEE (NAME)</h4>
@@ -243,20 +252,28 @@ const VourcherComponent = (props) => {
                 {voucher.voucherType.includes("PHP")
                   ? formatMoney(
                       voucher?.children?.reduce(
-                        (store, current) => store + Number(current.amount || 0),
+                        (store, current) => store + current.amount,
                         0,
-                      ),
-                      "PHP",
+                      ) || 0,
                     )
                   : formatMoney(
-                      voucher?.children?.reduce(
-                        (store, current) => store + Number(current.amount || 0),
-                        0,
-                      ),
-                      "USD",
-                      "en-US",
+                      voucher?.children.reduce(
+                        (store, current) => store + current.amount,
+                      ) || 0,
                     )}
               </h4>
+              {/* <input
+                type="number"
+                className="text-lg text-end"
+                name="total"
+                value={
+                  voucher?.children?.reduce(
+                    (store, current) => store + current.amount,
+                    0,
+                  ) || 0
+                }
+                onChange={(e) => handleChange(index, e)}
+              /> */}
             </div>
           </div>
         </div>

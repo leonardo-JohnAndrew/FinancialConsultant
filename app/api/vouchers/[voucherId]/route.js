@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
   const { voucherId } = await params;
-
+  ``;
   try {
     const specificCheck = await Check.findOne({
       where: { id: voucherId },
@@ -40,7 +40,8 @@ export async function POST(request, { params }) {
   const {
     title,
     voucherTypeNumber,
-    payment_item,
+    accountCode,
+    glCode,
     payment_voucher_date,
     voucherType,
     slipNo,
@@ -60,7 +61,8 @@ export async function POST(request, { params }) {
         voucherTypeNumber,
         payment_voucher_date,
         payment_voucher_formatted_date: formatVoucherDate(payment_voucher_date),
-        payment_item,
+        accountCode,
+        glCode,
         job,
         slipNo,
         voucherType,
@@ -183,8 +185,10 @@ export async function PUT(request, { params }) {
 
     const {
       title,
+      receiptOrPayment,
       voucherTypeNumber,
-      payment_item,
+      accountCode,
+      glCode,
       payment_voucher_date,
       voucherType,
       slipNo,
@@ -218,8 +222,10 @@ export async function PUT(request, { params }) {
       {
         title,
         voucherTypeNumber,
-        payment_item,
+        accountCode,
+        glCode,
         voucherType,
+        receiptOrPayment,
         slipNo,
         payment_voucher_date,
         payment_voucher_formatted_date: formatVoucherDate(payment_voucher_date),

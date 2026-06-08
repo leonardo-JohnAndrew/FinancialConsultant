@@ -11,6 +11,7 @@ import Notification from "./notification.js";
 import CashBooks from "./cashbooks.js";
 import US_Cash_Bank from "./cashbook_us.js";
 import PH_Cash_Bank from "./cashbook_ph.js";
+import Supplier from "./supplier.js";
 
 Purchase.hasMany(PurchaseItems, {
   foreignKey: "PurchaseID",
@@ -108,6 +109,7 @@ export {
   BudgetValue,
   Notification,
   CashBooks,
+  Supplier,
   US_Cash_Bank,
   PH_Cash_Bank,
 };

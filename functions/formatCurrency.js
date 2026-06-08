@@ -1,11 +1,14 @@
 export function formatMoney(amount, currency = "PHP", locale = "en-PH") {
-  if (typeof amount !== "number" || isNaN(amount)) {
-    throw new Error("Invalid amount: must be a number.");
+  const value = Number(amount);
+
+  if (isNaN(value)) {
+    return "₱0.00";
   }
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: currency,
+    currency,
     minimumFractionDigits: 2,
-    maximumFractionHDigits: 2,
-  }).format(amount);
+    maximumFractionDigits: 2,
+  }).format(value);
 }
