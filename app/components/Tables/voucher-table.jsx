@@ -21,32 +21,26 @@ const VoucherTable = (props) => {
           </tr>
         </thead>
         <tbody>
-          {data?.map(
-            (item, index) =>
-              item.items.length > 0 && (
-                <tr
-                  key={index}
-                  className="border-b border-gray-300 text-center"
-                >
-                  <td className="px-4 py2">{item.checkId}</td>
-                  <td className="px-4 py2">{item.items.length}</td>
-                  <td className="px-4 py2">{item.checkAmount}</td>
-                  <td className="px-4 py2">
-                    {item.claimable === "true" ? "Yes" : "No"}
-                  </td>
-                  <td className="px-4 py2">{item.createdAt.split("T")[0]}</td>
-                  <td className="px-4 py-2">
-                    <Link
-                      href={`/Main/Vouchers/${item.id}`}
-                      className="bg-lightRed rounded-md py-1 px-3 text-white font-bold border  
+          {data?.map((item, index) => (
+            <tr key={index} className="border-b border-gray-300 text-center">
+              <td className="px-4 py2">{item.checkId}</td>
+              <td className="px-4 py2">{item.items.length}</td>
+              <td className="px-4 py2">{item.checkAmount}</td>
+              <td className="px-4 py2">
+                {item.claimable === "true" ? "Yes" : "No"}
+              </td>
+              <td className="px-4 py2">{item.createdAt.split("T")[0]}</td>
+              <td className="px-4 py-2">
+                <Link
+                  href={`/Main/Vouchers/${item.id}`}
+                  className="bg-lightRed rounded-md py-1 px-3 text-white font-bold border  
                  hover:bg-white hover:text-black  hover:border  hover:border-darkRed"
-                    >
-                      view
-                    </Link>
-                  </td>
-                </tr>
-              ),
-          )}
+                >
+                  view
+                </Link>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

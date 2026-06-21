@@ -46,11 +46,13 @@ const UserTable = (props) => {
               <td className="px-4 py-2">
                 <img
                   src={
-                    !item.profile_pic ||
-                    item.profile_pic === null ||
-                    item.profile_pic === ""
-                      ? "/uploads/profile/Generic avatar.png"
-                      : item.profile_pic
+                    (
+                      !item.profile_pic ||
+                      item.profile_pic === null ||
+                      item.profile_pic === ""
+                    ) ?
+                      "/profile/`https://ui-avatars.com/api/?name=${u?.firstname}+${u?.lastname}&background=random&color=fff`.png"
+                    : item.profile_pic
                   }
                   className="h-10 w-10"
                   alt="avatar"

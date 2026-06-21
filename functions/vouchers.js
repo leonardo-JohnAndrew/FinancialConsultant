@@ -1,5 +1,5 @@
 "use server";
-import { Check, CheckItem } from "@/db/models";
+import { AccountCode, Check, CheckItem, GLcode } from "@/db/models";
 import { NextResponse } from "next/server";
 import { Sequelize } from "sequelize";
 
@@ -106,4 +106,63 @@ export async function GetFilterizeVoucher(
       { status: 500 },
     );
   }
+}
+
+export async function GetAccountCode() {
+  const data = await AccountCode.findAll();
+
+  return {
+    dataList: data.map((item) => item.toJSON()),
+  };
+}
+export async function GetGLCode() {
+  const data = await GLcode.findAll();
+
+  return {
+    dataList: data.map((item) => item.toJSON()),
+  };
+}
+
+export async function GetCashbookHeaders(voucherType) {
+  const data = {
+    "US Bank": "ZPA-USD1",
+    "US Cash": "ZPC-USD1",
+    "PH Bank": "ZPA-LC1",
+    "PH Cash": "ZPC-LC1",
+  };
+  return {
+    code: data[voucherType],
+  };
+}
+export async function GetCashNo(voucherType) {
+  const data = {
+    "US Bank": "033N2",
+    "US Cash": "001|2",
+    "PH Bank": "003N1",
+    "PH Cash": "001|1",
+  };
+  return {
+    code: data[voucherType],
+  };
+}
+export async function GetCashAndBankNo(voucherType) {
+  const data = {
+    "BANK USD": "033N2",
+    "CASH USD": "001|2",
+    "CASH PHP": "003N1",
+    "BANK PHP": "001|1",
+  };
+  return {
+    code: data[voucherType],
+  };
+}
+export async function GetBDONo(voucherType) {
+  const data = {
+    "PH Bank": "BDO#005798014647",
+    "US BANK": "BD0#105790173323",
+  };
+
+  return {
+    code: data[voucherType],
+  };
 }

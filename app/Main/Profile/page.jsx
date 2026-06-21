@@ -1,16 +1,23 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // ← fixed, single import
 
 export default function Profile() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const isSetup = searchParams.get("setup") === "true";
+
   const [user, setUser] = useState(null);
   const [signatureFile, setSignatureFile] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // FETCH current user info via cookie/token
+  // ── Password change state (setup mode) ──────────────────────────
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  // ────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     fetch("/api/cookies")
       .then((r) => {
@@ -40,10 +47,32 @@ export default function Profile() {
   const handleSave = async () => {
     if (!signatureFile)
       return showToast("Please upload a signature first.", "error");
+
+    // ── Validate password fields in setup mode ───────────────────
+    if (isSetup) {
+      if (!newPassword || newPassword.trim() === "") {
+        return showToast("Please enter a new password.", "error");
+      }
+      if (newPassword !== confirmPassword) {
+        return showToast("Passwords do not match.", "error");
+      }
+      if (newPassword.length < 8) {
+        return showToast("Password must be at least 8 characters.", "error");
+      }
+    }
+    // ─────────────────────────────────────────────────────────────
+
     setSaving(true);
 
     const formData = new FormData();
     formData.append("e_signature", signatureFile);
+
+    // ── Append extra fields in setup mode ───────────────────────
+    if (isSetup) {
+      formData.append("password", newPassword);
+      formData.append("mustChangePassword", "false");
+    }
+    // ─────────────────────────────────────────────────────────────
 
     const res = await fetch(`/api/users/manage?id=${user.userID}`, {
       method: "PATCH",
@@ -53,8 +82,13 @@ export default function Profile() {
     setSaving(false);
 
     if (res.ok) {
-      showToast("E-signature saved! Please re-login to continue.");
-      setTimeout(() => router.push("/Main/Home"), 2500);
+      if (isSetup) {
+        showToast("Account setup complete! Redirecting...");
+        setTimeout(() => router.push("/Main/Home"), 2000);
+      } else {
+        showToast("E-signature saved! Please re-login to continue.");
+        setTimeout(() => router.push("/Main/Home"), 2500);
+      }
     } else {
       showToast("Failed to save. Try again.", "error");
     }
@@ -83,7 +117,20 @@ export default function Profile() {
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
-        {!user.e_sign && (
+
+        {/* ── Setup mode banner ───────────────────────────────────── */}
+        {isSetup && (
+          <div className="mt-3 flex items-start gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg px-4 py-3">
+            <span className="mt-0.5">🔐</span>
+            <span>
+              Welcome! Please <strong>set a new password</strong> and upload
+              your <strong>e-signature</strong> to activate your account.
+            </span>
+          </div>
+        )}
+        {/* ────────────────────────────────────────────────────────── */}
+
+        {!user.e_sign && !isSetup && (
           <div className="mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-lg px-4 py-3">
             <span className="mt-0.5">❌</span>
             <span>
@@ -132,6 +179,45 @@ export default function Profile() {
             ))}
           </div>
 
+          {/* ── PASSWORD CHANGE SECTION (setup mode only) ────────── */}
+          {isSetup && (
+            <div className="border-t pt-6 mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                Set New Password
+              </h3>
+              <p className="text-xs text-gray-400 mb-4">
+                Choose a strong password (min. 8 characters).
+              </p>
+              <div className="grid gap-3">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password"
+                  className="p-2.5 border rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="p-2.5 border rounded-lg text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                {/* Live match indicator */}
+                {confirmPassword && (
+                  <p
+                    className={`text-xs ${newPassword === confirmPassword ? "text-green-500" : "text-red-400"}`}
+                  >
+                    {newPassword === confirmPassword ?
+                      "✓ Passwords match"
+                    : "✗ Passwords do not match"}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {/* ────────────────────────────────────────────────────── */}
+
           {/* E-SIGNATURE SECTION */}
           <div className="border-t pt-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-1">
@@ -142,7 +228,6 @@ export default function Profile() {
               background preferred).
             </p>
 
-            {/* CURRENT SIGNATURE */}
             {user.e_sign && !signaturePreview && (
               <div className="mb-4">
                 <p className="text-xs text-gray-400 mb-1">Current signature:</p>
@@ -154,7 +239,6 @@ export default function Profile() {
               </div>
             )}
 
-            {/* PREVIEW */}
             {signaturePreview && (
               <div className="mb-4">
                 <p className="text-xs text-gray-400 mb-1">Preview:</p>
@@ -166,20 +250,19 @@ export default function Profile() {
               </div>
             )}
 
-            {/* UPLOAD */}
             <label className="flex items-center gap-3 border-2 border-dashed border-gray-200 rounded-xl px-4 py-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors">
               <span className="text-2xl">
                 <img
                   src="/profile-esign.jpg"
                   alt="logo"
-                  className="w-15 h-15 object-contain "
+                  className="w-15 h-15 object-contain"
                 />
               </span>
               <div>
                 <p className="text-sm font-medium text-gray-700">
-                  {signatureFile
-                    ? signatureFile.name
-                    : "Click to upload signature"}
+                  {signatureFile ?
+                    signatureFile.name
+                  : "Click to upload signature"}
                 </p>
                 <p className="text-xs text-gray-400">PNG, JPG up to 5MB</p>
               </div>
@@ -191,13 +274,16 @@ export default function Profile() {
               />
             </label>
 
-            {/* SAVE BUTTON */}
             <button
               onClick={handleSave}
               disabled={saving || !signatureFile}
               className="mt-4 w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
             >
-              {saving ? "Saving..." : "Save E-Signature"}
+              {saving ?
+                "Saving..."
+              : isSetup ?
+                "Activate Account"
+              : "Save E-Signature"}
             </button>
           </div>
         </div>

@@ -533,7 +533,9 @@ export async function ExportExcelBudgetFile(items, name) {
         cell.alignment = {
           vertical: "middle",
           horizontal:
-            colNumber === 1 ? "center" : colNumber >= 3 ? "center" : "left",
+            colNumber === 1 ? "center"
+            : colNumber >= 3 ? "center"
+            : "left",
         };
 
         // DESCRIPTION INDENT

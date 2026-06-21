@@ -11,7 +11,7 @@ const US_Cash_Bank = sequelize.define(
     },
     slipNo: {
       type: DataTypes.INTEGER,
-      unique: true,
+      unique: false,
     },
     date: {
       type: DataTypes.DATE,
@@ -42,17 +42,17 @@ const US_Cash_Bank = sequelize.define(
       allowNull: true,
     },
     receipt: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
     payment: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
     balance: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
@@ -84,6 +84,13 @@ const US_Cash_Bank = sequelize.define(
     code_invoice_DOTR_2: {
       type: DataTypes.STRING,
       defaultValue: "N/A",
+    },
+    company: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    descript_length: {
+      type: DataTypes.INTEGER,
     },
   },
   {},

@@ -27,6 +27,10 @@ export default function PurchaseDetails() {
   const [formattedEnding, setFormattedEnding] = useState();
   const { showError, showSuccess } = useBanner();
   const [prcode, setPRCode] = useState("");
+  const userRole =
+    user?.role === "Admin" && purchaseDetails?.purchase?.AdminSign != null ?
+      "Chief Administrator Manager"
+    : user?.role;
   const fetchPurchaseDetails = useCallback(async () => {
     try {
       const response = await axios.get(`/api/purchase/${params.purchaseID}`);
@@ -42,7 +46,7 @@ export default function PurchaseDetails() {
       );
       setTotal(
         response.data.purchase.purchaseItems
-          .reduce((total, item) => total + item.Total, 0)
+          .reduce((total, item) => total + Number(item.Total || 0), 0)
           .toFixed(2),
       );
       //   console.log(response.data?.purchase?.purchaseItems[0].EndingInventoryDate);
@@ -191,31 +195,31 @@ export default function PurchaseDetails() {
       <div className="scrollbar-custom overflow-y-auto">
         <BudgetConfirmationTable
           tableHeader={
-            purchaseDetails?.purchase?.user?.role !== "Admin"
-              ? [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "CLAIMABLE",
-                  "TYPE OF EXPENSES",
-                  "REMARKS",
-                  "TOTAL",
-                ]
-              : [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "REQUIRED BALANCE",
-                  "ENDING INVENTORY",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "CLAIMABLE",
-                  "TYPE OF EXPENSES",
-                  "REMARKS",
-                  "TOTAL",
-                ]
+            purchaseDetails?.purchase?.user?.role !== "Admin" ?
+              [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "CLAIMABLE",
+                "TYPE OF EXPENSES",
+                "REMARKS",
+                "TOTAL",
+              ]
+            : [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "REQUIRED BALANCE",
+                "ENDING INVENTORY",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "CLAIMABLE",
+                "TYPE OF EXPENSES",
+                "REMARKS",
+                "TOTAL",
+              ]
           }
           data={purchaseDetails || isfetching === false ? purchaseDetails : []}
           Ending={formattedEnding}
@@ -258,7 +262,95 @@ export default function PurchaseDetails() {
           />
         </div>
       )}
+      <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
+        <tbody>
+          <tr className="text-left">
+            <td className="p-2 w-1/3">Requisitionist:</td>
 
+            {/* Sir JC */}
+            <td className="p-2 w-1/3">Initial Approved:</td>
+            <td className="p-2 w-1/3">Noted By:</td>
+            <td className="p-2 w-1/3">Approved By:</td>
+          </tr>
+
+          <tr className="text-center">
+            <td className="p-2 relative w-1/3">
+              <img
+                src={purchaseDetails?.purchase?.EmployeeSign || null}
+                alt="Signature"
+                className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
+              />
+              <span>
+                {`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}
+              </span>
+            </td>
+
+            <td className="p-2 relative w-1/3">
+              {(purchaseDetails?.purchase?.AdminSign !== null ||
+                userRole === "Admin") && (
+                <img
+                  src={`${purchaseDetails?.purchase?.AdminSign || null}`}
+                  alt="Signature"
+                  className={`absolute left-1/2 -translate-x-1/2 ${
+                    purchaseDetails?.purchase?.AdminSign ?
+                      "-top-15 h-25"
+                    : "-top-8 h-12"
+                  } object-contain pointer-events-none`}
+                />
+              )}
+              <span>{purchaseDetails?.purchase?.AdminName || "Admin"}</span>
+            </td>
+            <td className="p-2 relative w-1/3">
+              {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null ||
+                userRole === "Chief Administrator Manager") && (
+                <img
+                  src={`${purchaseDetails?.purchase?.ChiefAdminManageSign || null}`}
+                  alt="Signature"
+                  className={`absolute left-1/2 -translate-x-1/2 ${
+                    purchaseDetails?.purchase?.ChiefAdminManageSign ?
+                      "-top-15 h-25"
+                    : "-top-8 h-12"
+                  } object-contain pointer-events-none`}
+                />
+              )}
+              <span>
+                {purchaseDetails?.purchase?.ChiefAdminManagerName ||
+                  "Chief Administrator Manager"}
+              </span>
+            </td>
+
+            <td className="p-2 relative w-1/3">
+              {(purchaseDetails?.purchase?.ProjectDirectorSign !== null ||
+                userRole === "Project Director") && (
+                <img
+                  src={`${purchaseDetails?.purchase?.ProjectDirectorSign || null}`}
+                  alt="Signature"
+                  className={`absolute left-1/2 -translate-x-1/2 ${
+                    purchaseDetails?.purchase?.ProjectDirectorSign ?
+                      "-top-15 h-25"
+                    : "-top-8 h-12"
+                  } object-contain pointer-events-none`}
+                />
+              )}
+              <span>
+                {purchaseDetails?.purchase?.ProjectDirectorName ||
+                  "Jorge Müller"}
+              </span>
+            </td>
+          </tr>
+
+          <tr className="text-center">
+            <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
+            <td className="text-white bg-black py-2 w-1/3">Admin</td>
+            <td className="text-white bg-black py-2 w-1/3">
+              {purchaseDetails?.purchase?.isAdminForChiefSign ?
+                "Admin"
+              : "Chief Administrator Manager"}
+            </td>
+            <td className="text-white bg-black py-2 w-1/3">Project Director</td>
+          </tr>
+        </tbody>
+      </table>
       {/* accounting part claimable or non claimable  */}
       {/* <table className="border border-gray-300 w-full">
              <thead className = "bg-black text-white border-3 border-darkRed sticky top-0 z-10 font-thin" >

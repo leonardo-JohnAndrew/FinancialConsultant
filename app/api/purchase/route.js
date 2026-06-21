@@ -80,6 +80,7 @@ export async function POST(request) {
         { status: 500 },
       );
     }
+    //get admin chiefAdminName , ProjectDirector
 
     // get name of purchase items
     const codeID = generatePurchaseId();
@@ -149,7 +150,7 @@ export async function POST(request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Error inserting data:", error);
+    console.error("Error inserting data:", error.message);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },
@@ -180,12 +181,10 @@ export async function GET(request) {
     });
     const startParam = searchParams.get("dateStart");
     const endParam = searchParams.get("dateEnd");
-    const rangeStart = startParam
-      ? `${startParam} 00:00:00`
-      : dates.dataValues.earliestDate;
-    const rangeEnd = endParam
-      ? `${endParam} 23:59:59`
-      : dates.dataValues.latestDate;
+    const rangeStart =
+      startParam ? `${startParam} 00:00:00` : dates.dataValues.earliestDate;
+    const rangeEnd =
+      endParam ? `${endParam} 23:59:59` : dates.dataValues.latestDate;
 
     const { rows, count } = await Purchase.findAndCountAll({
       offset: offset,

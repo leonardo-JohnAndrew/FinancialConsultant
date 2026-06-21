@@ -35,12 +35,12 @@ const PurchaseItems = sequelize.define(
       defaultValue: 0,
     },
     UnitPrice: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
     Total: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },

@@ -26,7 +26,7 @@ const CheckItem = sequelize.define(
       allowNull: false,
     },
     amount: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       defaultValue: 0,
     },
     payment_voucher_date: {

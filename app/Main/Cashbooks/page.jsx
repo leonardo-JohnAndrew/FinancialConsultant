@@ -10,12 +10,11 @@ const CashbooksList = () => {
   // fetch the data for list of cashbooks
   const fetchCashbooks = async () => {
     try {
-      const cashbk = await axios.get("/api/cashbooks");
-      setCashbook(cashbk?.data?.cashbooks || []);
-      console.log(cashbk);
+      const cashbk = await axios.post("/api/cashbooks");
+
+      setCashbook(cashbk.data.cashbooks || []);
     } catch (err) {
-      // showError
-      showError("Failed to Fetch the Data");
+      showError("Failed to Fetch");
     }
   };
   // use Effect once Renders

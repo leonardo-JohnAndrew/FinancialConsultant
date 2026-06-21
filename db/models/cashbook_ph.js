@@ -12,7 +12,7 @@ const PH_Cash_Bank = sequelize.define(
 
     slipNo: {
       type: DataTypes.INTEGER,
-      unique: true,
+      unique: false,
     },
     date: {
       type: DataTypes.DATE,
@@ -43,17 +43,17 @@ const PH_Cash_Bank = sequelize.define(
       allowNull: true,
     },
     receipt: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
     payment: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
     balance: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
@@ -67,6 +67,14 @@ const PH_Cash_Bank = sequelize.define(
     },
     CRM: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    descript_length: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    company: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
     SIno: {

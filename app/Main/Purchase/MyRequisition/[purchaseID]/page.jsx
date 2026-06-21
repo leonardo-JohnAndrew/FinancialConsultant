@@ -99,25 +99,25 @@ export default function PurchaseDetails() {
       <div className="scrollbar-custom overflow-y-auto">
         <Table
           tableHeader={
-            purchaseDetails?.purchase?.user?.role !== "Admin"
-              ? [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
-              : [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "REQUIRED BALANCE",
-                  "ENDING INVENTORY",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
+            purchaseDetails?.purchase?.user?.role !== "Admin" ?
+              [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
+            : [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "REQUIRED BALANCE",
+                "ENDING INVENTORY",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
           }
           data={purchaseDetails || isfetching === false ? purchaseDetails : []}
           Ending={formattedEnding}
@@ -174,7 +174,7 @@ export default function PurchaseDetails() {
                     } object-contain pointer-events-none`}
                   />
                 )}
-                <span>Admin</span>
+                <span>{purchaseDetails?.purchase?.AdminName || "Admin"}</span>
               </td>
               <td className="p-2 relative w-1/3">
                 {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null ||
@@ -187,7 +187,10 @@ export default function PurchaseDetails() {
                     } object-contain pointer-events-none`}
                   />
                 )}
-                <span>{"Kai Sumitomo"}</span>
+                <span>
+                  {purchaseDetails?.purchase?.ChiefAdminManagerName ||
+                    "Chief Administrator Manager"}
+                </span>
               </td>
 
               <td className="p-2 relative w-1/3">
@@ -201,16 +204,19 @@ export default function PurchaseDetails() {
                     } object-contain pointer-events-none`}
                   />
                 )}
-                <span>Jorge Müller</span>
+                <span>
+                  {purchaseDetails?.purchase?.ProjectDirectorName ||
+                    "Jorge Müller"}
+                </span>
               </td>
             </tr>
 
             <tr className="text-center">
               <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
               <td className="text-white bg-black py-2 w-1/3">Admin</td>
-              <td className="text-white bg-black py-2 w-1/3">
-                Chief Administrator Manager
-              </td>
+              {purchaseDetails?.purchase?.isAdminForChiefSign ?
+                "Admin"
+              : "Chief Administrator Manager"}
               <td className="text-white bg-black py-2 w-1/3">
                 Project Director
               </td>

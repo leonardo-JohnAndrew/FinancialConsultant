@@ -34,8 +34,18 @@ const Purchase = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    AdminName: {
+      type: DataTypes.STRING,
+    },
+    ChiefAdminManagerName: {
+      type: DataTypes.STRING,
+    },
+    ProjectDirectorName: {
+      type: DataTypes.STRING,
+      defaultValue: "Jorge Müller",
+    },
     Total: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(18, 2),
       allowNull: true,
       defaultValue: 0,
     },
@@ -53,6 +63,10 @@ const Purchase = sequelize.define(
     mode: {
       type: DataTypes.ENUM,
       values: ["Small Amount", "Service Invoice"],
+    },
+    isAdminForChiefSign: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {},

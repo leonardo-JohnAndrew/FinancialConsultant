@@ -90,6 +90,8 @@ export async function createNotification(receiver, notification, email) {
   // await
   const payload = {
     notification: notification,
+    message: notification,
+    title: "Purchase Requisition",
     userID: receiver,
   };
   // find user email
@@ -119,3 +121,11 @@ export async function createNotification(receiver, notification, email) {
     return false;
   }
 }
+
+// find all userRole
+export async function findSpecificRole() {
+  const user = User.findOne({
+    where: {},
+  });
+}
+// department

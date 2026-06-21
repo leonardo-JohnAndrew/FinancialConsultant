@@ -26,7 +26,12 @@ export default function Menus(role) {
       section: "menu",
       path: "/Main/Cashbooks",
     },
-
+    {
+      label: "Creditors",
+      icon: "□",
+      section: "menu",
+      path: "/Main/Creditors",
+    },
     {
       label: "Budget Confirmation",
       icon: "□",
@@ -88,10 +93,10 @@ export default function Menus(role) {
 
     //  Reimbursable
     {
-      label: "Reimbursable",
+      label: "Summaries",
       icon: "□",
       section: "menu",
-      path: "/Main/Budgets",
+      path: "/Main/Summaries",
     },
     {
       label: "BIR 2307",
@@ -131,9 +136,10 @@ export default function Menus(role) {
       "My Requisition",
       "Submitted Requisition",
       "Vouchers",
-      "Reimbursable",
+      "Summaries",
       "Cashbooks",
       "BIR 2307",
+      "Creditors",
     ],
     Accounting: [
       "Dashboard",
@@ -141,9 +147,10 @@ export default function Menus(role) {
       "My Requisition",
       "Submitted Requisition",
       "Vouchers",
-      "Reimbursable",
+      "Summaries",
       "Cashbooks",
       "BIR 2307",
+      "Creditors",
     ],
     "Chief Administrator Manager": [
       "Dashboard",
@@ -152,6 +159,7 @@ export default function Menus(role) {
       "Requisition List",
       "Vouchers",
       "BIR 2307",
+      "Creditors",
       //  "My Requisition",
       //  "Profile",
     ],
@@ -181,4 +189,108 @@ export default function Menus(role) {
   return allMenu.filter(
     (item) => allowedMenus.includes(item.label) || item.label === "Logout",
   );
+}
+export function getAllowedPaths(role) {
+  const allMenu = [
+    { label: "Dashboard", path: "/Main/Home" },
+    { label: "Purchase Requisition Form", path: "/Main/Purchase/Requisition" },
+    { label: "Vouchers", path: "/Main/Vouchers" },
+    { label: "Cashbooks", path: "/Main/Cashbooks" },
+    { label: "Budget Confirmation", path: "/Main/BudgetConfirmation" },
+    {
+      label: "Submitted Requisition",
+      paths: [
+        "/Main/SubmittedRequisition/BudgetConfirmation",
+        "/Main/SubmittedRequisition/ApprovedPurchaseRequisition",
+      ],
+    },
+    {
+      label: "Requisition List",
+      paths: [
+        "/Main/Purchase/PurchaseRecommendingApproval",
+        "/Main/Purchase/RequisitionHistory",
+      ],
+    },
+    { label: "My Requisition", path: "/Main/Purchase/MyRequisition" },
+    { label: "User Management", path: "/Main/UserManagement" },
+    { label: "Summaries", path: "/Main/Summaries" },
+    { label: "BIR 2307", path: "/Main/bir2307" },
+    { label: "Creditors", path: "/Main/Creditors" },
+  ];
+
+  const roleMenuMap = {
+    "Regular Employee": [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "Creditors",
+    ],
+    Admin: [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "Requisition List",
+      "My Requisition",
+      "BIR 2307",
+      "Creditors",
+    ],
+    "Chief Accountant": [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "Submitted Requisition",
+      "Vouchers",
+      "Summaries",
+      "Cashbooks",
+      "BIR 2307",
+      "Creditors",
+    ],
+    Accounting: [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "Submitted Requisition",
+      "Vouchers",
+      "Summaries",
+      "Cashbooks",
+      "BIR 2307",
+      "Creditors",
+    ],
+    "Chief Administrator Manager": [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "Requisition List",
+      "Vouchers",
+      "BIR 2307",
+      "Creditors",
+    ],
+    "Project Director": [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "Requisition List",
+      "BIR 2307",
+      "Creditors",
+    ],
+    SuperAdmin: [
+      "Dashboard",
+      "Purchase Requisition Form",
+      "My Requisition",
+      "User Management",
+      "BIR 2307",
+      "Creditors",
+    ],
+  };
+
+  const allowedLabels = roleMenuMap[role] || [];
+
+  let paths = [];
+  allMenu.forEach((item) => {
+    if (allowedLabels.includes(item.label)) {
+      if (item.path) paths.push(item.path);
+      if (item.paths) paths.push(...item.paths);
+    }
+  });
+
+  return paths;
 }

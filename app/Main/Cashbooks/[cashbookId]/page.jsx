@@ -1,5 +1,7 @@
 "use client";
 import CashbooksTable from "@/app/components/Tables/cashbookTable";
+import { getCreditors } from "@/functions/cashbook";
+import { GetBDONo, GetCashbookHeaders, GetCashNo } from "@/functions/vouchers";
 import { useBanner } from "@/hooks/Context/banner";
 import axios from "axios";
 import { useParams } from "next/navigation";
@@ -7,7 +9,7 @@ import React, { useEffect, useState } from "react";
 
 const CashbookDetailed = () => {
   const params = useParams();
-  const { showSucess, showError } = useBanner();
+  const { showSuccess, showError } = useBanner();
   const [data, setData] = useState([]);
   const [date, setDate] = useState();
   const [previousMonthBalance, setPreviousMonthBalance] = useState(22220976.69);
@@ -23,10 +25,13 @@ const CashbookDetailed = () => {
   const [acNo2, setAcNo2] = useState("");
   const [currency, setCurrency] = useState();
   const [category, setCategory] = useState();
+  const [creditors, setCreditors] = useState([]);
   // fetch data
   const fetchData = async () => {
     try {
       const response = await axios.get(`/api/cashbooks/${params.cashbookId}`);
+      const res = await getCreditors();
+      setCreditors(res.dataList || []);
       setData(response?.data?.cashbooksDetails || []);
       setCategory(response.data.category);
       setCurrency(response.data.currency);
@@ -35,11 +40,23 @@ const CashbookDetailed = () => {
 
       setA_C_No(accountNo);
 
-      const parts = accountNo.split(" ");
+      const bdo = await GetBDONo(
+        `${response.data?.currency} ${response.data?.category}`,
+      );
 
-      setAcNo1(parts[0] || "");
-      setAcNo2(parts[1] || "");
-      setProjectCode(response.data?.project_code);
+      setAcNo1(response.data?.category === "Bank" ? bdo?.code || "" : "");
+
+      const cash = await GetCashNo(
+        `${response.data?.currency} ${response.data?.category}`,
+      );
+
+      setAcNo2(cash?.code || "");
+
+      const header = await GetCashbookHeaders(
+        `${response.data?.currency} ${response.data?.category}`,
+      );
+
+      setProjectCode(header?.code || "");
       setNextMonthBalance(response.data?.balance_carried_forward_to_next_month);
       setNextMontReciept(response.data?.receipt_carried_forward_to_next_month);
       setNextMonthPayment(response.data?.payment_carried_forward_to_next_month);
@@ -68,6 +85,21 @@ const CashbookDetailed = () => {
     );
   }, []);
 
+  // recompute
+  const recomputeBalances = (rows, openingBalance) => {
+    let runningBalance = Number(openingBalance || 0);
+
+    return rows.map((item) => {
+      runningBalance =
+        runningBalance + Number(item.receipt || 0) - Number(item.payment || 0);
+
+      return {
+        ...item,
+        balance: runningBalance,
+      };
+    });
+  };
+
   //handle change
   const handleChange = (index, field, value) => {
     setData((prev) => {
@@ -75,29 +107,19 @@ const CashbookDetailed = () => {
 
       updated[index] = {
         ...updated[index],
-        [field]: ["receipt", "payment", "slipNo"].includes(field)
-          ? Number(value) || 0
+        [field]:
+          ["receipt", "payment", "slipNo"].includes(field) ?
+            Number(value) || 0
           : value,
       };
 
-      updated.forEach((item, i) => {
-        const receipt = Number(item.receipt || 0);
-        const payment = Number(item.payment || 0);
-
-        const previousBalance =
-          i === 0
-            ? Number(previousMonthBalance || 0) // opening balance
-            : Number(updated[i - 1].balance || 0);
-
-        updated[i] = {
-          ...item,
-          balance: previousBalance + receipt - payment,
-        };
-      });
-
-      return updated;
+      return recomputeBalances(updated, previousMonthBalance);
     });
   };
+
+  useEffect(() => {
+    setData((prev) => recomputeBalances(prev, previousMonthBalance));
+  }, [previousMonthBalance]);
 
   //handleHeaderChange
   const handleHeaderChange = (field, value) => {
@@ -105,9 +127,9 @@ const CashbookDetailed = () => {
       const [first = "", second = ""] = (A_C_No || "").split(" ");
 
       const newValue =
-        field === "A_C_No_1"
-          ? `${value} ${second}`.trim()
-          : `${first} ${value}`.trim();
+        field === "A_C_No_1" ?
+          `${value} ${second}`.trim()
+        : `${first} ${value}`.trim();
 
       setA_C_No(newValue);
       return;
@@ -160,28 +182,33 @@ const CashbookDetailed = () => {
 
   // handleSubmit
   const handleSubmit = async () => {
-    const payload = {
-      project_code: projectCode,
-      A_C_No,
+    try {
+      const payload = {
+        project_code: projectCode,
+        A_C_No: `${acNo1} ${acNo2}`,
 
-      balance_brought_forward_from_previous_month: previousMonthBalance,
+        balance_brought_forward_from_previous_month: previousMonthBalance,
 
-      receipt_brought_forward_from_previous_month: previousMonthReceipt,
+        receipt_brought_forward_from_previous_month: previousMonthReceipt,
 
-      payment_brought_forward_from_previous_month: previousMonthPayment,
+        payment_brought_forward_from_previous_month: previousMonthPayment,
 
-      balance_carried_forward_to_next_month: nextMonthBalance,
+        balance_carried_forward_to_next_month: nextMonthBalance,
 
-      receipt_carried_forward_to_next_month: nextMonthReceipt,
+        receipt_carried_forward_to_next_month: nextMonthReceipt,
 
-      payment_carried_forward_to_next_month: nextMonthPayment,
+        payment_carried_forward_to_next_month: nextMonthPayment,
 
-      cashbooksDetails: data,
-    };
+        cashbooksDetails: data,
+      };
 
-    console.log(payload);
+      await axios.put(`/api/cashbooks/${params.cashbookId}`, payload);
 
-    //  await axios.put(`/api/cashbooks/${params.cashbookId}`, payload);
+      showSuccess("Cashbook updated successfully");
+    } catch (err) {
+      console.error(err);
+      showError("Failed to update cashbook");
+    }
   };
   useEffect(() => {
     setNextMonthBalance(
@@ -206,7 +233,8 @@ const CashbookDetailed = () => {
                   type="text"
                   placeholder="ZPC-LC1"
                   className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent"
-                  value={projectCode || "ZPC-LC1"}
+                  value={projectCode || ""}
+                  readOnly
                   onChange={(e) =>
                     handleHeaderChange("project_code", e.target.value)
                   }
@@ -247,12 +275,9 @@ const CashbookDetailed = () => {
                 {"(A/C No."}
                 <input
                   type="text"
-                  placeholder="BDO# 105790173323"
-                  value={A_C_No?.split(" ")[0] || "BDO#105790173323"}
+                  readOnly={true}
+                  value={acNo1 || ""}
                   className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent"
-                  onChange={(e) =>
-                    handleHeaderChange("A_C_No_1", e.target.value)
-                  }
                 />
                 {")"}
               </td>
@@ -261,43 +286,66 @@ const CashbookDetailed = () => {
                 <input
                   type="text"
                   placeholder="003N1"
-                  value={A_C_No?.split(" ")[1] || "003N1"}
+                  readOnly
+                  value={acNo2 || ""}
                   className="border w-15 border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent"
-                  onChange={(e) =>
-                    handleHeaderChange("A_C_No_2", e.target.value)
-                  }
                 />
               </td>
             </tr>
           </tbody>
         </table>
         {/* cashbooksTable Component */}
-        <div className="mt-3">
+        <div className="mt-3 max-h-[700px] overflow-y-auto ">
           <CashbooksTable
-            tableHeader={[
-              "Slip No",
-              "Date",
-              "Description",
-              "Account Code",
-              "Job No",
-              "Reference No",
-              "Payee/Payer No",
-              "Payee/Payor",
-              "Reciept",
-              "Payment",
-              "Balance",
-              "Others",
-              "GL Count",
-              // OUTSIDE THE TABLE
-              "CRM",
-              "length",
-              "SI#",
-              "AR/OR#",
-              "Company",
-              "Claimable/Non-Claimable",
-              "Code In Invoice to DOTR",
-              "Description",
-            ]}
+            tableHeader={
+              currency === "PH" ?
+                [
+                  "Slip No",
+                  "Date",
+                  "Description",
+                  "Account Code",
+                  "Job No",
+                  "Reference No",
+                  "Payee/Payer No",
+                  "Payee/Payor",
+                  "Reciept",
+                  "Payment",
+                  "Balance",
+                  "Others",
+                  "GL Count",
+                  // OUTSIDE THE TABLE
+                  "CRM",
+                  "length",
+                  "SI#",
+                  "AR/OR#",
+                  "Company",
+                  "Claimable/Non-Claimable",
+                  "Code In Invoice to DOTR",
+                  "Description",
+                ]
+              : [
+                  "Slip No",
+                  "Date",
+                  "Description",
+                  "Account Code",
+                  "Job No",
+                  "Reference No",
+                  "Payee/Payer No",
+                  "Payee/Payor",
+                  "Reciept",
+                  "Payment",
+                  "Balance",
+                  "Others",
+                  "GL Count",
+                  // OUTSIDE THE TABLE
+                  "CRM",
+                  "length",
+                  "Company",
+                  "Claimable/Non-Claimable",
+                  "Code In Invoice to DOTR",
+                  "Description",
+                ]
+            }
             tbdatDetailes={data}
             handleChange={handleChange}
             previousMonthBalance={previousMonthBalance}
@@ -307,6 +355,8 @@ const CashbookDetailed = () => {
             nextMonthPayment={nextMonthPayment}
             nextMonthReceipt={nextMonthReceipt}
             handleMonthChange={handleMonthChange}
+            creditors={creditors}
+            currency={currency}
           />
         </div>
         <button onClick={handleSubmit}>Submit</button>

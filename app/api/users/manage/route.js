@@ -38,12 +38,14 @@ export async function PATCH(req) {
     }
 
     const allowedFields = [
+      "userID",
       "firstname",
       "lastname",
       "email",
       "role",
       "department",
       "position",
+      "mustChangePassword",
     ];
     for (const field of allowedFields) {
       if (body[field] !== undefined && body[field] !== "") {
@@ -54,7 +56,11 @@ export async function PATCH(req) {
     if (body.password && body.password.trim() !== "") {
       updateData.password = await bcrypt.hash(body.password, 10);
     }
-
+    // Coerce mustChangePassword string → boolean
+    if (updateData.mustChangePassword !== undefined) {
+      updateData.mustChangePassword =
+        updateData.mustChangePassword === "false" ? false : true;
+    }
     await User.update(updateData, {
       where: { userID: userid.trim() },
     });
@@ -70,12 +76,15 @@ export async function PATCH(req) {
       profile: updatedUser.profile_pic,
       department: updatedUser.department,
       e_sign: updatedUser.e_signature,
+      mustChangePassword: updatedUser.mustChangePassword ?? false,
       name: `${updatedUser.lastname}, ${updatedUser.firstname} ${
-        !updatedUser.middle ||
-        updatedUser.middle === "N/A" ||
-        updatedUser.middle === null
-          ? ""
-          : updatedUser.middle
+        (
+          !updatedUser.middle ||
+          updatedUser.middle === "N/A" ||
+          updatedUser.middle === null
+        ) ?
+          ""
+        : updatedUser.middle
       }`,
     });
 

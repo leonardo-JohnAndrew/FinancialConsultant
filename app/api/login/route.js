@@ -43,12 +43,15 @@ export async function POST(request) {
       profile: userAccount.profile_pic,
       department: userAccount.department,
       e_sign: userAccount.e_signature,
+      mustChangePassword: userAccount.mustChangePassword ?? false,
       name: `${userAccount.lastname}, ${userAccount.firstname} ${
-        !userAccount.middle ||
-        userAccount.middle === "N/A" ||
-        userAccount.middle === null
-          ? ""
-          : userAccount.middle
+        (
+          !userAccount.middle ||
+          userAccount.middle === "N/A" ||
+          userAccount.middle === null
+        ) ?
+          ""
+        : userAccount.middle
       }`,
     });
 

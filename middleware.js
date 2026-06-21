@@ -1,23 +1,21 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "./lib/auth";
+import { getAllowedPaths } from "./functions/menus";
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Public auth routes
   if (
     pathname.startsWith("/api/login") ||
-    pathname.startsWith("/api/cookies") // ← may 's' na
+    pathname.startsWith("/api/cookies")
   ) {
     return NextResponse.next();
   }
 
-  // USER REGISTRATION: only POST allowed, NO AUTH CHECK
   if (pathname.startsWith("/api/users") && request.method === "POST") {
     return NextResponse.next();
   }
 
-  // Everything else requires token
   const token = request.cookies.get("token")?.value;
 
   if (!token) {
@@ -30,13 +28,31 @@ export async function middleware(request) {
   try {
     const decoded = await verifyToken(token);
 
-    // E-SIGN GUARD
-    const hasEsign = decoded.e_sign && decoded.e_sign.trim() !== "";
-    const isUserProfile = pathname.startsWith("/Main/Profile");
     const isApiRoute = pathname.startsWith("/api");
+    const isUserProfile = pathname.startsWith("/Main/Profile");
 
+    // ── E-SIGN GUARD ─────────────────────────────────────────────
+    const hasEsign = decoded.e_sign && decoded.e_sign.trim() !== "";
     if (!hasEsign && !isUserProfile && !isApiRoute) {
       return NextResponse.redirect(new URL("/Main/Profile", request.url));
+    }
+
+    // ── MUST CHANGE PASSWORD GUARD ───────────────────────────────
+    const mustChange =
+      decoded.mustChangePassword === true || decoded.mustChangePassword === 1;
+    if (mustChange && !isUserProfile && !isApiRoute) {
+      return NextResponse.redirect(
+        new URL("/Main/Profile?setup=true", request.url),
+      );
+    }
+
+    // ── ROLE-BASED PAGE GUARD ─────────────────────────────────────
+    if (pathname.startsWith("/Main") && !isUserProfile) {
+      const allowedPaths = getAllowedPaths(decoded.role);
+      const isAllowed = allowedPaths.some((p) => pathname.startsWith(p));
+      if (!isAllowed) {
+        return NextResponse.redirect(new URL("/Main/Home", request.url));
+      }
     }
 
     return NextResponse.next();

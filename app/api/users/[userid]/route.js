@@ -15,6 +15,7 @@ export async function PATCH(req, { params }) {
       "role",
       "department",
       "position",
+      "mustChangePassword",
     ];
     const updateData = {};
 
@@ -30,13 +31,9 @@ export async function PATCH(req, { params }) {
       updateData.password = await bcrypt.hash(body.password, 10);
     }
 
-    console.log("Updating userID:", userid, "with:", updateData); //   debug
-
     const [rowsAffected] = await User.update(updateData, {
       where: { userID: userid },
     });
-
-    console.log("Rows affected:", rowsAffected); //   should be 1
 
     if (rowsAffected === 0) {
       return NextResponse.json(

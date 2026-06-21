@@ -1,6 +1,9 @@
 import { Purchase } from "@/db/models";
 import { GetSpecificRequest } from "@/functions/purchase";
+import { verifyToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { decode } from "node:punycode";
 
 export async function GET(request) {
   const url = new URL(request.url);
@@ -35,6 +38,10 @@ export async function GET(request) {
 }
 export async function POST(request) {
   try {
+    const token = (await cookies()).get("token")?.value;
+    const decoded = await verifyToken(token);
+    const username = decoded.name;
+
     const url = new URL(request.url);
     const searchParams = url.searchParams;
     const body = await request.json();
@@ -50,12 +57,13 @@ export async function POST(request) {
       );
     }
     //update
-    await purchase.update({ AdminSign: body.e_sign });
+    await purchase.update({ AdminSign: body.e_sign, AdminName: username });
     return NextResponse.json(
       { message: `You Approved Purchase Requesition: ${id}` },
       { status: 200 },
     );
   } catch (error) {
+    console.log(error.message);
     return NextResponse.json({ error_message: error.message }, { status: 500 });
   }
 }

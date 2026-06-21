@@ -41,9 +41,9 @@ const VourcherComponent = (props) => {
       {/* table start  */}
       <div className="flex justify-center items-center h-5">
         <h4 className="font-bold text-lg">
-          {index === 0
-            ? `Amount - ${formatMoney(parseFloat(checkAmount) || 0)}`
-            : ``}
+          {index === 0 ?
+            `Amount - ${formatMoney(parseFloat(checkAmount) || 0)}`
+          : ``}
         </h4>
       </div>
       {/* flex rows FIrst Part */}
@@ -56,7 +56,7 @@ const VourcherComponent = (props) => {
           <div className="border-x-2 p-2 px-5.5  border-black">
             {/* <h4>{voucher.payment_item}</h4> */}
             <h4>
-              {`${voucher.accountCode || ""} ${voucher.glCode || ""}`.trim()}
+              {`${voucher.accountCode || ""} ${voucher.glCode?.split("-")[0] || ""}`.trim()}
             </h4>
           </div>
           <div className=" p-2 border-l-0 border-r-0">
@@ -148,9 +148,9 @@ const VourcherComponent = (props) => {
               </div>
               <div className="flex-2 p-2 flex justify-end items-center">
                 <h4 className="text-lg">
-                  {voucher.voucherType.includes("PHP")
-                    ? formatMoney(Number(amt.amount), "PHP")
-                    : formatMoney(Number(amt.amount), "USD", "en-US")}
+                  {voucher.voucherType.includes("PHP") ?
+                    formatMoney(Number(amt.amount), "PHP")
+                  : formatMoney(Number(amt.amount), "USD", "en-US")}
                 </h4>
                 {/* <input
                   type="number"
@@ -249,18 +249,20 @@ const VourcherComponent = (props) => {
             </div>
             <div className="flex-2 p-3 flex justify-end items-center">
               <h4 className="text-lg">
-                {voucher.voucherType.includes("PHP")
-                  ? formatMoney(
-                      voucher?.children?.reduce(
-                        (store, current) => store + current.amount,
-                        0,
-                      ) || 0,
-                    )
-                  : formatMoney(
-                      voucher?.children.reduce(
-                        (store, current) => store + current.amount,
-                      ) || 0,
-                    )}
+                {voucher.voucherType.includes("PHP") ?
+                  formatMoney(
+                    (voucher?.children ?? []).reduce(
+                      (total, child) => total + Number(child.amount || 0),
+                      0,
+                    ),
+                  )
+                : formatMoney(
+                    (voucher?.children ?? []).reduce(
+                      (total, child) => total + Number(child.amount || 0),
+                      0,
+                    ),
+                  )
+                }
               </h4>
               {/* <input
                 type="number"

@@ -1,3 +1,6 @@
+"use client";
+import { useBanner } from "@/hooks/Context/banner";
+import axios from "axios";
 import Link from "next/link";
 import React, { useState } from "react";
 
@@ -14,9 +17,44 @@ const CashbooksTable = (props) => {
     nextMonthPayment,
     nextMonthBalance,
     handleMonthChange,
+    creditors = [],
+    currency,
   } = props;
   const [modal, setModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [selectedCashbook, setSelectedCashbook] = useState(null);
+  const [activeSuggestion, setActiveSuggestion] = useState(null);
+  const { showError } = useBanner();
+  const [editRange, setEditRange] = useState({
+    dateRangeStart: "",
+    dateRangeEnd: "",
+  });
+  const handleUpdateRange = async () => {
+    try {
+      const res = await axios.patch(
+        `/api/cashbooks/${selectedCashbook.cashbook_id}`,
+        editRange,
+      );
 
+      showSuccess("Range updated");
+
+      /*
+      Kung may existing children,
+      automatic mag-aadd ng bagong pasok sa range.
+      Kung wala pa, inserted = 0 lang.
+    */
+
+      if (res.data.inserted > 0) {
+        showSuccess(`${res.data.inserted} additional entries synced`);
+      }
+
+      setOpenEditModal(false);
+
+      fetchCashbooks();
+    } catch (err) {
+      showError("Failed to update range");
+    }
+  };
   return (
     <>
       <div className="table-container w-full">
@@ -57,12 +95,50 @@ const CashbooksTable = (props) => {
                   </h3>
                 </td>
                 <td>
-                  <Link
-                    className="px-4 py-1 bg-btnRed text-white font-bold rounded-lg border hover:border hover:border-darkRed hover:text-black hover:bg-white"
-                    href={`/Main/Cashbooks/${data.cashbook_id}`}
-                  >
-                    view
-                  </Link>
+                  <div className="flex gap-2">
+                    {/* EDIT RANGE */}
+                    <button
+                      className="px-4 py-1 bg-yellow-500 text-white font-bold rounded-lg"
+                      onClick={() => {
+                        setSelectedCashbook(data);
+                        setEditRange({
+                          dateRangeStart: data.dateRangeStart?.split("T")[0],
+                          dateRangeEnd: data.dateRangeEnd?.split("T")[0],
+                        });
+                        setOpenEditModal(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    {/* VIEW / SYNC */}
+                    {data.hasChildren ?
+                      <Link
+                        className="px-4 py-1 bg-btnRed text-white font-bold rounded-lg"
+                        href={`/Main/Cashbooks/${data.cashbook_id}`}
+                      >
+                        View
+                      </Link>
+                    : <button
+                        className="px-4 py-1 bg-green-600 text-white font-bold rounded-lg"
+                        onClick={async () => {
+                          try {
+                            const res = await axios.post(
+                              `/api/cashbooks/${data.cashbook_id}/sync`,
+                            );
+
+                            showSuccess(`${res.data.inserted} entries synced`);
+
+                            fetchCashbooks();
+                          } catch (err) {
+                            showError("Failed to sync cashbook");
+                          }
+                        }}
+                      >
+                        Sync
+                      </button>
+                    }
+                  </div>
                 </td>
               </tr>
             ))}
@@ -107,6 +183,7 @@ const CashbooksTable = (props) => {
                   <td className="p-2">
                     <input
                       type="number"
+                      className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent"
                       value={previousMonthBalance}
                       onChange={(e) =>
                         handleMonthChange(
@@ -157,7 +234,7 @@ const CashbooksTable = (props) => {
                   <input
                     className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent "
                     type="date"
-                    value={data.date.split("T")[0] || ""}
+                    value={data.date?.split("T")[0] || ""}
                     onChange={(e) =>
                       handleChange(index, "slipNo", e.target.value)
                     }
@@ -220,18 +297,60 @@ const CashbooksTable = (props) => {
                   />
                 </td>
                 {/* payee/payor */}
-                <td className="px-2 py-2">
+                <td className="px-2 py-2 relative">
                   <textarea
-                    className="border border-gray-300 bg-gray-200 h-20 text-black print:border-0 print:outline-none print:bg-transparent"
-                    type="text"
-                    // style={{
-                    //   width: `${String(data.payee_payer || "").length + 3}ch`,
-                    // }}
+                    className="border border-gray-300 bg-gray-200 h-20 w-50 text-black"
                     value={data.payee_payer || ""}
-                    onChange={(e) =>
-                      handleChange(index, "payee_payer", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+
+                      handleChange(index, "payee_payer", value);
+
+                      setActiveSuggestion(index);
+                    }}
+                    onFocus={() => setActiveSuggestion(index)}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setActiveSuggestion(null);
+                      }, 150);
+                    }}
                   />
+
+                  {activeSuggestion === index && (
+                    <div className="absolute bg-white border shadow-md max-h-48 overflow-y-auto w-80 z-50">
+                      {creditors
+                        .filter((item) =>
+                          item.creditorsName
+                            ?.toLowerCase()
+                            .includes((data.payee_payer || "").toLowerCase()),
+                        )
+                        .slice(0, 10)
+                        .map((item) => (
+                          <div
+                            key={item.code}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => {
+                              handleChange(
+                                index,
+                                "payee_payer",
+                                item.creditorsName,
+                              );
+
+                              handleChange(index, "CRM", item.code);
+                              setActiveSuggestion(null);
+                            }}
+                          >
+                            <div className="font-medium">
+                              {item.creditorsName}
+                            </div>
+
+                            <div className="text-xs text-gray-500">
+                              CRM: {item.code}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
                 </td>
                 {/* receipt */}
                 <td className="px-2 py-2">
@@ -272,11 +391,151 @@ const CashbooksTable = (props) => {
                 <td className="p-2">
                   <textarea className="w-50 h-20 border border-gray-300  bg-gray-200 text-black "></textarea>
                 </td>
+
+                {/* crm */}
+                <td className="px-2 py-2">
+                  <input
+                    className="border border-gray-300 w-30 bg-gray-200"
+                    value={data.CRM || ""}
+                    readOnly
+                  />
+                </td>
+                {/* char length ni description */}
+                <td className="px-2 py-2">
+                  <input
+                    className="border border-gray-300 w-30 bg-gray-200"
+                    value={data.description?.length || 0}
+                    readOnly
+                  />
+                </td>
+
+                {/*  */}
+                {currency === "PH" && (
+                  <>
+                    <td className="px-2 py-2">
+                      <input
+                        className="border border-gray-300 w-30 bg-gray-200"
+                        value={data.SIno || ""}
+                        onChange={(e) =>
+                          handleChange(index, "SIno", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        className="border border-gray-300 w-30 bg-gray-200"
+                        value={data.A_ORNo || ""}
+                        onChange={(e) =>
+                          handleChange(index, "A_ORNo", e.target.value)
+                        }
+                      />
+                    </td>
+                  </>
+                )}
+                {/* company inputed lng  */}
+                <td className="px-2 py-2">
+                  <input
+                    className="border border-gray-300 w-30 bg-gray-200"
+                    value={data.company || ""}
+                    onChange={(e) =>
+                      handleChange(index, "company", e.target.value)
+                    }
+                  />
+                </td>
+                {/* claimable or non claimable changeable dropdown  */}
+                <td className="px-2 py-2">
+                  <select
+                    className="border border-gray-300  bg-gray-200"
+                    value={data.Claimable || ""}
+                    onChange={(e) =>
+                      handleChange(index, "Claimable", e.target.value)
+                    }
+                  >
+                    <option value="">Select</option>
+
+                    <option value="Claimable">Claimable</option>
+
+                    <option value="Non-Claimable">Non Claimable</option>
+                  </select>
+                </td>
+                {/* code invoice to dotr inputed lng din */}
+                <td className="p-2">
+                  <input
+                    className="border border-gray-300 w-30 bg-gray-200"
+                    value={data.code_invoice_DOTR || ""}
+                    onChange={(e) =>
+                      handleChange(index, "code_invoice_DOTR", e.target.value)
+                    }
+                  />
+                </td>
+                {/* description reimbursable tinatype sya */}
+                <td className="p-2">
+                  <textarea
+                    className="w-50 h-20 border border-gray-300 bg-gray-200"
+                    value={data.reimbursable_description || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        index,
+                        "reimbursable_description",
+                        e.target.value,
+                      )
+                    }
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {openEditModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+            <h2 className="text-xl font-bold mb-4">Edit Cashbook Range</h2>
+
+            <div className="space-y-4">
+              <input
+                type="date"
+                value={editRange.dateRangeStart}
+                onChange={(e) =>
+                  setEditRange((prev) => ({
+                    ...prev,
+                    dateRangeStart: e.target.value,
+                  }))
+                }
+                className="border p-2 rounded w-full"
+              />
+
+              <input
+                type="date"
+                value={editRange.dateRangeEnd}
+                onChange={(e) =>
+                  setEditRange((prev) => ({
+                    ...prev,
+                    dateRangeEnd: e.target.value,
+                  }))
+                }
+                className="border p-2 rounded w-full"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                className="border px-4 py-2 rounded"
+                onClick={() => setOpenEditModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={handleUpdateRange}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
