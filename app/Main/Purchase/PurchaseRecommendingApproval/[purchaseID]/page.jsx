@@ -11,6 +11,8 @@ import useUserContext from "@/hooks/Context/UserContext";
 import { useRouter } from "next/navigation";
 import { useBanner } from "@/hooks/Context/banner";
 import ConfirmBox from "@/app/components/modals/confirmbox";
+import { findDepartment, findSpecificRole } from "@/functions/notification";
+import { sendPurchaseApprovedEmail } from "@/lib/sendWelcomeEmail";
 export default function PurchaseDetails() {
   const pathname = usePathname();
   const params = useParams();
@@ -114,6 +116,7 @@ export default function PurchaseDetails() {
   const handleConfirm = async () => {
     let response;
     // userRole
+
     switch (userRole) {
       case "Chief Administrator Manager":
         // axios
@@ -123,6 +126,35 @@ export default function PurchaseDetails() {
             e_sign: user?.e_sign,
           },
         );
+        // pd notification
+        const projectDirector = await findSpecificRole("Project Director");
+
+        for (const pd of projectDirector?.data || []) {
+          const notifySytstem = await axios.post("/api/notification", {
+            userId: pd.userID,
+            title: "Purchase Requisition Approval",
+            message:
+              userRole +
+              " Approve Purchase Requisition id: " +
+              params.purchaseID,
+            type: "Info",
+            link: "",
+            // link host
+          });
+          if (notifySytstem.status === 200 || notifySytstem.status === 201) {
+            // email send
+            const res = await sendPurchaseApprovedEmail({
+              toEmail: pd.email,
+              requestNo: params.purchaseID,
+              approvedBy: user.name,
+              approvedByRole: user.role,
+              appUrl: "",
+              // url link host
+            });
+          } else {
+            return;
+          }
+        }
         if (response.status === 200 || response.status === 201) {
           showSuccess(response.data?.message);
         } else {
@@ -140,6 +172,35 @@ export default function PurchaseDetails() {
             e_sign: user?.e_sign,
           },
         );
+        // accountant :
+        const accountant = await findDepartment("Accounting");
+        for (const acc of accountant?.data || []) {
+          // system
+          const notifySytstem = await axios.post("/api/notification", {
+            userId: acc.userID,
+            title: "Purchase Requisition Approval",
+            message:
+              "Project Director Approve Purchase Requisition id: " +
+              params.purchaseID,
+            type: "Info",
+            link: "",
+            // link host
+          });
+          if (notifySytstem.status === 200 || notifySytstem.status === 201) {
+            // email send
+            const res = await sendPurchaseApprovedEmail({
+              toEmail: acc.email,
+              requestNo: params.purchaseID,
+              approvedBy: user.name,
+              approvedByRole: user.role,
+              appUrl: "",
+              // url link host
+            });
+          } else {
+            return;
+          }
+          // email
+        }
         if (response.status === 200 || response.status === 201) {
           showSuccess(response.data?.message);
         } else {
@@ -157,7 +218,37 @@ export default function PurchaseDetails() {
             e_sign: user?.e_sign,
           },
         );
-
+        // pd notification
+        // accountant :
+        const ChiefAdmin = await findSpecificRole(
+          "Chief Administrator Manager",
+        );
+        for (const chief of ChiefAdmin?.data || []) {
+          // system
+          const notifySytstem = await axios.post("/api/notification", {
+            userId: chief.userID,
+            title: "Purchase Requisition Approval",
+            message:
+              "Admin Approve Purchase Requisition id: " + params.purchaseID,
+            type: "Info",
+            link: "",
+            // link host
+          });
+          if (notifySytstem.status === 200 || notifySytstem.status === 201) {
+            // email send
+            const res = await sendPurchaseApprovedEmail({
+              toEmail: chief.email,
+              requestNo: params.purchaseID,
+              approvedBy: user.name,
+              approvedByRole: user.role,
+              appUrl: "",
+              // url link host
+            });
+          } else {
+            return;
+          }
+          // email
+        }
         if (response.status === 200 || response.status === 201) {
           showSuccess(response.data?.message);
         } else {
@@ -170,6 +261,9 @@ export default function PurchaseDetails() {
       default:
         break;
     }
+    // notification
+
+    // accountant
     setTimeout(() => {
       router.push("/Main/Purchase/PurchaseRecommendingApproval");
     }, 1800);
@@ -339,9 +433,9 @@ export default function PurchaseDetails() {
                 />
               )}
               <span>
-                {purchaseDetails?.purchase?.AdminSign != null ?
-                  `${user?.name}`
-                : "Kai Sumitomo"}
+                {purchaseDetails?.purchase?.AdminName != null ?
+                  purchaseDetails?.purchase?.ChiefAdminManagerName
+                : `${user?.name}`}
               </span>
             </td>
 
@@ -474,9 +568,9 @@ export default function PurchaseDetails() {
         </>
       : <>
           <div className="flex justify-end gap-4 mt-10 mb-10">
-            <button className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition">
+            {/* <button className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition">
               Reject
-            </button>
+            </button> */}
 
             <button
               onClick={(e) => {

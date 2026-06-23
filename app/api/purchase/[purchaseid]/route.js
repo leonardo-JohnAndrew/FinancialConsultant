@@ -71,13 +71,7 @@ export async function PATCH(request, { params }) {
     // call function
     const statusResult = await updateStatus("PR Approval", purchaseid);
 
-    // create Notification for Admin
-    const notify = await createNextApprovalNotification(
-      "Accountant",
-      "Head Admin",
-      purchaseid,
-    );
-
+    
     await pr.save();
 
     return NextResponse.json(

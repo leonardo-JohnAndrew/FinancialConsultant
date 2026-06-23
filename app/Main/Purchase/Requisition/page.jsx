@@ -7,6 +7,8 @@ import { FiMinus, FiPlus } from "react-icons/fi";
 import { formatMoney } from "@/functions/formatCurrency";
 import useUserContext from "@/hooks/Context/UserContext";
 import { useBanner } from "@/hooks/Context/banner";
+import { findDepartment } from "@/functions/notification";
+import { sendPurchaseForwardedEmail } from "@/lib/sendWelcomeEmail";
 const CreateRequisition = () => {
   const [data, setData] = useState([]);
   const [row, setRow] = useState([]);
@@ -80,6 +82,31 @@ const CreateRequisition = () => {
     try {
       const response = await axios.post("/api/purchase", forms, {});
       if (response.status === 200 || response.status === 201) {
+        // email send and notication
+        // call all accounting
+        const accounting = await findDepartment("Accounting");
+        // console.log(accounting.data);
+        // create notication
+        for (const forward of accounting?.data) {
+          // console.log(forward);
+          const rs = await axios.post("/api/notification", {
+            userId: forward.userID,
+            title: "Purchase Requisition Submition",
+            message: `${user.name} is Submitted a Purchase Requisitions`,
+            type: "info",
+            // LINK HOST
+          });
+          // email send
+          await sendPurchaseForwardedEmail({
+            toEmail: forward.email,
+            forwardedBy: user.name,
+            forwardedByRole: user.role,
+            forwardedTo: `${forward.firstname} ${forward.lastname}`,
+            // link host
+            appUrl: "",
+          });
+        }
+
         showSuccess(response?.data?.message);
         resetTable();
         addTableRow(5);
@@ -264,25 +291,25 @@ const CreateRequisition = () => {
           data={row}
           item={data}
           tableHeader={
-            user?.role !== "Admin"
-              ? [
-                  "NO",
-                  "ITEM CATALOG # COMPLETE ITEM DESCRIPTION",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
-              : [
-                  "NO",
-                  "ITEM",
-                  "REQUIRED BALANCE",
-                  "ENDING INVENTORY",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
+            user?.role !== "Admin" ?
+              [
+                "NO",
+                "ITEM CATALOG # COMPLETE ITEM DESCRIPTION",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
+            : [
+                "NO",
+                "ITEM",
+                "REQUIRED BALANCE",
+                "ENDING INVENTORY",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
           }
           setData={setData}
           setItemInfo={setItemInfo}

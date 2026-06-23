@@ -44,7 +44,7 @@ export async function POST(request) {
       department: userAccount.department,
       e_sign: userAccount.e_signature,
       mustChangePassword: userAccount.mustChangePassword ?? false,
-      name: `${userAccount.lastname}, ${userAccount.firstname} ${
+      name: `${userAccount.firstname} ${
         (
           !userAccount.middle ||
           userAccount.middle === "N/A" ||
@@ -52,7 +52,7 @@ export async function POST(request) {
         ) ?
           ""
         : userAccount.middle
-      }`,
+      }. ${userAccount.lastname} `,
     });
 
     // store in cookie

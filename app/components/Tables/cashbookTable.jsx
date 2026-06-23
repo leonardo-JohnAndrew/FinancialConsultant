@@ -226,7 +226,7 @@ const CashbooksTable = (props) => {
                     onChange={(e) =>
                       handleChange(index, "slipNo", Number(e.target.value))
                     }
-                    value={data.slipNo || index + 1}
+                    value={index + 1}
                     //slip number
                   />
                 </td>
@@ -389,7 +389,13 @@ const CashbooksTable = (props) => {
                 </td>
                 {/* GL Count */}
                 <td className="p-2">
-                  <textarea className="w-50 h-20 border border-gray-300  bg-gray-200 text-black "></textarea>
+                  <textarea
+                    className="w-50 h-20 border border-gray-300  bg-gray-200 text-black "
+                    onChange={(e) =>
+                      handleChange(index, "glCount", e.target.value)
+                    }
+                    value={data.glCount}
+                  ></textarea>
                 </td>
 
                 {/* crm */}

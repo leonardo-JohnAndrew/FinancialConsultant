@@ -102,7 +102,7 @@ export default function Profile() {
     );
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="w-full mx-auto py-10 px-4">
       {/* TOAST */}
       {toast && (
         <div

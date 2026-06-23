@@ -208,13 +208,7 @@ export default function DashboardPage() {
     switch (role) {
       case "Admin":
         return [
-          {
-            label: "Total Users",
-            value: stats.totalUsers ?? 0,
-            icon: "👤",
-            color: "bg-blue-50 border-blue-100",
-            text: "text-blue-600",
-          },
+ 
           {
             label: "Purchase Requests",
             value: stats.totalPurchase ?? 0,
@@ -276,13 +270,6 @@ export default function DashboardPage() {
             icon: "📝",
             color: "bg-blue-50 border-blue-100",
             text: "text-blue-600",
-          },
-          {
-            label: "Budget Projects",
-            value: stats.totalBudget ?? 0,
-            icon: "📊",
-            color: "bg-teal-50 border-teal-100",
-            text: "text-teal-600",
           },
         ];
       case "Chief Administrator Manager":

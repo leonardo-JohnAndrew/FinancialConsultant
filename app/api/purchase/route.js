@@ -89,6 +89,7 @@ export async function POST(request) {
       UserID: body?.purchaseItem[0]?.UserID,
       RequestorDepartment: userDprt?.department || "",
       timeStamp: new Date(),
+      status: "Budget Confirmation",
       EmployeeSign: body?.EmployeeSign,
       Total: body.TotalItem,
       mode: body.mode,
@@ -118,29 +119,6 @@ export async function POST(request) {
       );
     }
     //find users
-
-    //notification parts
-    const notify = await accountingNofication(
-      "Budget Confirmation",
-      purchase.PurchaseID,
-      `${userDprt.lastname}, ${userDprt.firstname}`,
-    );
-    const status = await updateStatus(
-      "Budget Confirmation",
-      purchase.PurchaseID,
-    );
-    if (notify === false || status === false) {
-      await purchase.destroy({
-        where: { PurchaseID: purchase.PurchaseID },
-      });
-      return NextResponse.json(
-        {
-          message: "Failed to create purchase items, purchase rolled back",
-        },
-        { status: 500 },
-      );
-    }
-
     return NextResponse.json(
       {
         message: "Purchase created successfully",

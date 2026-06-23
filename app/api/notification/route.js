@@ -27,7 +27,7 @@ export async function POST(req) {
     const body = await req.json();
     const { userId, title, message, type, link } = body;
     const notif = await Notification.create({
-      userId,
+      userID: userId,
       title,
       message,
       type,
@@ -35,6 +35,7 @@ export async function POST(req) {
     });
     return NextResponse.json({ notification: notif }, { status: 201 });
   } catch (err) {
+    console.log(err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

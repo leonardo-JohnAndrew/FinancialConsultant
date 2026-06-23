@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useBanner } from "@/hooks/Context/banner";
 import ConfirmBox from "@/app/components/modals/confirmbox";
 import BudgetConfirmationTable from "@/app/components/Tables/budgetConfirmationTable";
+import { sendPurchaseForwardedEmail } from "@/lib/sendWelcomeEmail";
+import { findSpecificRole } from "@/functions/notification";
 export default function PurchaseDetails() {
   const pathname = usePathname();
   const params = useParams();
@@ -122,7 +124,37 @@ export default function PurchaseDetails() {
         prcode,
         items,
       });
-
+      // accountant :
+      const admin = await findSpecificRole("Admin");
+      //  console.log(admin.data);
+      for (const Admin of admin?.data || []) {
+        // system
+        const notifySytstem = await axios.post("/api/notification", {
+          userId: Admin.userID,
+          title: "Purchase Requisition Approval",
+          message:
+            "Accounting Confirm Budget for Purchase Requisition id: " +
+            params.purchaseID,
+          type: "Info",
+          link: "",
+          // link host
+        });
+        if (notifySytstem.status === 200 || notifySytstem.status === 201) {
+          // email send
+          const res = await sendPurchaseForwardedEmail({
+            toEmail: Admin.email,
+            requestNo: params.purchaseID,
+            forwardedBy: user.name,
+            forwardedByRole: user.role,
+            forwardedTo: `${Admin.firstname} ${Admin.lastname}`,
+            appUrl: "",
+            // url link host
+          });
+        } else {
+          return;
+        }
+        // email
+      }
       if (response.status === 200 || response.status === 201) {
         showSuccess(`Budget Confirm: ${params.purchaseID}`);
       }
@@ -131,6 +163,7 @@ export default function PurchaseDetails() {
         router.push("/Main/SubmittedRequisition/BudgetConfirmation");
       }, 1800);
     } catch (err) {
+      console.log(err.message);
       showError("Unable to Confirm Budget");
     }
   };

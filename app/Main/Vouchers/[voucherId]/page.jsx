@@ -12,7 +12,13 @@ import {
   GetAccountCode,
   GetCashAndBankNo,
   GetGLCode,
+  UpdateAttachment,
 } from "@/functions/vouchers";
+import {
+  sendVoucherApprovedEmail,
+  sendVoucherForwardedEmail,
+} from "@/lib/sendWelcomeEmail";
+import { findDepartment, findSpecificRole } from "@/functions/notification";
 const PaymentVouchers = () => {
   const [openModal, setOpenModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -45,7 +51,7 @@ const PaymentVouchers = () => {
     // payment_item: "",
     accountCode: "", // ✅ bago
     glCode: "", // ✅ bago
-    payment_voucher_date: new Date().toISOString().split("T")[0],
+    payment_voucher_date: "",
     voucherType: "CASH USD",
     slipNo: "",
     job: "9665R7268",
@@ -58,6 +64,33 @@ const PaymentVouchers = () => {
       },
     ],
   });
+  const [attachment, setAttachment] = useState(null);
+  const [preview, setPreview] = useState("");
+
+  //file attachment
+  const handleChange = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setAttachment(file);
+    setPreview(URL.createObjectURL(file));
+
+    try {
+      const result = await UpdateAttachment({
+        id: params.voucherId,
+        file,
+      });
+      if (result.success === false) {
+        showError("Failed Upload File");
+      }
+      showSuccess("File  Uploaded");
+      console.log(result.path); // "/uploads/..."
+    } catch (err) {
+      console.log(err.message);
+      showError("Failed to Upload file");
+    }
+  };
   // FETCH EXISTING VOUCHERS
   useEffect(() => {
     fetchVouchers();
@@ -72,6 +105,7 @@ const PaymentVouchers = () => {
         claimable: response.data?.specificCheck?.claimable === true,
         nonClaimable: response.data?.specificCheck?.claimable === false,
       });
+      setAttachment(response.data?.cheque_attachment);
       // supplier name
       const payeeName = await getSuppliers();
       console.log("payeeName", payeeName.data);
@@ -270,10 +304,7 @@ const PaymentVouchers = () => {
       voucherTypeNumber: voucher.voucherTypeNumber || "033N2",
       accountCode: voucher.accountCode || "", // ✅ direct na sa column
       glCode: voucher.glCode || "", // ✅ direct na sa column
-      payment_voucher_date:
-        voucher.payment_voucher_date?.split("T")[0] ||
-        voucher.createdAt?.split("T")[0],
-
+      payment_voucher_date: voucher.payment_voucher_date?.split("T")[0] || "",
       voucherType: voucher.voucherType || "CASH USD",
       slipNo: voucher.slipNo || "",
       receiptOrPayment: voucher.receiptOrPayment || "",
@@ -305,7 +336,33 @@ const PaymentVouchers = () => {
       if (submit.status !== 200 && submit.status !== 201) {
         showError("Failed to Submit");
       } else {
-        showSuccess("Successfully Forwarded to Chief Account");
+        //notification system
+        // get chief Accountant ROle
+        const chiefAccountant = await findSpecificRole("Chief Accountant");
+
+        // api notif post
+        for (const chief of chiefAccountant?.data || []) {
+          await axios.post("/api/notification", {
+            userId: chief.userID,
+            title: "Payment and Receipt Vouchers",
+            message: `${user.name} Forwarded Vooucher List ID : ${params.voucherId}`,
+            type: "Info",
+            link: "",
+            // localhost link
+          });
+        }
+        for (const chief of chiefAccountant?.data || []) {
+          await sendVoucherForwardedEmail({
+            toEmail: chief.email,
+            voucherNo: params.voucherId,
+            forwardedBy: user.name,
+            forwardedByRole: user.role,
+            forwardedTo: chief.firstname + " " + chief.lastname,
+            appUrl: "",
+            // local host link
+          });
+        }
+        showSuccess("Successfully Forwarded to Chief Accountant");
         setTimeout(() => {
           router.push("/Main/Vouchers");
         }, 3000);
@@ -316,6 +373,7 @@ const PaymentVouchers = () => {
       console.log(err.response.data.error_message);
       setApproving(true);
     }
+    // notification email
   };
   // cancel handle
   const handleCancel = () => {
@@ -337,6 +395,28 @@ const PaymentVouchers = () => {
           },
         );
         if (response.status === 200 || response.status === 201) {
+          //notification all accounting
+          const accounting = await findDepartment("Accounting");
+          for (const Accounting of accounting?.data || []) {
+            // system
+            await axios.post("/api/notification", {
+              userId: Accounting.userID,
+              title: "Vouchers Approval",
+              message: `Chief Administrator Manager: ${user.name} Approved Voucher List ID: ${params.voucherId}`,
+              type: `Info`,
+              link: `/Main/Vouchers/${params.id}`,
+            });
+          }
+          for (const Accounting of accounting?.data || []) {
+            // email
+            await sendVoucherApprovedEmail({
+              toEmail: Accounting.userID,
+              voucherNo: params.voucherId,
+              approvedBy: user.name,
+              approvedByRole: "Chief Administrator Manager",
+              appUrl: "",
+            });
+          }
           showSuccess(response.data?.message);
         } else {
           showError("Failed Vouchers Approval");
@@ -352,6 +432,30 @@ const PaymentVouchers = () => {
           },
         );
         if (response.status === 200 || response.status === 201) {
+          // notification chief Admin
+          const chiefAdmin = await findSpecificRole(
+            "Chief Administrator Manager",
+          );
+          for (const chief of chiefAdmin?.data || []) {
+            // system
+            await axios.post("/api/notification", {
+              userId: chief.userID,
+              title: "Vouchers Approval",
+              message: `Chief Accountant: ${user.name} Approved Voucher List ID: ${params.voucherId}`,
+              type: `Info`,
+              link: `/Main/Vouchers/${params.id}`,
+            });
+          }
+          for (const chief of chiefAdmin?.data || []) {
+            // email
+            await sendVoucherApprovedEmail({
+              toEmail: chief.userID,
+              voucherNo: params.voucherId,
+              approvedBy: user.name,
+              approvedByRole: "Chief Accountant",
+              appUrl: "",
+            });
+          }
           showSuccess(response.data?.message);
         } else {
           showError("Failed Vouchers Approval");
@@ -460,7 +564,10 @@ const PaymentVouchers = () => {
             {/* HEADER */}
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-2xl font-bold">
-                {isEdit ? "Edit Payment Voucher" : "Create Payment Voucher"}
+                {isEdit ?
+                  `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                }
               </h2>
 
               <button
@@ -476,9 +583,10 @@ const PaymentVouchers = () => {
               <input
                 type="date"
                 name="payment_voucher_date"
+                placeholder="Voucher Date"
                 value={formData.payment_voucher_date}
                 onChange={handleParentChange}
-                className="border p-2 rounded"
+                className="border p-2 rounded "
               />
 
               <select
@@ -671,7 +779,37 @@ const PaymentVouchers = () => {
           </div>
         </div>
       )}
-
+      {/* file cheque attachment */}
+      {checks?.ChiefAccountSignature !== null &&
+        checks?.ChiefAdminSignature !== null && (
+          // file attachment
+          <>
+            {checks?.cheque_attachment &&
+              (checks?.cheque_attachment.toLowerCase().includes(".pdf") ?
+                <div className="flex justify-center items-center">
+                  <iframe
+                    src={checks?.cheque_attachment || ""}
+                    className="w-full h-fit border rounded m-5"
+                    title="Attachment preview"
+                  />
+                </div>
+              : <div className="flex justify-center items-center">
+                  <img
+                    src={checks?.cheque_attachment || ""}
+                    alt="Attachment Preview"
+                    className="w-full max-h-96 border rounded m-5"
+                  />
+                </div>)}
+            <div className="flex justify-end ">
+              <input
+                type="file"
+                accept=".pdf,image/*"
+                className="bg-btnRed text-white font-bold my-2 hover:bg-black px-2 py-2"
+                onChange={handleChange}
+              />
+            </div>
+          </>
+        )}
       {/* add checkbox claimable and not
        */}
       <div className="flex justify-center mt-6 gap-6">
@@ -693,16 +831,16 @@ const PaymentVouchers = () => {
           Non-Claimable
         </label>
       </div>
+
       {/* approving */}
       {/* table  */}
       {/* e-signature*/}
-      {(user?.role === "Chief Accountant" ||
-        user?.role === "Chief Administrator Manager") && (
+      {
         <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
           <tbody>
             <tr className="text-left">
-              <td className="p-2 w-1/3">Chief Accountant:</td>
-              <td className="p-2 w-1/3">Chief Administrator Manager:</td>
+              <td className="p-2 w-1/3">Approved by:</td>
+              <td className="p-2 w-1/3">Approved by:</td>
             </tr>
 
             <tr className="text-center">
@@ -717,7 +855,7 @@ const PaymentVouchers = () => {
                     } object-contain pointer-events-none`}
                   />
                 )}
-                <span>Admin</span>
+                <span>Laarni Cruz</span>
               </td>
 
               <td className="p-2 relative w-1/3">
@@ -731,7 +869,7 @@ const PaymentVouchers = () => {
                     } object-contain pointer-events-none`}
                   />
                 )}
-                <span>Chief Administrator Manager</span>
+                <span>Kai Sumitomo</span>
               </td>
             </tr>
 
@@ -745,7 +883,7 @@ const PaymentVouchers = () => {
             </tr>
           </tbody>
         </table>
-      )}
+      }
       {/* approving */}
       {isApproving &&
         userRole !== "Chief Accountant" &&

@@ -198,7 +198,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
         ChiefAdminSignature: {
           [Op.not]: null,
         },
-        createdAt: {
+        payment_voucher_date: {
           [Op.between]: [range.dateRangeStart, range.dateRangeEnd],
         },
       },

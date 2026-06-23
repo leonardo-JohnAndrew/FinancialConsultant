@@ -1,6 +1,8 @@
 import { Purchase } from "@/db/models";
 import { GetSpecificRequest } from "@/functions/purchase";
 import { updateStatus } from "@/functions/status";
+import { verifyToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 export async function GET(request) {
   const url = new URL(request.url);

@@ -120,7 +120,7 @@ const VourcherComponent = (props) => {
           {voucher?.children?.map((item, i) => (
             <div
               key={i}
-              className="flex-1 border-b-2  p-3.5 flex justify-center items-center"
+              className="flex-1 border-b-2  p-3.5 flex justify-center items-center "
             >
               <h4 className="italic">{item.title || ""}</h4>
               {/* <input

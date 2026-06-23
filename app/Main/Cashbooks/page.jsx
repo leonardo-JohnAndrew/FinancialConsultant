@@ -23,7 +23,6 @@ const CashbooksList = () => {
   }, []);
   return (
     <>
-      <div>CashbooksList</div>
       {/* call the cashbookTable */}
       <CashbooksTable
         tableHeader={[

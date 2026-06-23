@@ -3,6 +3,44 @@ import { AccountCode, Check, CheckItem, GLcode } from "@/db/models";
 import { NextResponse } from "next/server";
 import { Sequelize } from "sequelize";
 
+import fs from "fs/promises";
+import path from "path";
+
+export async function UpdateAttachment({ id, file }) {
+  try {
+    // Convert File to Buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Unique filename
+    const fileName = `${Date.now()}-${file.name}`;
+
+    // Save to public/uploads
+    const uploadPath = path.join(process.cwd(), "public", "uploads", fileName);
+
+    await fs.writeFile(uploadPath, buffer);
+
+    // Save URL/path to DB
+    await Check.update(
+      {
+        cheque_attachment: `/uploads/${fileName}`,
+      },
+      {
+        where: { id },
+      },
+    );
+
+    return {
+      success: true,
+      path: `/uploads/${fileName}`,
+    };
+  } catch (err) {
+    console.log(err);
+    return {
+      error_message: err.message,
+    };
+  }
+}
 export async function GetFilterizeVoucher(
   role,
   startParam,

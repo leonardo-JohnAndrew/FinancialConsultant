@@ -3,6 +3,8 @@ import { Purchase, PurchaseItems, User } from "@/db/models";
 import { NextResponse } from "next/server";
 import { GetSpecificRequest } from "@/functions/purchase";
 import { decode } from "node:punycode";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/auth";
 export async function GET(request) {
   // create a end points , to get all purchase requisition that are pending for chief approval
   // condition :  ChiefAdminManage Sign Null and ProjectDirectorSign Null
@@ -51,6 +53,7 @@ export async function POST(request) {
       { status: 200 },
     );
   } catch (error) {
+    console.log(error.message);
     return NextResponse.json({ error_message: error.message }, { status: 500 });
   }
 }

@@ -123,9 +123,25 @@ export async function createNotification(receiver, notification, email) {
 }
 
 // find all userRole
-export async function findSpecificRole() {
-  const user = User.findOne({
-    where: {},
+export async function findSpecificRole(role) {
+  const user = await User.findAll({
+    where: { role: role },
   });
+
+  return {
+    data: user.map((item) => item.toJSON()),
+  };
 }
 // department
+export async function findDepartment(department) {
+  const user = await User.findAll({
+    where: { department: department },
+  });
+  console.log("dprt", department);
+  console.log(JSON.stringify(user));
+  return {
+    data: user.map((item) => item.toJSON()),
+  };
+}
+
+// {endpoint parameter (userId , title , message , type , link ) }
