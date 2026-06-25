@@ -39,6 +39,7 @@ const CheckItem = sequelize.define(
     accountCode: {
       type: DataTypes.STRING,
     },
+
     glCode: {
       type: DataTypes.STRING,
     },

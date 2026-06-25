@@ -300,11 +300,11 @@ export default function SummariesPage() {
                             cls="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                             onClick={() => handleView(row)}
                           />
-                          <ActionBtn
+                          {/* <ActionBtn
                             label="Edit"
                             cls="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
                             onClick={() => openEdit(row)}
-                          />
+                          /> */}
                           <ActionBtn
                             label="Delete"
                             cls="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"

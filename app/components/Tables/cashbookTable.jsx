@@ -97,7 +97,7 @@ const CashbooksTable = (props) => {
                 <td>
                   <div className="flex gap-2">
                     {/* EDIT RANGE */}
-                    <button
+                    {/* <button
                       className="px-4 py-1 bg-yellow-500 text-white font-bold rounded-lg"
                       onClick={() => {
                         setSelectedCashbook(data);
@@ -109,7 +109,7 @@ const CashbooksTable = (props) => {
                       }}
                     >
                       Edit
-                    </button>
+                    </button> */}
 
                     {/* VIEW / SYNC */}
                     {data.hasChildren ?
