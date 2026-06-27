@@ -40,7 +40,7 @@ export async function GET(request) {
         createdAt: {
           [Op.between]: [rangeStart, rangeEnd],
         },
-        isOnTheBudget: 0,
+      
       },
       include: [
         { model: User },

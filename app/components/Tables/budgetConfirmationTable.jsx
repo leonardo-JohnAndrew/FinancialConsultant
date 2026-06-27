@@ -2,25 +2,32 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/functions/formatCurrency";
+import { GetTypeOfExpenses } from "@/functions/purchase";
 
 const BudgetConfirmationTable = (props) => {
-  const { role, approve } = props;
-
+  const { role, approve, username } = props;
+  const [TypeOfExpensesList, setExpensesList] = useState([]);
   const handleChange = (index, field, value) => {
     props.setItems((prevItems) =>
       prevItems.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item,
+        i === index ?
+          {
+            ...item,
+            [field]: value,
+          }
+        : item,
       ),
     );
   };
+  const getExpenses = async () => {
+    const types = await GetTypeOfExpenses();
+
+    setExpensesList(types.datalist || []);
+  };
   useEffect(() => {
-    console.log(props.items);
+    getExpenses();
   }, []);
+
   return (
     <>
       <div className="table-container w-full">
@@ -40,9 +47,9 @@ const BudgetConfirmationTable = (props) => {
                         className="bg-white text-red-500 w-full"
                         type="date"
                         value={
-                          props.items[0]?.EndingInventoryDate
-                            ? props.items[0].EndingInventoryDate.slice(0, 10)
-                            : ""
+                          props.items[0]?.EndingInventoryDate ?
+                            props.items[0].EndingInventoryDate.slice(0, 10)
+                          : ""
                         }
                         disabled={true}
                       />
@@ -98,12 +105,20 @@ const BudgetConfirmationTable = (props) => {
                 <td className="px-4 py-2">
                   <input
                     className="bg-gray-200 border border-gray-300 outline-1 outline-gray-200"
-                    type="text"
+                    list="expenses"
                     value={item.TypeOfExpenses || ""}
                     onChange={(e) =>
                       handleChange(index, "TypeOfExpenses", e.target.value)
                     }
                   />
+
+                  <datalist id="expenses">
+                    {TypeOfExpensesList?.map((item, i) => (
+                      <option key={i} value={item.name}>
+                        {item.name}{" "}
+                      </option>
+                    ))}
+                  </datalist>
                   {/* {item?.UnitPrice} */}
                 </td>
                 <td className="px-4 py-2">
@@ -133,7 +148,13 @@ const BudgetConfirmationTable = (props) => {
             {props.list?.map((purchase, index) => (
               <tr key={index} className="border-b border-gray-300">
                 <td className="px-1 py-3">{purchase.PurchaseID}</td>
-                <td className="px-4 py-3">{"NAME"}</td>
+                <td className="px-4 py-3">
+                  {purchase.user?.middle || purchase.user?.middle !== "N/A" ?
+                    `${purchase.user?.firstname} ${purchase.user?.middle} ${purchase.user?.lastname}`
+                  : `${purchase.user?.firstname} ${purchase.user?.lastname}` ||
+                    "NAME"
+                  }
+                </td>
                 <td className="px-4 py-3">{purchase.RequestorDepartment}</td>
                 <td className="px-4 py-3">{purchase.purchaseItems.length}</td>
                 <td className="px-4 py-3">
@@ -151,7 +172,7 @@ const BudgetConfirmationTable = (props) => {
                   {new Date(purchase.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3">
-                  {approve ? (
+                  {approve ?
                     <>
                       <Link
                         href={`/Main/SubmittedRequisition/ApprovedPurchaseRequisition/${purchase.PurchaseID}`}
@@ -160,8 +181,7 @@ const BudgetConfirmationTable = (props) => {
                         View
                       </Link>
                     </>
-                  ) : (
-                    <>
+                  : <>
                       <Link
                         href={`/Main/SubmittedRequisition/BudgetConfirmation/${purchase.PurchaseID}`}
                         className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm"
@@ -169,7 +189,7 @@ const BudgetConfirmationTable = (props) => {
                         View
                       </Link>
                     </>
-                  )}
+                  }
                   {/* <a href={`/Main/Purchase/${purchase.PurchaseID}`} className="px-4 py-2 w-auto my-1 border border-darkRed bg-btnRed rounded-xl text-darkRed hover:bg-white text-sm" >
                             View
                           </a> */}

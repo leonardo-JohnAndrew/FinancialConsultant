@@ -199,23 +199,26 @@ export default function DashboardPage() {
     switch (role) {
       case "Admin":
         return [
-          {
-            label: "Total users",
-            value: stats.totalUsers ?? 0,
-            theme: "blue",
-            icon: "👥",
-          },
+          // {
+          //   label: "Total users",
+          //   value: stats.totalUsers ?? 0,
+          //   theme: "blue",
+          //   icon: "👥",
+          //   href: "/Main/UserManagement",
+          // },
           {
             label: "Purchase requests",
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase",
           },
           {
             label: "Submitted purchases",
             value: stats.submittedPurchase ?? 0,
             theme: "orange",
             icon: "📋",
+            href: "/Main/Purchase",
           },
         ];
       case "Accounting":
@@ -225,18 +228,21 @@ export default function DashboardPage() {
             value: stats.totalVouchers ?? 0,
             theme: "violet",
             icon: "🧾",
+            href: "/Main/Vouchers",
           },
           {
             label: "Submitted purchases",
             value: stats.submittedPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase",
           },
           {
             label: "Approved purchases",
             value: stats.approvedPurchase ?? 0,
             theme: "green",
             icon: "✅",
+            href: "/Main/Purchase/Approvals/BudgetConfirmation",
           },
         ];
       case "Chief Accountant":
@@ -246,24 +252,28 @@ export default function DashboardPage() {
             value: stats.totalVouchers ?? 0,
             theme: "violet",
             icon: "🧾",
+            href: "/Main/Vouchers",
           },
           {
             label: "Approved purchases",
             value: stats.approvedPurchase ?? 0,
             theme: "green",
             icon: "✅",
+            href: "/Main/Purchase/Approvals/BudgetConfirmation",
           },
           {
             label: "Voucher approvals",
             value: stats.voucherApprovals ?? 0,
             theme: "blue",
             icon: "✍️",
+            href: "/Main/Vouchers/Approvals/ChiefAccountant",
           },
           {
             label: "Budget projects",
             value: stats.totalBudget ?? 0,
             theme: "teal",
             icon: "📊",
+            href: "/Main/Budget",
           },
         ];
       case "Chief Administrator Manager":
@@ -273,18 +283,21 @@ export default function DashboardPage() {
             value: stats.submittedPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase",
           },
           {
             label: "Vouchers (by Chief Accountant)",
             value: stats.chiefAccountantVouchers ?? 0,
             theme: "violet",
             icon: "🧾",
+            href: "/Main/Vouchers/Approvals/ChiefAccountant",
           },
           {
             label: "Total vouchers",
             value: stats.totalVouchers ?? 0,
             theme: "blue",
             icon: "📄",
+            href: "/Main/Vouchers",
           },
         ];
       case "Project Director":
@@ -294,12 +307,14 @@ export default function DashboardPage() {
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase",
           },
           {
             label: "Approved purchases (by Chief Accountant)",
             value: stats.approvedPurchase ?? 0,
             theme: "green",
             icon: "✅",
+            href: "/Main/Purchase/Approvals/BudgetConfirmation",
           },
         ];
       case "SuperAdmin":
@@ -309,12 +324,14 @@ export default function DashboardPage() {
             value: stats.totalUsers ?? 0,
             theme: "blue",
             icon: "👥",
+            href: "/Main/UserManagement",
           },
           {
             label: "Purchase requests",
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase",
           },
         ];
       case "Regular Employee":
@@ -325,6 +342,7 @@ export default function DashboardPage() {
             value: stats.myPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
+            href: "/Main/Purchase/MyRequisition",
           },
         ];
     }
@@ -629,9 +647,10 @@ export default function DashboardPage() {
             marginBottom: "2rem",
           }}
         >
-          {cards.map(({ label, value, theme, icon }) => {
+          {cards.map(({ label, value, theme, icon, href }) => {
             const t = themeMap[theme] || themeMap.blue;
-            return (
+
+            const cardContent = (
               <div
                 key={label}
                 style={{
@@ -641,8 +660,23 @@ export default function DashboardPage() {
                   padding: "1.1rem 1.25rem",
                   position: "relative",
                   overflow: "hidden",
+                  // ↓ Add cursor + hover effect
+                  cursor: href ? "pointer" : "default",
+                  transition: "box-shadow 0.15s, transform 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  if (href) {
+                    e.currentTarget.style.boxShadow =
+                      "0 4px 12px rgba(0,0,0,0.08)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "";
+                  e.currentTarget.style.transform = "";
                 }}
               >
+                {/* top bar */}
                 <div
                   style={{
                     position: "absolute",
@@ -654,6 +688,7 @@ export default function DashboardPage() {
                     borderRadius: "12px 12px 0 0",
                   }}
                 />
+                {/* icon */}
                 <div
                   style={{
                     width: "36px",
@@ -670,6 +705,7 @@ export default function DashboardPage() {
                 >
                   {icon}
                 </div>
+                {/* value */}
                 <p
                   style={{
                     fontSize: "28px",
@@ -681,6 +717,7 @@ export default function DashboardPage() {
                 >
                   {value.toLocaleString()}
                 </p>
+                {/* label */}
                 <p
                   style={{
                     fontSize: "12px",
@@ -692,6 +729,16 @@ export default function DashboardPage() {
                 </p>
               </div>
             );
+
+            return href ?
+                <Link
+                  key={label}
+                  href={href}
+                  style={{ textDecoration: "none" }}
+                >
+                  {cardContent}
+                </Link>
+              : <div key={label}>{cardContent}</div>;
           })}
         </div>
       )}
@@ -723,6 +770,7 @@ export default function DashboardPage() {
                   <Th>ID</Th>
                   <Th>Payee</Th>
                   <Th>Amount</Th>
+                  <Th>Status</Th>
                 </tr>
               </thead>
               <tbody>
@@ -748,6 +796,9 @@ export default function DashboardPage() {
                         v.amount ||
                         0
                       ).toLocaleString()}
+                    </td>
+                    <td style={tdBase}>
+                      <Badge status={v.status || v.Status} />
                     </td>
                   </tr>
                 ))}
@@ -809,7 +860,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {myRequisitions.length === 0 ? (
+              {myRequisitions.length === 0 ?
                 <tr>
                   <td
                     colSpan={7}
@@ -823,8 +874,7 @@ export default function DashboardPage() {
                     No requisitions submitted yet
                   </td>
                 </tr>
-              ) : (
-                myRequisitions.map((p, i) => (
+              : myRequisitions.map((p, i) => (
                   <tr
                     key={i}
                     onMouseEnter={(e) =>
@@ -842,20 +892,20 @@ export default function DashboardPage() {
                     </td>
                     <td style={tdMuted}>{p.mode || "—"}</td>
                     <td style={tdMuted}>
-                      {p.timeStamp
-                        ? new Date(p.timeStamp).toLocaleDateString("en-PH", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        : "—"}
+                      {p.timeStamp ?
+                        new Date(p.timeStamp).toLocaleDateString("en-PH", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "—"}
                     </td>
                     <td style={tdBase}>
                       <Badge status={p.Status} />
                     </td>
                   </tr>
                 ))
-              )}
+              }
             </tbody>
           </table>
           <div

@@ -1,6 +1,11 @@
 "use server";
 import sequelize from "@/db/connection";
-import { Purchase, PurchaseItems, User } from "@/db/models";
+import {
+  ExpensesDescription,
+  Purchase,
+  PurchaseItems,
+  User,
+} from "@/db/models";
 import { Sequelize } from "sequelize";
 import { NextResponse } from "next/server";
 
@@ -256,21 +261,17 @@ export async function GetPurchaseWithUserId(
       raw: true,
     });
 
-    const earliestDate = dateRange?.earliestDate
-      ? new Date(dateRange.earliestDate)
-      : new Date();
+    const earliestDate =
+      dateRange?.earliestDate ? new Date(dateRange.earliestDate) : new Date();
 
-    const latestDate = dateRange?.latestDate
-      ? new Date(dateRange.latestDate)
-      : new Date();
+    const latestDate =
+      dateRange?.latestDate ? new Date(dateRange.latestDate) : new Date();
 
-    const rangeStart = startParam
-      ? new Date(`${startParam}T00:00:00.000Z`)
-      : earliestDate;
+    const rangeStart =
+      startParam ? new Date(`${startParam}T00:00:00.000Z`) : earliestDate;
 
-    const rangeEnd = endParam
-      ? new Date(`${endParam}T23:59:59.999Z`)
-      : latestDate;
+    const rangeEnd =
+      endParam ? new Date(`${endParam}T23:59:59.999Z`) : latestDate;
 
     const whereClause = {
       UserID: userID,
@@ -309,4 +310,12 @@ export async function GetPurchaseWithUserId(
       error_message: error.message || "Internal Server Error",
     };
   }
+}
+
+export async function GetTypeOfExpenses() {
+  const data = await ExpensesDescription.findAll();
+
+  return {
+    datalist: data.map((item) => item.toJSON()),
+  };
 }

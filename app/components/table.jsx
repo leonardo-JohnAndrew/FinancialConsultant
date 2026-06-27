@@ -5,7 +5,7 @@ import { formatMoney } from "@/functions/formatCurrency";
 import { useRouter } from "next/navigation";
 
 const Table = (props) => {
-  const { role, approvalType, ownList } = props;
+  const { role, approvalType, ownList, username } = props;
   const router = useRouter();
   const handleChange = (index, field, value) => {
     props?.setItems((prev) => {
@@ -18,14 +18,14 @@ const Table = (props) => {
       };
 
       const required =
-        field === "RequiredBalance"
-          ? Number(value)
-          : Number(item.RequiredBalance || 0);
+        field === "RequiredBalance" ?
+          Number(value)
+        : Number(item.RequiredBalance || 0);
 
       const ending =
-        field === "EndingInventory"
-          ? Number(value)
-          : Number(item.EndingInventory || 0);
+        field === "EndingInventory" ?
+          Number(value)
+        : Number(item.EndingInventory || 0);
 
       item.Quantity = Math.max(required - ending, 0);
 
@@ -72,9 +72,9 @@ const Table = (props) => {
                         className="bg-white text-red-500 w-full"
                         type="date"
                         value={
-                          props.items[0]?.EndingInventoryDate
-                            ? props.items[0].EndingInventoryDate.slice(0, 10)
-                            : ""
+                          props.items[0]?.EndingInventoryDate ?
+                            props.items[0].EndingInventoryDate.slice(0, 10)
+                          : ""
                         }
                         disabled={true}
                       />
@@ -130,9 +130,7 @@ const Table = (props) => {
             {props.list?.map((purchase, index) => (
               <tr key={index} className="border-b border-gray-300">
                 <td className="px-1 py-3">{purchase.PurchaseID}</td>
-                <td className="px-4 py-3">
-                  {purchase.RequestorName || "NAME"}
-                </td>
+                <td className="px-4 py-3">{username || "NAME"}</td>
                 <td className="px-4 py-3">{purchase.RequestorDepartment}</td>
                 <td className="px-4 py-3">{purchase.purchaseItems.length}</td>
                 <td className="px-4 py-3">

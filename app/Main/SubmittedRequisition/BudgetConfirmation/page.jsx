@@ -16,6 +16,7 @@ export default function BudgetConfirmation() {
   const [page, setPage] = useState(1);
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
+  const [activeTab, setActiveTab] = useState("pending"); // "pending" = Confirmation, "approved" = PR Approval
   const [dateStartDefault, setDateStartDefault] = useState();
   const [dateEndDefault, setDateEndDefault] = useState();
   const [totalPages, setTotalPages] = useState();
@@ -94,7 +95,16 @@ export default function BudgetConfirmation() {
         break;
     }
   };
+  const tabFilteredList = (purchaseDetails || []).filter((e) =>
+    activeTab === "pending" ?
+      e.Status === "Budget Confirmation" && e.isOnTheBudget === false
+    : e.Status === "PR Approval" && e.isOnTheBudget === true,
+  );
 
+  const finalList =
+    search ?
+      tabFilteredList.filter((e) => e.PurchaseID === purchaseID)
+    : tabFilteredList;
   return (
     <>
       <div className="flex relative mb-5 w-auto"></div>
@@ -141,7 +151,28 @@ export default function BudgetConfirmation() {
         <hr className="border-t border-gray-300" />
       </div>
       {/* filter  */}
-
+      <div className=" flex justify-end items-end mb-3">
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`border border-darkRed px-4 py-2 ${
+            activeTab === "pending" ?
+              "bg-white text-black"
+            : "bg-darkRed text-white"
+          }`}
+        >
+          Confirmation
+        </button>
+        <button
+          onClick={() => setActiveTab("approved")}
+          className={`border border-darkRed px-4 py-2 ${
+            activeTab === "approved" ?
+              "bg-white text-black"
+            : "bg-darkRed text-white"
+          }`}
+        >
+          PR Approval
+        </button>
+      </div>
       <div className="max-h-200 overflow-hidden">
         <BudgetConfirmationTable
           approve={false}
@@ -155,12 +186,7 @@ export default function BudgetConfirmation() {
             "REQUISITION DATE",
             "ACTION",
           ]}
-          list={
-            search
-              ? purchaseDetails.filter((e) => e.PurchaseID === purchaseID)
-              : purchaseDetails || []
-          }
-          approvalType={approvalType}
+          list={finalList}
         />
       </div>
       {/* paginations */}
@@ -177,9 +203,9 @@ export default function BudgetConfirmation() {
             key={index}
             onClick={() => setPage(index + 1)}
             className={`px-4 py-1 border-r-2 border-gray-500 ${
-              page === index + 1
-                ? "bg-darkRed text-white"
-                : "bg-gray-200 hover:bg-darkRed hover:text-white"
+              page === index + 1 ?
+                "bg-darkRed text-white"
+              : "bg-gray-200 hover:bg-darkRed hover:text-white"
             }`}
           >
             {index + 1}

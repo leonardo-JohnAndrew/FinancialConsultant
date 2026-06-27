@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { signToken } from "@/lib/auth";
 import path from "path";
 
-// UPDATE USER
+// UPDATE USER (fields + status toggle)
 export async function PATCH(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -16,6 +16,26 @@ export async function PATCH(req) {
     const formData = await req.formData();
     const body = Object.fromEntries(formData.entries());
     const updateData = {};
+
+    // ── STATUS TOGGLE (enable/disable) ──────────────────────────
+    // If only status is being changed (e.g. from the toggle button),
+    // we skip the other field processing and just update status.
+    if (body.status && Object.keys(body).length === 1) {
+      const allowedStatuses = ["Active", "Inactive"];
+      if (!allowedStatuses.includes(body.status)) {
+        return NextResponse.json(
+          { error: "Invalid status value." },
+          { status: 400 },
+        );
+      }
+
+      await User.update(
+        { status: body.status },
+        { where: { userID: userid.trim() } },
+      );
+      return NextResponse.json({ message: "Status updated." }, { status: 200 });
+    }
+    // ─────────────────────────────────────────────────────────────
 
     // Handle e_signature file upload
     const signatureFile = formData.get("e_signature");
@@ -45,6 +65,7 @@ export async function PATCH(req) {
       "role",
       "department",
       "position",
+      "status",
       "mustChangePassword",
     ];
     for (const field of allowedFields) {
@@ -56,11 +77,13 @@ export async function PATCH(req) {
     if (body.password && body.password.trim() !== "") {
       updateData.password = await bcrypt.hash(body.password, 10);
     }
+
     // Coerce mustChangePassword string → boolean
     if (updateData.mustChangePassword !== undefined) {
       updateData.mustChangePassword =
         updateData.mustChangePassword === "false" ? false : true;
     }
+
     await User.update(updateData, {
       where: { userID: userid.trim() },
     });

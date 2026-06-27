@@ -18,6 +18,8 @@ import GLcode from "./glcode.js";
 import Summary from "./summary.js";
 import SummaryDetailed from "./summary_detailed.js";
 
+import ExpensesDescription from "./expenses_descriptions.js";
+
 Purchase.hasMany(PurchaseItems, {
   foreignKey: "PurchaseID",
   sourceKey: "PurchaseID",
@@ -112,6 +114,7 @@ SummaryDetailed.belongsTo(Summary, {
   foreignKey: "summary_id",
   targetKey: "summary_id",
 });
+
 export {
   Purchase,
   PurchaseItems,
@@ -129,6 +132,7 @@ export {
   Creditor,
   AccountCode,
   GLcode,
+  ExpensesDescription,
   Summary,
   SummaryDetailed,
 };

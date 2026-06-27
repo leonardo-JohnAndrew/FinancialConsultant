@@ -1,6 +1,6 @@
 const sequelize = require("./db/connection");
 
-const { US_Cash_Bank, PH_Cash_Bank } = require("./db/models/index");
+const { ExpensesDescription } = require("./db/models/index");
 sequelize
   .sync({ alter: true })
   .then(() => {

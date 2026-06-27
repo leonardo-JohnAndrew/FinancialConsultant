@@ -35,6 +35,7 @@ export async function GET(request, { params }) {
       { status: 200 },
     );
   } catch (error) {
+    console.log(error.message);
     return NextResponse.json(
       { message: "Error fetching purchase", error: error.message },
       { status: 500 },
@@ -66,7 +67,7 @@ export async function PATCH(request, { params }) {
     // Update each purchase item's Claimable, TypeOfExpenses, and Remarks
     if (body.items && Array.isArray(body.items)) {
       for (const item of body.items) {
-        await PurchaseItem.update(
+        await PurchaseItems.update(
           {
             Claimable: item.Claimable,
             TypeOfExpenses: item.TypeOfExpenses,
@@ -85,6 +86,7 @@ export async function PATCH(request, { params }) {
 
     return NextResponse.json({ message: "Budget Confirm" }, { status: 200 });
   } catch (err) {
+    console.log(err.message);
     return NextResponse.json(
       { message: "Error Find", error: err.message },
       { status: 500 },
