@@ -18,6 +18,7 @@ const CashbooksTable = (props) => {
     nextMonthBalance,
     handleMonthChange,
     creditors = [],
+    accountCodes = [],
     currency,
   } = props;
   const [modal, setModal] = useState(false);
@@ -253,6 +254,7 @@ const CashbooksTable = (props) => {
                     value={data.description || ""}
                   />
                 </td>
+                {/* Account Code */}
                 <td className="px-2 py-2">
                   <input
                     className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent"
@@ -262,6 +264,13 @@ const CashbooksTable = (props) => {
                       handleChange(index, "A_C_code", e.target.value)
                     }
                   />
+
+                  {/* description ng account code, black bg / white text */}
+                  <div className="bg-black text-white text-xs px-2 py-1 mt-1 text-center print:bg-black print:text-white">
+                    {accountCodes.find(
+                      (ac) => String(ac.code) === String(data.A_C_code),
+                    )?.description || ""}
+                  </div>
                 </td>
                 {/* Job No */}
                 <td className="px-2 py-2">

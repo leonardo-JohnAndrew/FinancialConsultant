@@ -4,6 +4,7 @@ import { getCreditors } from "@/functions/cashbook";
 import { GetBDONo, GetCashbookHeaders, GetCashNo } from "@/functions/vouchers";
 import { useBanner } from "@/hooks/Context/banner";
 import axios from "axios";
+import { GetAccountCode } from "@/functions/vouchers";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -26,11 +27,14 @@ const CashbookDetailed = () => {
   const [currency, setCurrency] = useState();
   const [category, setCategory] = useState();
   const [creditors, setCreditors] = useState([]);
+  const [accountCodes, setAccountCodes] = useState([]);
   // fetch data
   const fetchData = async () => {
     try {
       const response = await axios.get(`/api/cashbooks/${params.cashbookId}`);
       const res = await getCreditors();
+      const ac = await GetAccountCode();
+      setAccountCodes(ac.dataList || []);
       setCreditors(res.dataList || []);
       setData(response?.data?.cashbooksDetails || []);
       setCategory(response.data.category);
@@ -107,8 +111,9 @@ const CashbookDetailed = () => {
 
       updated[index] = {
         ...updated[index],
-        [field]: ["receipt", "payment", "slipNo"].includes(field)
-          ? Number(value) || 0
+        [field]:
+          ["receipt", "payment", "slipNo"].includes(field) ?
+            Number(value) || 0
           : value,
       };
 
@@ -126,9 +131,9 @@ const CashbookDetailed = () => {
       const [first = "", second = ""] = (A_C_No || "").split(" ");
 
       const newValue =
-        field === "A_C_No_1"
-          ? `${value} ${second}`.trim()
-          : `${first} ${value}`.trim();
+        field === "A_C_No_1" ?
+          `${value} ${second}`.trim()
+        : `${first} ${value}`.trim();
 
       setA_C_No(newValue);
       return;
@@ -297,53 +302,53 @@ const CashbookDetailed = () => {
         <div className="mt-3 max-h-[700px] overflow-y-auto ">
           <CashbooksTable
             tableHeader={
-              currency === "PH"
-                ? [
-                    "Slip No",
-                    "Date",
-                    "Description",
-                    "Account Code",
-                    "Job No",
-                    "Reference No",
-                    "Payee/Payer No",
-                    "Payee/Payor",
-                    "Reciept",
-                    "Payment",
-                    "Balance",
-                    "Others",
-                    "GL Count",
-                    // OUTSIDE THE TABLE
-                    "CRM",
-                    "length",
-                    "SI#",
-                    "AR/OR#",
-                    "Company",
-                    "Claimable/Non-Claimable",
-                    "Code In Invoice to DOTR",
-                    "Description",
-                  ]
-                : [
-                    "Slip No",
-                    "Date",
-                    "Description",
-                    "Account Code",
-                    "Job No",
-                    "Reference No",
-                    "Payee/Payer No",
-                    "Payee/Payor",
-                    "Reciept",
-                    "Payment",
-                    "Balance",
-                    "Others",
-                    "GL Count",
-                    // OUTSIDE THE TABLE
-                    "CRM",
-                    "length",
-                    "Company",
-                    "Claimable/Non-Claimable",
-                    "Code In Invoice to DOTR",
-                    "Description",
-                  ]
+              currency === "PH" ?
+                [
+                  "Slip No",
+                  "Date",
+                  "Description",
+                  "Account Code",
+                  "Job No",
+                  "Reference No",
+                  "Payee/Payer No",
+                  "Payee/Payor",
+                  "Reciept",
+                  "Payment",
+                  "Balance",
+                  "Others",
+                  "GL Count",
+                  // OUTSIDE THE TABLE
+                  "CRM",
+                  "length",
+                  "SI#",
+                  "AR/OR#",
+                  "Company",
+                  "Claimable/Non-Claimable",
+                  "Code In Invoice to DOTR",
+                  "Description",
+                ]
+              : [
+                  "Slip No",
+                  "Date",
+                  "Description",
+                  "Account Code",
+                  "Job No",
+                  "Reference No",
+                  "Payee/Payer No",
+                  "Payee/Payor",
+                  "Reciept",
+                  "Payment",
+                  "Balance",
+                  "Others",
+                  "GL Count",
+                  // OUTSIDE THE TABLE
+                  "CRM",
+                  "length",
+                  "Company",
+                  "Claimable/Non-Claimable",
+                  "Code In Invoice to DOTR",
+                  "Description",
+                ]
             }
             tbdatDetailes={data}
             handleChange={handleChange}
@@ -356,6 +361,7 @@ const CashbookDetailed = () => {
             handleMonthChange={handleMonthChange}
             creditors={creditors}
             currency={currency}
+            accountCodes={accountCodes}
           />
         </div>
         <div className="flex justify-end items-end mt-5 mr-4">

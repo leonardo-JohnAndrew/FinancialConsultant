@@ -62,7 +62,7 @@ export async function PATCH(request, { params }) {
     }
 
     pr.isOnTheBudget = true;
-    pr.PRCode = body.prcode;
+    //  pr.PRCode = body.prcode;
 
     // Update each purchase item's Claimable, TypeOfExpenses, and Remarks
     if (body.items && Array.isArray(body.items)) {

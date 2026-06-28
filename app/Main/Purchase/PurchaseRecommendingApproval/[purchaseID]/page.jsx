@@ -138,7 +138,9 @@ export default function PurchaseDetails() {
               " Approve Purchase Requisition id: " +
               params.purchaseID,
             type: "Info",
-            link: "",
+            link:
+              "/Main/Purchase/PurchaseRecommendingApproval/" +
+              params.purchaseID,
             // link host
           });
           if (notifySytstem.status === 200 || notifySytstem.status === 201) {
@@ -183,7 +185,9 @@ export default function PurchaseDetails() {
               "Project Director Approve Purchase Requisition id: " +
               params.purchaseID,
             type: "Info",
-            link: "",
+            link:
+              "/Main/Purchase/SubmittedRequisition/ApprovedPurchaseRequisition/" +
+              params.purchaseID,
             // link host
           });
           if (notifySytstem.status === 200 || notifySytstem.status === 201) {
@@ -205,7 +209,7 @@ export default function PurchaseDetails() {
                 "Project Director Approve Purchase Requisition id: " +
                 params.purchaseID,
               type: "Info",
-              link: "",
+              link: "/Main/Purchase/MyRequisition/" + params.purchaseID,
               // link host
             });
             res = await sendPurchaseApprovedEmail({
@@ -251,7 +255,9 @@ export default function PurchaseDetails() {
             message:
               "Admin Approve Purchase Requisition id: " + params.purchaseID,
             type: "Info",
-            link: "",
+            link:
+              "/Main/Purchase/PurchaseRecommendingApproval/" +
+              params.purchaseID,
             // link host
           });
           if (notifySytstem.status === 200 || notifySytstem.status === 201) {

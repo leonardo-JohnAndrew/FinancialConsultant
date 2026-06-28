@@ -94,6 +94,7 @@ const CreateRequisition = () => {
             title: "Purchase Requisition Submition",
             message: `${user.name} is Submitted a Purchase Requisitions`,
             type: "info",
+            link: "/Main/SubmittedRequisition/BudgetConfirmation",
             // LINK HOST
           });
           // email send

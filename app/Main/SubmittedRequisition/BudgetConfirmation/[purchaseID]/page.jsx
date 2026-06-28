@@ -28,7 +28,7 @@ export default function PurchaseDetails() {
   const [EndingInventoryDate, setEndingInventoryDate] = useState();
   const [formattedEnding, setFormattedEnding] = useState();
   const { showError, showSuccess } = useBanner();
-  const [prcode, setPRCode] = useState("");
+  //const [prcode, setPRCode] = useState("");
   const userRole =
     user?.role === "Admin" && purchaseDetails?.purchase?.AdminSign != null ?
       "Chief Administrator Manager"
@@ -93,11 +93,11 @@ export default function PurchaseDetails() {
   //validations
 
   const isFormValid = () => {
-    // PR Code required
-    if (!prcode || prcode.trim() === "") {
-      showError("PR Code is required");
-      return false;
-    }
+    // // PR Code required
+    // if (!prcode || prcode.trim() === "") {
+    //   showError("PR Code is required");
+    //   return false;
+    // }
 
     // Every item must have TypeOfExpenses
     const hasEmptyExpenseType = items.some(
@@ -121,7 +121,7 @@ export default function PurchaseDetails() {
 
     try {
       response = await axios.patch(`/api/purchase/${params.purchaseID}`, {
-        prcode,
+        //prcode,
         items,
       });
       // accountant :
@@ -136,7 +136,8 @@ export default function PurchaseDetails() {
             "Accounting Confirm Budget for Purchase Requisition id: " +
             params.purchaseID,
           type: "Info",
-          link: "",
+          link:
+            "/Main/Purchase/PurchaseRecommendingApproval/" + params.purchaseID,
           // link host
         });
         if (notifySytstem.status === 200 || notifySytstem.status === 201) {
@@ -213,17 +214,7 @@ export default function PurchaseDetails() {
         <hr className="border-t border-gray-300" />
       </div>
       <div className="flex justify-start my-3">
-        <div className="flex flex-row gap-1">
-          <h5 className="p-1 px-2 bg-black text-white font-semibold">
-            PR CODE:{" "}
-          </h5>
-          <input
-            type="text"
-            className="border border-gray-300 p-1"
-            value={prcode}
-            onChange={(e) => setPRCode(e.target.value)}
-          />
-        </div>
+        <div className="flex flex-row gap-1"></div>
       </div>
       <div className="scrollbar-custom overflow-y-auto">
         <BudgetConfirmationTable
@@ -289,7 +280,7 @@ export default function PurchaseDetails() {
           <ConfirmBox
             title="Confirm Budget Confirmation"
             content={`Are you sure you want to confirm the budget for Purchase Code:`}
-            id={prcode}
+            id={params.purchaseID}
             handleConfirm={handleConfirm}
             handleclose={handleCancelConfirm}
           />
