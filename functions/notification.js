@@ -137,6 +137,7 @@ export async function findDepartment(department) {
   const user = await User.findAll({
     where: { department: department },
   });
+
   console.log("dprt", department);
   console.log(JSON.stringify(user));
   return {

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { GetPurchaseWithUserId } from "@/functions/purchase";
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
@@ -8,6 +9,7 @@ export default function DashboardPage() {
   const [recentVouchers, setRecentVouchers] = useState([]);
   const [recentPurchase, setRecentPurchase] = useState([]);
   const [myRequisitions, setMyRequisitions] = useState([]);
+  const [recommendingApproval, setRecommendingApproval] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,37 +23,66 @@ export default function DashboardPage() {
         const newStats = {};
         const fetches = [];
 
+        // My Requisitions (all roles)
         fetches.push(
-          fetch("/api/purchase").then(async (r) => {
-            const d = await r.json();
-            const all = d.data || [];
-            const mine = all
-              .filter(
-                (p) =>
-                  p.User?.UserID === userData.userID ||
-                  p.UserID === userData.userID,
-              )
-              .slice(0, 5);
-            setMyRequisitions(mine);
-          }),
+          (async () => {
+            const recentRes = await GetPurchaseWithUserId(
+              userData.userID,
+              undefined,
+              undefined,
+              1,
+              5,
+              "All",
+              "",
+            );
+            setMyRequisitions(recentRes.data || []);
+
+            if (role === "Regular Employee") {
+              const countRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1,
+                "All",
+                "",
+              );
+              newStats.myPurchase = countRes.total || 0;
+            }
+          })(),
         );
 
+        // Admin
         if (role === "Admin") {
           fetches.push(
             fetch("/api/users").then(async (r) => {
               const d = await r.json();
               newStats.totalUsers = (d.users || []).length;
             }),
-            fetch("/api/purchase").then(async (r) => {
-              const d = await r.json();
-              const purchases = d.data || [];
-              newStats.totalPurchase = d.total || purchases.length;
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
+              );
+              const purchases = allRes.data || [];
+              newStats.totalPurchase = allRes.total || purchases.length;
               setRecentPurchase(purchases.slice(0, 5));
-              newStats.submittedPurchase = d.total || purchases.length;
+            })(),
+            // Recommending Approval — count = d.total, table = d.data.slice(0,5)
+            fetch("/api/purchase/Approvals/AdminApproval").then(async (r) => {
+              const d = await r.json();
+              newStats.submittedPurchase = d.total || (d.data || []).length;
+              setRecommendingApproval((d.data || []).slice(0, 5));
             }),
           );
         }
 
+        // Accounting
         if (role === "Accounting") {
           fetches.push(
             fetch("/api/vouchers").then(async (r) => {
@@ -60,12 +91,20 @@ export default function DashboardPage() {
               newStats.totalVouchers = d.total || vouchers.length;
               setRecentVouchers(vouchers.slice(0, 5));
             }),
-            fetch("/api/purchase").then(async (r) => {
-              const d = await r.json();
-              const purchases = d.data || [];
-              newStats.submittedPurchase = d.total || purchases.length;
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
+              );
+              const purchases = allRes.data || [];
+              newStats.submittedPurchase = allRes.total || purchases.length;
               setRecentPurchase(purchases.slice(0, 5));
-            }),
+            })(),
             fetch("/api/purchase/Approvals/BudgetConfirmation").then(
               async (r) => {
                 const d = await r.json();
@@ -75,6 +114,7 @@ export default function DashboardPage() {
           );
         }
 
+        // Chief Accountant
         if (role === "Chief Accountant") {
           fetches.push(
             fetch("/api/vouchers").then(async (r) => {
@@ -83,6 +123,20 @@ export default function DashboardPage() {
               newStats.totalVouchers = d.total || vouchers.length;
               setRecentVouchers(vouchers.slice(0, 5));
             }),
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
+              );
+              const purchases = allRes.data || [];
+              newStats.totalPurchase = allRes.total || purchases.length;
+              setRecentPurchase(purchases.slice(0, 5));
+            })(),
             fetch("/api/budgets").then(async (r) => {
               const d = await r.json();
               const budgets = Array.isArray(d) ? d : d.data || d.budgets || [];
@@ -101,6 +155,7 @@ export default function DashboardPage() {
           );
         }
 
+        // Chief Administrator Manager
         if (role === "Chief Administrator Manager") {
           fetches.push(
             fetch("/api/vouchers").then(async (r) => {
@@ -109,61 +164,81 @@ export default function DashboardPage() {
               newStats.totalVouchers = d.total || vouchers.length;
               setRecentVouchers(vouchers.slice(0, 5));
             }),
-            fetch("/api/purchase/Approvals/AdminApproval").then(async (r) => {
-              const d = await r.json();
-              newStats.submittedPurchase = d.total || (d.data || []).length;
-              setRecentPurchase((d.data || []).slice(0, 5));
-            }),
-            fetch("/api/vouchers/approvals/chiefAccountant").then(async (r) => {
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
+              );
+              const purchases = allRes.data || [];
+              newStats.totalPurchase = allRes.total || purchases.length;
+            })(),
+            fetch("/api/vouchers/approvals/chiefAdmin").then(async (r) => {
               const d = await r.json();
               newStats.chiefAccountantVouchers =
                 d.total || (d.data || []).length;
             }),
-          );
-        }
-
-        if (role === "Project Director") {
-          fetches.push(
-            fetch("/api/purchase").then(async (r) => {
-              const d = await r.json();
-              const purchases = d.data || [];
-              newStats.totalPurchase = d.total || purchases.length;
-              setRecentPurchase(purchases.slice(0, 5));
-            }),
+            // Recommending Approval — count = d.total, table = d.data.slice(0,5)
             fetch("/api/purchase/Approvals/ChiefApproval").then(async (r) => {
               const d = await r.json();
-              newStats.approvedPurchase = d.total || (d.data || []).length;
+              newStats.submittedPurchase = d.total || (d.data || []).length;
+              setRecommendingApproval((d.data || []).slice(0, 5));
             }),
           );
         }
 
+        // Project Director
+        if (role === "Project Director") {
+          fetches.push(
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
+              );
+              const purchases = allRes.data || [];
+              newStats.totalPurchase = allRes.total || purchases.length;
+            })(),
+            // Recommending Approval — count = d.total, table = d.data.slice(0,5)
+            fetch("/api/purchase/Approvals/ProjectDirectorApproval").then(
+              async (r) => {
+                const d = await r.json();
+                newStats.submittedPurchase = d.total || (d.data || []).length;
+                setRecommendingApproval((d.data || []).slice(0, 5));
+              },
+            ),
+          );
+        }
+
+        // SuperAdmin
         if (role === "SuperAdmin") {
           fetches.push(
             fetch("/api/users").then(async (r) => {
               const d = await r.json();
               newStats.totalUsers = (d.users || []).length;
             }),
-            fetch("/api/purchase").then(async (r) => {
-              const d = await r.json();
-              const purchases = d.data || [];
-              newStats.totalPurchase = d.total || purchases.length;
-              setRecentPurchase(purchases.slice(0, 5));
-            }),
-          );
-        }
-
-        if (role === "Regular Employee") {
-          fetches.push(
-            fetch("/api/purchase").then(async (r) => {
-              const d = await r.json();
-              const all = d.data || [];
-              const mine = all.filter(
-                (p) =>
-                  p.User?.UserID === userData.userID ||
-                  p.UserID === userData.userID,
+            (async () => {
+              const allRes = await GetPurchaseWithUserId(
+                userData.userID,
+                undefined,
+                undefined,
+                1,
+                1000,
+                "All",
+                "",
               );
-              newStats.myPurchase = mine.length;
-            }),
+              const purchases = allRes.data || [];
+              newStats.totalPurchase = allRes.total || purchases.length;
+              setRecentPurchase(purchases.slice(0, 5));
+            })(),
           );
         }
 
@@ -179,142 +254,112 @@ export default function DashboardPage() {
     fetchAll();
   }, []);
 
-  const statusBadge = (status) => {
-    if (!status) return "badge badge-gray";
-    const s = status.toLowerCase();
-    if (s.includes("approved") || s === "active") return "badge badge-green";
-    if (s.includes("pending") || s.includes("confirmation"))
-      return "badge badge-amber";
-    if (s.includes("rejected") || s === "inactive") return "badge badge-red";
-    if (
-      s.includes("submission") ||
-      s.includes("approval") ||
-      s.includes("review")
-    )
-      return "badge badge-blue";
-    return "badge badge-gray";
-  };
-
   const getRoleCards = (role) => {
     switch (role) {
       case "Admin":
         return [
-          // {
-          //   label: "Total users",
-          //   value: stats.totalUsers ?? 0,
-          //   theme: "blue",
-          //   icon: "👥",
-          //   href: "/Main/UserManagement",
-          // },
           {
-            label: "Purchase requests",
+            label: "My Purchase requests",
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/MyRequisition",
           },
           {
-            label: "Submitted purchases",
+            label: "Recommending Approval",
             value: stats.submittedPurchase ?? 0,
             theme: "orange",
             icon: "📋",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/PurchaseRecommendingApproval",
           },
         ];
       case "Accounting":
         return [
           {
-            label: "Total vouchers",
+            label: "Total Vouchers",
             value: stats.totalVouchers ?? 0,
             theme: "violet",
             icon: "🧾",
             href: "/Main/Vouchers",
           },
           {
-            label: "Submitted purchases",
+            label: "My Submitted Purchases",
             value: stats.submittedPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/MyRequisition",
           },
           {
-            label: "Approved purchases",
+            label: "Budget Confirmations",
             value: stats.approvedPurchase ?? 0,
             theme: "green",
             icon: "✅",
-            href: "/Main/Purchase/Approvals/BudgetConfirmation",
+            href: "/Main/SubmittedRequisition/BudgetConfirmation",
           },
         ];
       case "Chief Accountant":
         return [
           {
-            label: "Total vouchers",
-            value: stats.totalVouchers ?? 0,
-            theme: "violet",
-            icon: "🧾",
-            href: "/Main/Vouchers",
+            label: "My Purchase requests",
+            value: stats.totalPurchase ?? 0,
+            theme: "amber",
+            icon: "🛒",
+            href: "/Main/Purchase/MyRequisition",
           },
           {
-            label: "Approved purchases",
+            label: "Budget Confirmations",
             value: stats.approvedPurchase ?? 0,
             theme: "green",
             icon: "✅",
-            href: "/Main/Purchase/Approvals/BudgetConfirmation",
+            href: "/Main/SubmittedRequisition/BudgetConfirmation",
           },
           {
             label: "Voucher approvals",
             value: stats.voucherApprovals ?? 0,
             theme: "blue",
             icon: "✍️",
-            href: "/Main/Vouchers/Approvals/ChiefAccountant",
-          },
-          {
-            label: "Budget projects",
-            value: stats.totalBudget ?? 0,
-            theme: "teal",
-            icon: "📊",
-            href: "/Main/Budget",
+            href: "/Main/Vouchers",
           },
         ];
       case "Chief Administrator Manager":
         return [
           {
-            label: "Submitted purchases (by Admin)",
-            value: stats.submittedPurchase ?? 0,
+            label: "My Purchase requests",
+            value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/MyRequisition",
           },
           {
-            label: "Vouchers (by Chief Accountant)",
+            label: "Vouchers",
             value: stats.chiefAccountantVouchers ?? 0,
             theme: "violet",
             icon: "🧾",
-            href: "/Main/Vouchers/Approvals/ChiefAccountant",
+            href: "/Main/Vouchers",
           },
           {
-            label: "Total vouchers",
-            value: stats.totalVouchers ?? 0,
-            theme: "blue",
-            icon: "📄",
-            href: "/Main/Vouchers",
+            label: "Recommending Approval",
+            value: stats.submittedPurchase ?? 0,
+            theme: "orange",
+            icon: "📋",
+            href: "/Main/Purchase/PurchaseRecommendingApproval",
           },
         ];
       case "Project Director":
         return [
           {
-            label: "Purchase requests",
+            label: "My Purchase requests",
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/MyRequisition",
           },
           {
-            label: "Approved purchases (by Chief Accountant)",
-            value: stats.approvedPurchase ?? 0,
-            theme: "green",
-            icon: "✅",
-            href: "/Main/Purchase/Approvals/BudgetConfirmation",
+            label: "Recommending Approval",
+            value: stats.submittedPurchase ?? 0,
+            theme: "orange",
+            icon: "📋",
+            href: "/Main/Purchase/PurchaseRecommendingApproval",
           },
         ];
       case "SuperAdmin":
@@ -331,7 +376,7 @@ export default function DashboardPage() {
             value: stats.totalPurchase ?? 0,
             theme: "amber",
             icon: "🛒",
-            href: "/Main/Purchase",
+            href: "/Main/Purchase/MyRequisition",
           },
         ];
       case "Regular Employee":
@@ -563,6 +608,38 @@ export default function DashboardPage() {
     </span>
   );
 
+  const RequisitionRow = ({ p }) => (
+    <tr
+      onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+    >
+      <td style={tdMono}>{p.PurchaseID || "—"}</td>
+      <td style={tdBase}>{p.RequestorDepartment || "—"}</td>
+      <td style={{ ...tdBase, fontWeight: 500 }}>
+        ₱{(p.Total || 0).toLocaleString()}
+      </td>
+      <td style={tdMuted}>{p.mode || "—"}</td>
+      <td style={tdMuted}>
+        {p.timeStamp
+          ? new Date(p.timeStamp).toLocaleDateString("en-PH", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "—"}
+      </td>
+      <td style={tdBase}>
+        <Badge status={p.Status} />
+      </td>
+    </tr>
+  );
+
+  // Roles that show "Recommending Approval" table instead of "My recent requisitions"
+  const showRecommendingTable =
+    user?.role === "Admin" ||
+    user?.role === "Chief Administrator Manager" ||
+    user?.role === "Project Director";
+
   return (
     <div
       style={{
@@ -621,7 +698,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* SECTION LABEL */}
+      {/* SUMMARY LABEL */}
       {cards.length > 0 && (
         <p
           style={{
@@ -649,7 +726,6 @@ export default function DashboardPage() {
         >
           {cards.map(({ label, value, theme, icon, href }) => {
             const t = themeMap[theme] || themeMap.blue;
-
             const cardContent = (
               <div
                 key={label}
@@ -660,7 +736,6 @@ export default function DashboardPage() {
                   padding: "1.1rem 1.25rem",
                   position: "relative",
                   overflow: "hidden",
-                  // ↓ Add cursor + hover effect
                   cursor: href ? "pointer" : "default",
                   transition: "box-shadow 0.15s, transform 0.15s",
                 }}
@@ -676,7 +751,6 @@ export default function DashboardPage() {
                   e.currentTarget.style.transform = "";
                 }}
               >
-                {/* top bar */}
                 <div
                   style={{
                     position: "absolute",
@@ -688,7 +762,6 @@ export default function DashboardPage() {
                     borderRadius: "12px 12px 0 0",
                   }}
                 />
-                {/* icon */}
                 <div
                   style={{
                     width: "36px",
@@ -705,7 +778,6 @@ export default function DashboardPage() {
                 >
                   {icon}
                 </div>
-                {/* value */}
                 <p
                   style={{
                     fontSize: "28px",
@@ -717,7 +789,6 @@ export default function DashboardPage() {
                 >
                   {value.toLocaleString()}
                 </p>
-                {/* label */}
                 <p
                   style={{
                     fontSize: "12px",
@@ -729,21 +800,18 @@ export default function DashboardPage() {
                 </p>
               </div>
             );
-
-            return href ?
-                <Link
-                  key={label}
-                  href={href}
-                  style={{ textDecoration: "none" }}
-                >
-                  {cardContent}
-                </Link>
-              : <div key={label}>{cardContent}</div>;
+            return href ? (
+              <Link key={label} href={href} style={{ textDecoration: "none" }}>
+                {cardContent}
+              </Link>
+            ) : (
+              <div key={label}>{cardContent}</div>
+            );
           })}
         </div>
       )}
 
-      {/* SECTION LABEL */}
+      {/* RECENT ACTIVITY LABEL */}
       <p
         style={{
           fontSize: "11px",
@@ -807,135 +875,136 @@ export default function DashboardPage() {
           </TableCard>
         )}
 
-        {/* RECENT PURCHASE REQUESTS */}
-        {recentPurchase.length > 0 && (
-          <TableCard title="Recent purchase requests">
-            <table style={tblStyle}>
+        {/* RECOMMENDING APPROVAL TABLE — Admin, Chief Admin Manager, Project Director */}
+        {showRecommendingTable && (
+          <TableCard title="Recommending Approval" fullWidth>
+            <table style={{ ...tblStyle, minWidth: "600px" }}>
               <thead>
                 <tr>
-                  <Th>PR Code</Th>
+                  <Th>Purchase ID</Th>
                   <Th>Department</Th>
                   <Th>Total</Th>
+                  <Th>Mode</Th>
+                  <Th>Date</Th>
                   <Th>Status</Th>
                 </tr>
               </thead>
               <tbody>
-                {recentPurchase.map((p, i) => (
-                  <tr
-                    key={i}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#f9fafb")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "")
-                    }
-                  >
-                    <td style={tdMono}>{p.PRCode || "—"}</td>
-                    <td style={tdBase}>{p.RequestorDepartment || "—"}</td>
-                    <td style={{ ...tdBase, fontWeight: 500 }}>
-                      ₱{(p.Total || 0).toLocaleString()}
-                    </td>
-                    <td style={tdBase}>
-                      <Badge status={p.Status} />
+                {recommendingApproval.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{
+                        padding: "3rem 1rem",
+                        textAlign: "center",
+                        color: "var(--text-muted)",
+                        fontSize: "14px",
+                      }}
+                    >
+                      No purchases for recommending approval
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recommendingApproval.map((p, i) => (
+                    <RequisitionRow key={i} p={p} />
+                  ))
+                )}
               </tbody>
             </table>
+            <div
+              style={{
+                padding: "10px 16px",
+                borderTop: "0.5px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                Showing {recommendingApproval.length} of{" "}
+                {stats.submittedPurchase ?? 0} total
+              </span>
+              <Link
+                href="/Main/Purchase/PurchaseRecommendingApproval"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--text-accent)",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                View all →
+              </Link>
+            </div>
           </TableCard>
         )}
 
-        {/* MY RECENT REQUISITIONS */}
-        <TableCard title="My recent requisitions" fullWidth>
-          <table style={{ ...tblStyle, minWidth: "700px" }}>
-            <thead>
-              <tr>
-                <Th>Purchase ID</Th>
-                <Th>PR Code</Th>
-                <Th>Department</Th>
-                <Th>Total</Th>
-                <Th>Mode</Th>
-                <Th>Date</Th>
-                <Th>Status</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {myRequisitions.length === 0 ?
+        {/* MY RECENT REQUISITIONS — all other roles */}
+        {!showRecommendingTable && (
+          <TableCard title="My recent requisitions" fullWidth>
+            <table style={{ ...tblStyle, minWidth: "600px" }}>
+              <thead>
                 <tr>
-                  <td
-                    colSpan={7}
-                    style={{
-                      padding: "3rem 1rem",
-                      textAlign: "center",
-                      color: "var(--text-muted)",
-                      fontSize: "14px",
-                    }}
-                  >
-                    No requisitions submitted yet
-                  </td>
+                  <Th>Purchase ID</Th>
+                  <Th>Department</Th>
+                  <Th>Total</Th>
+                  <Th>Mode</Th>
+                  <Th>Date</Th>
+                  <Th>Status</Th>
                 </tr>
-              : myRequisitions.map((p, i) => (
-                  <tr
-                    key={i}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "#f9fafb")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "")
-                    }
-                  >
-                    <td style={tdMono}>{p.PurchaseID || "—"}</td>
-                    <td style={tdMono}>{p.PRCode || "—"}</td>
-                    <td style={tdBase}>{p.RequestorDepartment || "—"}</td>
-                    <td style={{ ...tdBase, fontWeight: 500 }}>
-                      ₱{(p.Total || 0).toLocaleString()}
-                    </td>
-                    <td style={tdMuted}>{p.mode || "—"}</td>
-                    <td style={tdMuted}>
-                      {p.timeStamp ?
-                        new Date(p.timeStamp).toLocaleDateString("en-PH", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : "—"}
-                    </td>
-                    <td style={tdBase}>
-                      <Badge status={p.Status} />
+              </thead>
+              <tbody>
+                {myRequisitions.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      style={{
+                        padding: "3rem 1rem",
+                        textAlign: "center",
+                        color: "var(--text-muted)",
+                        fontSize: "14px",
+                      }}
+                    >
+                      No requisitions submitted yet
                     </td>
                   </tr>
-                ))
-              }
-            </tbody>
-          </table>
-          <div
-            style={{
-              padding: "10px 16px",
-              borderTop: "0.5px solid #e5e7eb",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-              Showing {myRequisitions.length} most recent
-            </span>
-            <Link
-              href="/Main/Purchase/MyRequisition"
+                ) : (
+                  myRequisitions.map((p, i) => <RequisitionRow key={i} p={p} />)
+                )}
+              </tbody>
+            </table>
+            <div
               style={{
-                fontSize: "12px",
-                fontWeight: 500,
-                color: "var(--text-accent)",
-                textDecoration: "none",
+                padding: "10px 16px",
+                borderTop: "0.5px solid #e5e7eb",
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: "4px",
               }}
             >
-              View all →
-            </Link>
-          </div>
-        </TableCard>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                Showing {myRequisitions.length} most recent
+              </span>
+              <Link
+                href="/Main/Purchase/MyRequisition"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "var(--text-accent)",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                View all →
+              </Link>
+            </div>
+          </TableCard>
+        )}
       </div>
     </div>
   );

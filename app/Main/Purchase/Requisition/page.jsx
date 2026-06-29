@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PurchaseSubmitTable from "@/app/components/Tables/purchase-submit-table";
 import { formatDates } from "@/functions/formattDate";
 import { FiMinus, FiPlus } from "react-icons/fi";
@@ -9,215 +9,237 @@ import useUserContext from "@/hooks/Context/UserContext";
 import { useBanner } from "@/hooks/Context/banner";
 import { findDepartment } from "@/functions/notification";
 import { sendPurchaseForwardedEmail } from "@/lib/sendWelcomeEmail";
+
 const CreateRequisition = () => {
   const [data, setData] = useState([]);
   const [row, setRow] = useState([]);
   const { showError, showSuccess } = useBanner();
   const [itemIds, setItemIds] = useState([]);
-  const [total, setTotal] = useState();
+  const [total, setTotal] = useState(0);
   const [mode, setMode] = useState("Small Amount");
   const [isRendered, setRendered] = useState(false);
   const [disable, setDisable] = useState(true);
-  let count = 0;
-  //const [totalRow, setTotalRow] = useState(0);
-  const [itemInfo, setItemInfo] = useState([
-    {
-      ItemName: "",
-      Unit: "",
-      UnitPrice: 0,
-      Quantity: 0,
-      Total: 0,
-    },
-  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ guard para sa double-submit
+  const [itemInfo, setItemInfo] = useState([]);
   const { user } = useUserContext();
   const [endindInventoryDate, setEndingInventoryDate] = useState(null);
-  let fetch;
 
+  // ✅ Stable — no external deps, uses only setter
+  const addTableRow = useCallback((added = 1) => {
+    setRow((prevData) => {
+      const newRows = Array.from({ length: added }, (_, i) => ({
+        id: prevData.length + i + 1,
+        ItemName: "New Item",
+        RequiredBalance: 0,
+        EndingInventory: 0,
+        Quantity: 0,
+        Unit: "pcs",
+        UnitPrice: 0,
+      }));
+      return [...prevData, ...newRows];
+    });
+  }, []);
+
+  // ✅ Stable reset — depends only on addTableRow which is stable
+  const resetTable = useCallback(() => {
+    setRow([]);
+    setItemInfo([]);
+    setItemIds([]);
+    addTableRow(3);
+  }, [addTableRow]);
+
+  // ✅ All real dependencies listed explicitly
   const handleSubmitInfo = useCallback(async () => {
-    console.log(itemInfo);
-    if (itemInfo.length === 0) {
-      showError("No Items Inputed");
-      return;
-    }
-
-    const limitedItemInfo =
-      itemInfo.length > row.length ? itemInfo.slice(0, row.length) : itemInfo;
-
-    const limitedItemIds =
-      itemIds.length > row.length ? itemIds.slice(0, row.length) : itemIds;
-
-    setItemInfo(limitedItemInfo);
-    setItemIds(limitedItemIds);
-    const filtered = limitedItemInfo.filter(
-      (item) => item.ItemName && parseFloat(item.Total) > 0,
-    );
-    // user Role permission
-    if (user.role === "Admin" && !endindInventoryDate) {
-      showError("Ending Inventory Date is Required");
-      return;
-    }
-    if (!user.e_sign) {
-      showError("You must have a e_signature");
-      return;
-    }
-
-    const itemInfoWithDate = filtered.map((item) => ({
-      ...item,
-      UserID: user.id,
-      EndingInventoryDate: endindInventoryDate,
-    }));
-
-    if (itemInfoWithDate.length === 0) {
-      showError("Total must be greater than 0");
-      return;
-    }
-
-    const forms = {
-      TotalItem: total,
-      mode: mode,
-      EmployeeSign: user.e_sign,
-      purchaseItem: itemInfoWithDate,
-    };
+    // ✅ Double-submit guard
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      const response = await axios.post("/api/purchase", forms, {});
-      if (response.status === 200 || response.status === 201) {
-        // email send and notication
-        // call all accounting
-        const accounting = await findDepartment("Accounting");
-        // console.log(accounting.data);
-        // create notication
-        for (const forward of accounting?.data) {
-          // console.log(forward);
-          const rs = await axios.post("/api/notification", {
-            userId: forward.userID,
-            title: "Purchase Requisition Submition",
-            message: `${user.name} is Submitted a Purchase Requisitions`,
-            type: "info",
-            link: "/Main/SubmittedRequisition/BudgetConfirmation",
-            // LINK HOST
-          });
-          // email send
-          await sendPurchaseForwardedEmail({
-            toEmail: forward.email,
-            forwardedBy: user.name,
-            forwardedByRole: user.role,
-            forwardedTo: `${forward.firstname} ${forward.lastname}`,
-            // link host
-            appUrl: "",
-          });
+      if (itemInfo.length === 0) {
+        showError("No Items Inputed");
+        return;
+      }
+
+      const limitedItemInfo =
+        itemInfo.length > row.length ? itemInfo.slice(0, row.length) : itemInfo;
+      const limitedItemIds =
+        itemIds.length > row.length ? itemIds.slice(0, row.length) : itemIds;
+
+      setItemInfo(limitedItemInfo);
+      setItemIds(limitedItemIds);
+
+      const filtered = limitedItemInfo.filter(
+        (item) => item.ItemName && parseFloat(item.Total) > 0,
+      );
+
+      if (user.role === "Admin" && !endindInventoryDate) {
+        showError("Ending Inventory Date is Required");
+        return;
+      }
+      if (!user.e_sign) {
+        showError("You must have a e_signature");
+        return;
+      }
+
+      const itemInfoWithDate = filtered.map((item) => ({
+        ...item,
+        UserID: user.id,
+        EndingInventoryDate: endindInventoryDate,
+      }));
+
+      if (itemInfoWithDate.length === 0) {
+        showError("Total must be greater than 0");
+        return;
+      }
+
+      const forms = {
+        TotalItem: total,
+        mode,
+        EmployeeSign: user.e_sign,
+        purchaseItem: itemInfoWithDate,
+      };
+
+      try {
+        const response = await axios.post("/api/purchase", forms);
+        if (response.status === 200 || response.status === 201) {
+          const accounting = await findDepartment("Accounting");
+
+          // ✅ Parallel — lahat ng notifications + emails sabay-sabay, hindi isa-isa
+          await Promise.all(
+            (accounting?.data || []).map((forward) =>
+              Promise.all([
+                axios.post("/api/notification", {
+                  userId: forward.userID,
+                  title: "Purchase Requisition Submition",
+                  message: `${user.name} is Submitted a Purchase Requisitions`,
+                  type: "info",
+                  link: "/Main/SubmittedRequisition/BudgetConfirmation",
+                }),
+                sendPurchaseForwardedEmail({
+                  toEmail: forward.email,
+                  forwardedBy: user.name,
+                  forwardedByRole: user.role,
+                  forwardedTo: `${forward.firstname} ${forward.lastname}`,
+                  appUrl: "",
+                }),
+              ]),
+            ),
+          );
+
+          showSuccess(response?.data?.message);
+          resetTable();
+          addTableRow(5);
         }
-
-        showSuccess(response?.data?.message);
-        resetTable();
-        addTableRow(5);
+      } catch (error) {
+        const data = error?.response?.data;
+        if (data?.errors) {
+          const errorMessages = Object.entries(data.errors)
+            .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
+            .join(" | ");
+          showError(`${data.message} ${"->" + errorMessages}`);
+        } else {
+          showError(data?.message || "Something went wrong");
+        }
       }
-    } catch (error) {
-      const data = error?.response?.data;
-      if (data?.errors) {
-        const errorMessages = Object.entries(data.errors)
-          .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
-          .join(" | ");
-
-        showError(`${data.message} ${"->" + errorMessages}`);
-      } else {
-        showError(data?.message || "Something went wrong");
-      }
+    } finally {
+      // ✅ Palaging i-reset ang isSubmitting kahit may error
+      setIsSubmitting(false);
     }
-  }, [itemInfo, itemIds, row, endindInventoryDate]);
+  }, [
+    isSubmitting,
+    itemInfo,
+    itemIds,
+    row,
+    endindInventoryDate,
+    user,
+    total,
+    mode,
+    showError,
+    showSuccess,
+    resetTable,
+    addTableRow,
+  ]);
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get("/api/purchase/items");
-      setData(response.data.items);
-      //   console.log(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  // ✅ Fetch once on mount only — hindi na naka-depend sa handleSubmitInfo
   useEffect(() => {
-    //  alert('fetch')
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("/api/purchase/items");
+        setData(response.data.items);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
     fetchData();
-    // console.log(data);
-  }, [handleSubmitInfo]);
-  const addTableRow = (added = 1) => {
-    // adding multiple rows based on the input value
-    for (let i = 0; i < added; i++) {
-      setRow((prevData) => [
-        ...prevData,
-        {
-          id: prevData.length + 1,
-          ItemName: "New Item",
-          RequiredBalance: 0,
-          EndingInventory: 0,
-          Quantity: 0,
-          Unit: "pcs",
-          UnitPrice: 0,
-        },
-      ]);
-    }
-    //setData([...data, {id: data.length + 1, ItemName: "New Item", RequiredBalance: 0, EndingInventory: 0, Quantity: 0, Unit: "pcs", UnitPrice: 0}])
-  };
-  // console.log("Row changed:", value);
-  // setRow(prevData => prevData.map(row => row.id === value.id ? {...row, ...value} : row));
-  const handleRowChange = (value) => {
-    //  alert(`Value changed: ${value}`);
-    if (value === row.length) return;
+  }, []);
 
-    if (value > row.length) {
-      addTableRow(value - row.length);
-    } else {
-      // remove rows if value is smaller
-      setRow((prev) => prev.slice(0, value));
-      // setData(prev => prev.slice(0, value));
-      // setItemInfo(prev => prev.slice(0, value));
-      // setItemIds(prev => prev.slice(0, value));
+  // ✅ Initial rows — once on mount
+  useEffect(() => {
+    if (!isRendered) {
+      setRendered(true);
+      addTableRow(3);
     }
-  };
+  }, []);
 
-  // handle able disable
+  // ✅ Memoized tableHeader — hindi na bago sa bawat render
+  const tableHeader = useMemo(() => {
+    return user?.role !== "Admin"
+      ? [
+          "NO",
+          "ITEM CATALOG # COMPLETE ITEM DESCRIPTION",
+          "QUANTITY",
+          "UNIT",
+          "UNIT PRICE",
+          "TOTAL",
+        ]
+      : [
+          "NO",
+          "ITEM",
+          "REQUIRED BALANCE",
+          "ENDING INVENTORY",
+          "QUANTITY",
+          "UNIT",
+          "UNIT PRICE",
+          "TOTAL",
+        ];
+  }, [user?.role]);
+
+  const handleRowChange = useCallback(
+    (value) => {
+      if (value === row.length) return;
+      if (value > row.length) {
+        addTableRow(value - row.length);
+      } else {
+        setRow((prev) => prev.slice(0, value));
+      }
+    },
+    [row.length, addTableRow],
+  );
+
+  const handleDeleteRow = useCallback(() => {
+    setRow((prevData) => prevData.slice(0, prevData.length - 1));
+    setItemInfo((prevData) => prevData.slice(0, prevData.length - 1));
+    setItemIds((prevData) => prevData.slice(0, prevData.length - 1));
+  }, []);
+
+  // ✅ Compute total + disable state
   useEffect(() => {
     const fillable = itemInfo.filter(
       (item) => item.ItemName && parseFloat(item.Total) > 0,
     );
     if (!fillable || fillable.length === 0) {
       setDisable(true);
+      setTotal(0);
     } else {
-      setTotal(
-        fillable.reduce((sum, item) => sum + (parseFloat(item?.Total) || 0), 0),
+      const computedTotal = fillable.reduce(
+        (sum, item) => sum + (parseFloat(item?.Total) || 0),
+        0,
       );
+      setTotal(computedTotal);
       setDisable(false);
     }
   }, [itemInfo]);
 
-  const handleDeleteRow = () => {
-    setRow((prevData) => prevData.filter((_, i) => i !== row.length - 1));
-    //setData(prevData => prevData.filter((_, i) => i !== row.length - 1));
-    setItemInfo((prevData) => prevData.filter((_, i) => i !== row.length - 1));
-    setItemIds((prevData) => prevData.filter((_, i) => i !== row.length - 1));
-    // setRow(prevData => prevData.filter((_, i) => i !== index));// through index to delete specific row
-    // setData(prevData => prevData.filter((_, i) => i !== index));
-    // setItemInfo(prevData => prevData.filter((_, i) => i !== index));
-    // setItemIds(prevData => prevData.filter((_, i) => i !== index));
-    // console.log("Deleted row at index:", index);
-    // console.log("Updated data after deletion:", data);
-    // console.log("Updated itemInfo after deletion:", itemInfo);
-    // console.log("Updated itemIds after deletion:", itemIds);
-    // setData(prevData => prevData.filter((_, i) => i !== index));
-  };
-  useEffect(() => {
-    if (!isRendered) {
-      setRendered(!isRendered);
-      addTableRow(3);
-    } else return;
-  }, []);
-
-  const resetTable = () => {
-    setRow([]);
-    setItemInfo([]);
-    setItemIds([]);
-    addTableRow(3);
-  };
   if (!user) {
     return <div>Please Wait....</div>;
   }
@@ -226,33 +248,27 @@ const CreateRequisition = () => {
     <>
       <div className="flex relative mb-5 w-auto">
         <div className="w-1/2 flex flex-row gap-2">
-          {/* {formatMoney(parseFloat(total), 'PHP', 'en-PH')} */}
-          <h5 className="text-xl font-bold">Requestor Department: </h5>{" "}
+          <h5 className="text-xl font-bold">Requestor Department: </h5>
           <h5 className="display-inline text-red-950 text-xl font-extrabold">
             {user?.department}
           </h5>
         </div>
-        <div className="w-1/2 flex flex-row gap-2 place-content-end">
-          {/* <h5 className= 'place-self-end font-bold text-xl'>Requisition Date:</h5><h5 className = 'display-inline text-red-950 text-xl font-extrabold'></h5> */}
-        </div>
       </div>
+
       <div className="grid grid-row-3 mb-5">
         <hr className="border-t border-gray-300" />
-        <div className="flex text-xl ">
+        <div className="flex text-xl">
           <h5 className="display-inline text-black-500 font-bold text-xl p-5 px-0">
-            {" "}
             Requisition Date: {formatDates(new Date())}
           </h5>
-          <h5 className="display-inline text-red-700 font-bold p-5"> </h5>
         </div>
         <hr className="border-t border-gray-300" />
       </div>
-      {/* <button onClick={handleClick}>Fetch Item Info</button> */}
+
       <div className="flex relative flex-row justify-between items-center mb-5 w-auto print:hidden">
         {/* LEFT SIDE */}
         <div className="flex flex-row items-center gap-3">
           <label className="font-bold text-lg">Mode:</label>
-
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value)}
@@ -267,7 +283,7 @@ const CreateRequisition = () => {
         <div className="grid-cols-[auto_auto_auto] place-content-end flex flex-row">
           <button
             className="text-white outline outline-darkRed font-bold rounded-tl-lg rounded-bl-lg bg-black pl-2 py-1 w-10 hover:bg-gray-300 hover:text-black text-sm flex flex-row"
-            onClick={() => handleDeleteRow()}
+            onClick={handleDeleteRow}
           >
             <FiMinus size={20} />
           </button>
@@ -287,31 +303,12 @@ const CreateRequisition = () => {
           </button>
         </div>
       </div>
-      <div className=" print:overflow-hidden">
+
+      <div className="print:overflow-hidden">
         <PurchaseSubmitTable
           data={row}
           item={data}
-          tableHeader={
-            user?.role !== "Admin" ?
-              [
-                "NO",
-                "ITEM CATALOG # COMPLETE ITEM DESCRIPTION",
-                "QUANTITY",
-                "UNIT",
-                "UNIT PRICE",
-                "TOTAL",
-              ]
-            : [
-                "NO",
-                "ITEM",
-                "REQUIRED BALANCE",
-                "ENDING INVENTORY",
-                "QUANTITY",
-                "UNIT",
-                "UNIT PRICE",
-                "TOTAL",
-              ]
-          }
+          tableHeader={tableHeader}
           setData={setData}
           setItemInfo={setItemInfo}
           itemInfo={itemInfo}
@@ -320,14 +317,7 @@ const CreateRequisition = () => {
           setEndingInventoryDate={setEndingInventoryDate}
         />
       </div>
-      {/* buttons submit */}
-      {/* 
-       Design 
-        
-       Table 
-              
-              submit button               
-       */}
+
       <div className="mt-5 mr-3 flex relative flex-row place-content-end mb-5 w-auto">
         <div className="grid-cols-[auto_auto_auto] place-content-end">
           <div className="w-auto h-auto bg-darkRed p-2 text-lg font-bold text-white">
@@ -337,18 +327,16 @@ const CreateRequisition = () => {
           </div>
         </div>
       </div>
+
       <div className="mt-10 flex relative flex-row place-content-end mb-5 w-auto">
         <div className="grid-cols-[auto_auto_auto] place-content-end">
           <button
-            className="bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black  disabled:bg-gray-400 disabled:cursor-not-allowed disabled:outline disabled:outline-white disabled:hover:text-white"
-            disabled={disable}
-            onClick={(e) => handleSubmitInfo()}
+            className="bg-darkRed text-white py-1 w-30 text-lg outline outline-darkRed rounded-lg hover:bg-btnRed hover:text-black disabled:bg-gray-400 disabled:cursor-not-allowed disabled:outline disabled:outline-white disabled:hover:text-white"
+            disabled={disable || isSubmitting}
+            onClick={handleSubmitInfo}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
-          {/* <button onClick={() => window.print()} className="print:hidden">
-  Print
-</button> */}
         </div>
       </div>
     </>

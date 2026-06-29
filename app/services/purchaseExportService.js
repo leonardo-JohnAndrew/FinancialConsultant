@@ -132,9 +132,9 @@ async function exportPurchaseToExcel(purchaseId) {
       where: { PurchaseID: purchaseId },
       order: [["id", "ASC"]],
     }),
-    purchase.UserID ?
-      User.findOne({ where: { userID: purchase.UserID } })
-    : null,
+    purchase.UserID
+      ? User.findOne({ where: { userID: purchase.UserID } })
+      : null,
   ]);
 
   console.log(`[exportPurchaseToExcel] purchase found:`, !!purchase);
@@ -161,7 +161,6 @@ async function exportPurchaseToExcel(purchaseId) {
   sheet.getCell("B7").value = purchase.PurchaseID;
   sheet.getCell("P7").value = fmtDate(purchase.createdAt);
   sheet.getCell("E10").value = purchase.RequestorDepartment;
-  sheet.getCell("C14").value = purchase.PRCode;
 
   // ---------- Signatory names ----------
   sheet.getCell("B29").value = fullName(requestor);

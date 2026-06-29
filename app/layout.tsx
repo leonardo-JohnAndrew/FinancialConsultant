@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My App",
+  title: "FinancialPR",
   description: "With Sidebar",
+  icons: {
+    icon: "/NstrenWhite.png",
+  },
 };
 
 export default function RootLayout({

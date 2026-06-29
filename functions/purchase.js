@@ -141,10 +141,6 @@ export async function GetSpecificRequest(
       },
 
       isOnTheBudget: true,
-
-      PRCode: {
-        [Sequelize.Op.not]: null,
-      },
     };
 
     // -----------------------------
@@ -263,17 +259,21 @@ export async function GetPurchaseWithUserId(
       raw: true,
     });
 
-    const earliestDate =
-      dateRange?.earliestDate ? new Date(dateRange.earliestDate) : new Date();
+    const earliestDate = dateRange?.earliestDate
+      ? new Date(dateRange.earliestDate)
+      : new Date();
 
-    const latestDate =
-      dateRange?.latestDate ? new Date(dateRange.latestDate) : new Date();
+    const latestDate = dateRange?.latestDate
+      ? new Date(dateRange.latestDate)
+      : new Date();
 
-    const rangeStart =
-      startParam ? new Date(`${startParam}T00:00:00.000Z`) : earliestDate;
+    const rangeStart = startParam
+      ? new Date(`${startParam}T00:00:00.000Z`)
+      : earliestDate;
 
-    const rangeEnd =
-      endParam ? new Date(`${endParam}T23:59:59.999Z`) : latestDate;
+    const rangeEnd = endParam
+      ? new Date(`${endParam}T23:59:59.999Z`)
+      : latestDate;
 
     // build tab-based condition
     let tabWhere = {};

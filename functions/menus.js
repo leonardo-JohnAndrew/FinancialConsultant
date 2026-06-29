@@ -99,12 +99,18 @@ export default function Menus(role) {
       section: "menu",
       path: "/Main/bir2307",
     },
+    {
+      label: "Profile",
+      icon: "□",
+      section: "menu",
+      path: "/Main/Profile",
+    },
 
     {
       label: "Logout",
       icon: "□",
       section: "footer",
-      path: "/Login",
+      path: "/PR",
       hasArrow: true,
     },
   ];
@@ -114,15 +120,15 @@ export default function Menus(role) {
       "Purchase Requisition Form",
       "My Requisition",
 
-      // "Profile"
+      "Profile",
     ],
     Admin: [
       "Dashboard",
       "Purchase Requisition Form",
       "Requisition List",
       "My Requisition",
-      "BIR 2307",
-      //  "Profile",
+
+      "Profile",
     ],
     "Chief Accountant": [
       "Dashboard",
@@ -134,6 +140,7 @@ export default function Menus(role) {
       "Cashbooks",
       "BIR 2307",
       "Creditors",
+      "Profile",
     ],
     Accounting: [
       "Dashboard",
@@ -145,6 +152,7 @@ export default function Menus(role) {
       "Cashbooks",
       "BIR 2307",
       "Creditors",
+      "Profile",
     ],
     "Chief Administrator Manager": [
       "Dashboard",
@@ -152,19 +160,19 @@ export default function Menus(role) {
       "My Requisition",
       "Requisition List",
       "Vouchers",
-      "BIR 2307",
+
       "Creditors",
       //  "My Requisition",
-      //  "Profile",
+      "Profile",
     ],
     "Project Director": [
       "Dashboard",
       "Purchase Requisition Form",
       "My Requisition",
       "Requisition List",
-      "BIR 2307",
+
       //  "My Requisition",
-      //  "Profile",
+      "Profile",
     ],
     SuperAdmin: [
       "Dashboard",
@@ -172,8 +180,6 @@ export default function Menus(role) {
       "My Requisition",
       //  "My Requisition",
       "User Management",
-      "BIR 2307",
-      //  "Profile"
     ],
   };
   //find specific Role

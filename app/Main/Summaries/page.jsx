@@ -330,11 +330,11 @@ export default function SummariesPage() {
                             cls="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
                             onClick={() => openEdit(row)}
                           /> */}
-                          <ActionBtn
+                          {/* <ActionBtn
                             label="Delete"
                             cls="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
                             onClick={() => handleDelete(row)}
-                          />
+                          /> */}
                         </div>
                       </td>
                     </tr>

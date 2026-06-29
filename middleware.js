@@ -20,7 +20,7 @@ export async function middleware(request) {
 
   if (!token) {
     if (!pathname.startsWith("/api")) {
-      return NextResponse.redirect(new URL("/Login", request.url));
+      return NextResponse.redirect(new URL("/PR", request.url));
     }
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -58,7 +58,7 @@ export async function middleware(request) {
     return NextResponse.next();
   } catch (error) {
     if (!pathname.startsWith("/api")) {
-      return NextResponse.redirect(new URL("/Login", request.url));
+      return NextResponse.redirect(new URL("/PR", request.url));
     }
     return NextResponse.json({ error_message: error.message }, { status: 401 });
   }

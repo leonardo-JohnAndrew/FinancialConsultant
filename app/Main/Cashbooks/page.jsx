@@ -34,6 +34,7 @@ const CashbooksList = () => {
           "",
         ]}
         tbdata={cashbook}
+        fetchCashbooks={fetchCashbooks}
       />
     </>
   );

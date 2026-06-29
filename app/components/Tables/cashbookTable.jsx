@@ -20,12 +20,13 @@ const CashbooksTable = (props) => {
     creditors = [],
     accountCodes = [],
     currency,
+    fetchCashbooks,
   } = props;
   const [modal, setModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedCashbook, setSelectedCashbook] = useState(null);
   const [activeSuggestion, setActiveSuggestion] = useState(null);
-  const { showError } = useBanner();
+  const { showError, showSuccess } = useBanner();
   const [editRange, setEditRange] = useState({
     dateRangeStart: "",
     dateRangeEnd: "",
@@ -113,32 +114,29 @@ const CashbooksTable = (props) => {
                     </button> */}
 
                     {/* VIEW / SYNC */}
-                    {data.hasChildren ?
+                    {data.hasChildren ? (
                       <Link
                         className="px-4 py-1 bg-btnRed text-white font-bold rounded-lg"
                         href={`/Main/Cashbooks/${data.cashbook_id}`}
                       >
                         View
                       </Link>
-                    : <button
+                    ) : (
+                      <button
                         className="px-4 py-1 bg-green-600 text-white font-bold rounded-lg"
                         onClick={async () => {
-                          try {
-                            const res = await axios.post(
-                              `/api/cashbooks/${data.cashbook_id}/sync`,
-                            );
+                          const res = await axios.post(
+                            `/api/cashbooks/${data.cashbook_id}/sync`,
+                          );
 
-                            showSuccess(`${res.data.inserted} entries synced`);
+                          showSuccess(`${res.data.inserted} entries synced`);
 
-                            fetchCashbooks();
-                          } catch (err) {
-                            showError("Failed to sync cashbook");
-                          }
+                          fetchCashbooks();
                         }}
                       >
                         Sync
                       </button>
-                    }
+                    )}
                   </div>
                 </td>
               </tr>

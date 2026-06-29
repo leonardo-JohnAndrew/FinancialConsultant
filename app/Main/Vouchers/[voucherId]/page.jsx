@@ -75,26 +75,23 @@ const PaymentVouchers = () => {
 
   //file attachment
   const handleChange = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
 
     if (!file) return;
 
-    setAttachment(file);
-    setPreview(URL.createObjectURL(file));
+    const localPreview = URL.createObjectURL(file);
+
+    setPreview(localPreview); // instant preview
 
     try {
       const result = await UpdateAttachment({
         id: params.voucherId,
         file,
       });
-      if (result.success === false) {
-        showError("Failed Upload File");
-      }
-      showSuccess("File  Uploaded");
-      console.log(result.path); // "/uploads/..."
+
+      showSuccess("File Uploaded");
     } catch (err) {
-      console.log(err.message);
-      showError("Failed to Upload file");
+      showError("Failed Upload File");
     }
   };
   // FETCH EXISTING VOUCHERS
@@ -353,7 +350,7 @@ const PaymentVouchers = () => {
             title: "Payment and Receipt Vouchers",
             message: `${user.name} Forwarded Vooucher List ID : ${params.voucherId}`,
             type: "Info",
-            link: "",
+            link: "/Main/Vouchers",
             // localhost link
           });
         }
@@ -410,13 +407,13 @@ const PaymentVouchers = () => {
               title: "Vouchers Approval",
               message: `Chief Administrator Manager: ${user.name} Approved Voucher List ID: ${params.voucherId}`,
               type: `Info`,
-              link: `/Main/Vouchers/${params.id}`,
+              link: `/Main/Vouchers/${params.voucherId}`,
             });
           }
           for (const Accounting of accounting?.data || []) {
             // email
             await sendVoucherApprovedEmail({
-              toEmail: Accounting.userID,
+              toEmail: Accounting.email,
               voucherNo: params.voucherId,
               approvedBy: user.name,
               approvedByRole: "Chief Administrator Manager",
@@ -455,7 +452,7 @@ const PaymentVouchers = () => {
           for (const chief of chiefAdmin?.data || []) {
             // email
             await sendVoucherApprovedEmail({
-              toEmail: chief.userID,
+              toEmail: chief.email,
               voucherNo: params.voucherId,
               approvedBy: user.name,
               approvedByRole: "Chief Accountant",
@@ -583,6 +580,7 @@ const PaymentVouchers = () => {
   };
   return (
     <div className="p-5">
+      {/* {JSON.stringify(checks)} */}
       <table>
         <thead>
           <tr>
@@ -874,19 +872,21 @@ const PaymentVouchers = () => {
         checks?.ChiefAdminSignature !== null && (
           // file attachment
           <>
-            {checks?.cheque_attachment &&
-              (checks?.cheque_attachment.toLowerCase().includes(".pdf") ? (
+            {(preview || checks?.cheque_attachment) &&
+              ((preview || checks?.cheque_attachment)
+                .toLowerCase()
+                .includes(".pdf") ? (
                 <div className="flex justify-center items-center">
                   <iframe
-                    src={checks?.cheque_attachment || ""}
-                    className="w-full h-fit border rounded m-5"
-                    title="Attachment preview"
+                    src={preview || checks?.cheque_attachment}
+                    className="w-full h-[600px] border rounded m-5"
+                    title="Attachment Preview"
                   />
                 </div>
               ) : (
                 <div className="flex justify-center items-center">
                   <img
-                    src={checks?.cheque_attachment || ""}
+                    src={preview || checks?.cheque_attachment}
                     alt="Attachment Preview"
                     className="w-full max-h-96 border rounded m-5"
                   />
@@ -944,29 +944,26 @@ const PaymentVouchers = () => {
             </tr>
 
             <tr className="text-center">
+              {/* Chief Accountant */}
               <td className="p-2 relative w-1/3">
-                {(checks?.ChiefAccountSignature !== null ||
-                  userRole === "Chief Accountant") && (
+                {/* show saved signature from DB, or preview if currently approving */}
+                {(checks?.ChiefAccountSignature || ChiefAccountSignature) && (
                   <img
-                    src={ChiefAccountSignature}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      ChiefAccountSignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
+                    src={ChiefAccountSignature || checks?.ChiefAccountSignature}
+                    alt="Chief Accountant Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
                 <span>Laarni Cruz</span>
               </td>
 
+              {/* Chief Admin Manager */}
               <td className="p-2 relative w-1/3">
-                {(checks?.ChiefAdminSignature !== null ||
-                  userRole === "Chief Administrator Manager") && (
+                {(checks?.ChiefAdminSignature || ChiefAdminSignature) && (
                   <img
-                    src={ChiefAdminSignature}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      ChiefAdminSignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
+                    src={ChiefAdminSignature || checks?.ChiefAdminSignature}
+                    alt="Chief Admin Manager Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
                 <span>Kai Sumitomo</span>
@@ -1004,18 +1001,13 @@ const PaymentVouchers = () => {
         (isApproving ? (
           <div className="flex justify-end gap-4 mt-10 mb-10">
             <button
-              onClick={(e) => {
-                handleCancel();
-              }}
-              className="px-6 py-2 bg-darkRed border  border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
+              onClick={handleCancel}
+              className="px-6 py-2 bg-darkRed border border-darkRed text-white font-bold rounded hover:bg-red-700 transition"
             >
               Cancel
             </button>
-
             <button
-              onClick={(e) => {
-                handleConfirm();
-              }}
+              onClick={handleConfirm}
               className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
             >
               Confirm
@@ -1023,28 +1015,36 @@ const PaymentVouchers = () => {
           </div>
         ) : (
           <div className="flex justify-end gap-4 mt-10 mb-10">
-            <button
-              onClick={(e) => {
-                handleApprove();
-              }}
-              className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
-            >
-              Accept
-            </button>
+            {/* ✅ Show Accept only if THIS role hasn't signed yet */}
+            {((userRole === "Chief Accountant" &&
+              !checks?.ChiefAccountSignature) ||
+              (userRole === "Chief Administrator Manager" &&
+                !checks?.ChiefAdminSignature)) && (
+              <button
+                onClick={handleApprove}
+                className="px-6 py-2 bg-lightRed border border-darkRed text-white font-bold rounded hover:bg-red-200 hover:text-black transition"
+              >
+                Accept
+              </button>
+            )}
           </div>
         ))}
 
-      {/* buttons  */}
+      {/* ✅ Submit button — only show if no one has signed yet */}
       {userRole !== "Chief Accountant" &&
-        userRole !== "Chief Administrator Manager" && (
-          <div className="flex justify-end  mt-3">
+        userRole !== "Chief Administrator Manager" &&
+        !checks?.ChiefAccountSignature &&
+        !checks?.ChiefAdminSignature && (
+          <div className="flex justify-end mt-3">
             <button
-              title="Total Amount not must be zero"
-              onClick={(e) => {
-                setApproving(true);
-              }}
-              className={` ${checks.checkAmount > 0 ? "bg-btnRed text-white hover:bg-black" : "bg-gray-200 text-black"} px-5 py-2 rounded mr-2 `}
-              disabled={checks.checkAmount > 0 ? false : true}
+              title="Total Amount must not be zero"
+              onClick={() => setApproving(true)}
+              className={`${
+                checks.checkAmount > 0
+                  ? "bg-btnRed text-white hover:bg-black"
+                  : "bg-gray-200 text-black"
+              } px-5 py-2 rounded mr-2`}
+              disabled={checks.checkAmount <= 0}
             >
               Submit
             </button>

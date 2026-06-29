@@ -20,6 +20,7 @@ export default function ApprovePurchaseDetails() {
   const [is404, setIs404] = useState(false);
   const [isfetching, setIsFetching] = useState(true);
   const [formatted, setFormatted] = useState("");
+  const [isCLick, setIsClick] = useState(false);
   const [items, setItems] = useState([]);
   const router = useRouter();
   const [EndingInventoryDate, setEndingInventoryDate] = useState();
@@ -60,16 +61,20 @@ export default function ApprovePurchaseDetails() {
   }, [fetchPurchaseDetails]);
 
   const handleDownload = async () => {
-    const res = await axios.get(`/api/purchase/${id}/export`, {
+    setIsClick(true);
+    const res = await axios.get(`/api/purchase/${params.purchaseID}/export`, {
       responseType: "blob",
     });
 
     const url = URL.createObjectURL(new Blob([res.data]));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `summary-${id}.xlsx`;
+    a.download = `purchase-${params.purchaseID}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
+    setTimeout(function () {
+      setIsClick(false);
+    }, 2000);
   };
 
   useEffect(() => {
@@ -152,44 +157,44 @@ export default function ApprovePurchaseDetails() {
         <hr className="border-t border-gray-300" />
       </div>
       <div className="flex justify-start my-3">
-        <div className="flex flex-row gap-1">
+        {/* <div className="flex flex-row gap-1">
           <h5 className="p-1 px-2 bg-black text-white font-semibold">
             PR CODE:{" "}
           </h5>
           <h5 className="p-1 px-2 bg-gray-200 text-black font-semibold">
             {purchaseDetails?.purchase?.PRCode || "Not Set"}
           </h5>
-        </div>
+        </div> */}
       </div>
       <div className="scrollbar-custom overflow-y-auto">
         <BudgetConfirmationTable
           approve={true}
           tableHeader={
-            purchaseDetails?.purchase?.user?.role !== "Admin" ?
-              [
-                "NO.",
-                "ITEM DESCRIPTION",
-                "QUANTITY",
-                "UNIT",
-                "UNIT PRICE",
-                "CLAIMABLE",
-                "TYPE OF EXPENSES",
-                "REMARKS",
-                "TOTAL",
-              ]
-            : [
-                "NO.",
-                "ITEM DESCRIPTION",
-                "REQUIRED BALANCE",
-                "ENDING INVENTORY",
-                "QUANTITY",
-                "UNIT",
-                "UNIT PRICE",
-                "CLAIMABLE",
-                "TYPE OF EXPENSES",
-                "REMARKS",
-                "TOTAL",
-              ]
+            purchaseDetails?.purchase?.user?.role !== "Admin"
+              ? [
+                  "NO.",
+                  "ITEM DESCRIPTION",
+                  "QUANTITY",
+                  "UNIT",
+                  "UNIT PRICE",
+                  "CLAIMABLE",
+                  "TYPE OF EXPENSES",
+                  "REMARKS",
+                  "TOTAL",
+                ]
+              : [
+                  "NO.",
+                  "ITEM DESCRIPTION",
+                  "REQUIRED BALANCE",
+                  "ENDING INVENTORY",
+                  "QUANTITY",
+                  "UNIT",
+                  "UNIT PRICE",
+                  "CLAIMABLE",
+                  "TYPE OF EXPENSES",
+                  "REMARKS",
+                  "TOTAL",
+                ]
           }
           data={purchaseDetails || isfetching === false ? purchaseDetails : []}
           Ending={formattedEnding}
@@ -220,55 +225,50 @@ export default function ApprovePurchaseDetails() {
           Confirm
         </button> */}
       </div>
+      {/* {JSON.stringify(purchaseDetails)} */}
       <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
         <tbody>
           <tr className="text-left">
             <td className="p-2 w-1/3">Requisitionist:</td>
-
-            {/* Sir JC */}
             <td className="p-2 w-1/3">Initial Approved:</td>
             <td className="p-2 w-1/3">Noted By:</td>
             <td className="p-2 w-1/3">Approved By:</td>
           </tr>
 
           <tr className="text-center">
+            {/* Employee */}
             <td className="p-2 relative w-1/3">
-              <img
-                src={purchaseDetails?.purchase?.EmployeeSign || null}
-                alt="Signature"
-                className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
-              />
+              {purchaseDetails?.purchase?.EmployeeSign && (
+                <img
+                  src={purchaseDetails.purchase.EmployeeSign}
+                  alt="Employee Signature"
+                  className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
+                />
+              )}
               <span>
-                {`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}
+                {`${purchaseDetails?.purchase?.user?.firstname ?? ""} ${purchaseDetails?.purchase?.user?.lastname ?? ""}`}
               </span>
             </td>
 
+            {/* Admin */}
             <td className="p-2 relative w-1/3">
-              {(purchaseDetails?.purchase?.AdminSign !== null ||
-                userRole === "Admin") && (
+              {purchaseDetails?.purchase?.AdminSign && (
                 <img
-                  src={`${purchaseDetails?.purchase?.AdminSign || null}`}
-                  alt="Signature"
-                  className={`absolute left-1/2 -translate-x-1/2 ${
-                    purchaseDetails?.purchase?.AdminSign ?
-                      "-top-15 h-25"
-                    : "-top-8 h-12"
-                  } object-contain pointer-events-none`}
+                  src={purchaseDetails.purchase.AdminSign}
+                  alt="Admin Signature"
+                  className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                 />
               )}
               <span>{purchaseDetails?.purchase?.AdminName || "Admin"}</span>
             </td>
+
+            {/* Chief Admin Manager */}
             <td className="p-2 relative w-1/3">
-              {(purchaseDetails?.purchase?.ChiefAdminManageSign !== null ||
-                userRole === "Chief Administrator Manager") && (
+              {purchaseDetails?.purchase?.ChiefAdminManageSign && (
                 <img
-                  src={`${purchaseDetails?.purchase?.ChiefAdminManageSign || null}`}
-                  alt="Signature"
-                  className={`absolute left-1/2 -translate-x-1/2 ${
-                    purchaseDetails?.purchase?.ChiefAdminManageSign ?
-                      "-top-15 h-25"
-                    : "-top-8 h-12"
-                  } object-contain pointer-events-none`}
+                  src={purchaseDetails.purchase.ChiefAdminManageSign}
+                  alt="Chief Admin Manager Signature"
+                  className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                 />
               )}
               <span>
@@ -277,22 +277,18 @@ export default function ApprovePurchaseDetails() {
               </span>
             </td>
 
+            {/* Project Director */}
             <td className="p-2 relative w-1/3">
-              {(purchaseDetails?.purchase?.ProjectDirectorSign !== null ||
-                userRole === "Project Director") && (
+              {purchaseDetails?.purchase?.ProjectDirectorSign && (
                 <img
-                  src={`${purchaseDetails?.purchase?.ProjectDirectorSign || null}`}
-                  alt="Signature"
-                  className={`absolute left-1/2 -translate-x-1/2 ${
-                    purchaseDetails?.purchase?.ProjectDirectorSign ?
-                      "-top-15 h-25"
-                    : "-top-8 h-12"
-                  } object-contain pointer-events-none`}
+                  src={purchaseDetails.purchase.ProjectDirectorSign}
+                  alt="Project Director Signature"
+                  className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                 />
               )}
               <span>
                 {purchaseDetails?.purchase?.ProjectDirectorName ||
-                  "Jorge Müller"}
+                  "Project Director"}
               </span>
             </td>
           </tr>
@@ -301,14 +297,23 @@ export default function ApprovePurchaseDetails() {
             <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
             <td className="text-white bg-black py-2 w-1/3">Admin</td>
             <td className="text-white bg-black py-2 w-1/3">
-              {purchaseDetails?.purchase?.isAdminForChiefSign ?
-                "Admin"
-              : "Chief Administrator Manager"}
+              {purchaseDetails?.purchase?.isAdminForChiefSign
+                ? "Admin"
+                : "Chief Administrator Manager"}
             </td>
             <td className="text-white bg-black py-2 w-1/3">Project Director</td>
           </tr>
         </tbody>
       </table>
+      <div className="flex justify-end items-end">
+        <button
+          className={`mt-3 py-3  ${isCLick === true ? "bg-gray-500" : "bg-green-800"}  text-white ${isCLick === false && "hover:bg-green-950"}  p-2 font-medium rounded-md`}
+          onClick={handleDownload}
+          disabled={isCLick}
+        >
+          {"Export Data"}
+        </button>
+      </div>
       {/* <button onClick={handleDownload} className="bg-green-600 text-white">
         Download Summary
       </button> */}

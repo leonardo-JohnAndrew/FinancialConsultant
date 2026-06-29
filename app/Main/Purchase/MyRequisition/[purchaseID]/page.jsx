@@ -141,49 +141,131 @@ export default function PurchaseDetails() {
         </div>
       </div>
       {
+        // <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
+        //   <tbody>
+        //     <tr className="text-left">
+        //       <td className="p-2 w-1/3">Requisitionist:</td>
+
+        //       {/* Sir JC */}
+        //       <td className="p-2 w-1/3">Initial Approved:</td>
+        //       <td className="p-2 w-1/3">Noted By:</td>
+        //       <td className="p-2 w-1/3">Approved By:</td>
+        //     </tr>
+
+        //     <tr className="text-center">
+        //       <td className="p-2 relative w-1/3">
+        //         <img
+        //           src={purchaseDetails?.purchase?.EmployeeSign || null}
+        //           alt="Signature"
+        //           className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
+        //         />
+        //         <span>
+        //           {`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}
+        //         </span>
+        //       </td>
+
+        //       <td className="p-2 relative w-1/3">
+        //         {purchaseDetails?.purchase?.AdminSign !== null || (
+        //           <img
+        //             src={`${purchaseDetails?.purchase?.AdminSign || null}`}
+        //             alt="Signature"
+        //             className={`absolute left-1/2 -translate-x-1/2 ${
+        //               AdminSignature ? "-top-15 h-25" : "-top-8 h-12"
+        //             } object-contain pointer-events-none`}
+        //           />
+        //         )}
+        //         <span>{purchaseDetails?.purchase?.AdminName || "Admin"}</span>
+        //       </td>
+        //       <td className="p-2 relative w-1/3">
+        //         {purchaseDetails?.purchase?.ChiefAdminManageSign !== null || (
+        //           <img
+        //             src={`${purchaseDetails?.purchase?.ChiefAdminManageSign || null}`}
+        //             alt="Signature"
+        //             className={`absolute left-1/2 -translate-x-1/2 ${
+        //               Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
+        //             } object-contain pointer-events-none`}
+        //           />
+        //         )}
+        //         <span>
+        //           {purchaseDetails?.purchase?.ChiefAdminManagerName ||
+        //             "Chief Administrator Manager"}
+        //         </span>
+        //       </td>
+
+        //       <td className="p-2 relative w-1/3">
+        //         {purchaseDetails?.purchase?.ProjectDirectorSign !== null || (
+        //           <img
+        //             src={`${purchaseDetails?.purchase?.ProjectDirectorSign || null}`}
+        //             alt="Signature"
+        //             className={`absolute left-1/2 -translate-x-1/2 ${
+        //               PDirectorsignature ? "-top-15 h-25" : "-top-8 h-12"
+        //             } object-contain pointer-events-none`}
+        //           />
+        //         )}
+        //         <span>
+        //           {purchaseDetails?.purchase?.ProjectDirectorName ||
+        //             "Jorge Müller"}
+        //         </span>
+        //       </td>
+        //     </tr>
+
+        //     <tr className="text-center">
+        //       <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
+        //       <td className="text-white bg-black py-2 w-1/3">Admin</td>
+        //       <td className="text-white bg-black py-2 w-1/3">
+        //         {purchaseDetails?.purchase?.isAdminForChiefSign
+        //           ? "Admin"
+        //           : "Chief Administrator Manager"}
+        //       </td>
+        //       <td className="text-white bg-black py-2 w-1/3">
+        //         Project Director
+        //       </td>
+        //     </tr>
+        //   </tbody>
+        // </table>
         <table className="mt-30 w-full table-fixed bg-gray-100 border border-gray-200">
           <tbody>
             <tr className="text-left">
               <td className="p-2 w-1/3">Requisitionist:</td>
-
-              {/* Sir JC */}
               <td className="p-2 w-1/3">Initial Approved:</td>
               <td className="p-2 w-1/3">Noted By:</td>
               <td className="p-2 w-1/3">Approved By:</td>
             </tr>
 
             <tr className="text-center">
+              {/* Employee */}
               <td className="p-2 relative w-1/3">
-                <img
-                  src={purchaseDetails?.purchase?.EmployeeSign || null}
-                  alt="Signature"
-                  className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
-                />
+                {purchaseDetails?.purchase?.EmployeeSign && (
+                  <img
+                    src={purchaseDetails.purchase.EmployeeSign}
+                    alt="Employee Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
+                  />
+                )}
                 <span>
-                  {`${purchaseDetails?.purchase?.user?.firstname} ${purchaseDetails?.purchase?.user?.lastname}`}
+                  {`${purchaseDetails?.purchase?.user?.firstname ?? ""} ${purchaseDetails?.purchase?.user?.lastname ?? ""}`}
                 </span>
               </td>
 
+              {/* Admin */}
               <td className="p-2 relative w-1/3">
-                {purchaseDetails?.purchase?.AdminSign !== null || (
+                {purchaseDetails?.purchase?.AdminSign && (
                   <img
-                    src={`${purchaseDetails?.purchase?.AdminSign || null}`}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      AdminSignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
+                    src={purchaseDetails.purchase.AdminSign}
+                    alt="Admin Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
                 <span>{purchaseDetails?.purchase?.AdminName || "Admin"}</span>
               </td>
+
+              {/* Chief Admin Manager */}
               <td className="p-2 relative w-1/3">
-                {purchaseDetails?.purchase?.ChiefAdminManageSign !== null || (
+                {purchaseDetails?.purchase?.ChiefAdminManageSign && (
                   <img
-                    src={`${purchaseDetails?.purchase?.ChiefAdminManageSign || null}`}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      Chiefsignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
+                    src={purchaseDetails.purchase.ChiefAdminManageSign}
+                    alt="Chief Admin Manager Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
                 <span>
@@ -192,19 +274,18 @@ export default function PurchaseDetails() {
                 </span>
               </td>
 
+              {/* Project Director */}
               <td className="p-2 relative w-1/3">
-                {purchaseDetails?.purchase?.ProjectDirectorSign !== null || (
+                {purchaseDetails?.purchase?.ProjectDirectorSign && (
                   <img
-                    src={`${purchaseDetails?.purchase?.ProjectDirectorSign || null}`}
-                    alt="Signature"
-                    className={`absolute left-1/2 -translate-x-1/2 ${
-                      PDirectorsignature ? "-top-15 h-25" : "-top-8 h-12"
-                    } object-contain pointer-events-none`}
+                    src={purchaseDetails.purchase.ProjectDirectorSign}
+                    alt="Project Director Signature"
+                    className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
                 <span>
                   {purchaseDetails?.purchase?.ProjectDirectorName ||
-                    "Jorge Müller"}
+                    "Project Director"}
                 </span>
               </td>
             </tr>
