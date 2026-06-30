@@ -933,7 +933,7 @@ const PaymentVouchers = () => {
       <div className="flex justify-end items-end mt-4">
         <button
           onClick={handleDownload}
-          className="bg-green-800 text-white p-2 rounded-md"
+          className="bg-green-700 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
         >
           Export Voucher
         </button>
