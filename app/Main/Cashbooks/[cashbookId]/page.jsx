@@ -366,7 +366,7 @@ const CashbookDetailed = () => {
         </div>
         <div className="flex justify-end items-end mt-5 mr-4">
           <button
-            className="bg-btnRed text-white hover:bg-black"
+            className="bg-btnRed text-lg text-white p-2 rounded-md hover:bg-black"
             onClick={handleSubmit}
           >
             Submit

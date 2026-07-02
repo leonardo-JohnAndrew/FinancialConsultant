@@ -22,9 +22,9 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { projec_name, projec_code, period_start, period_end } = body;
+    const { period_start, period_end } = body;
 
-    if (!projec_name || !projec_code || !period_start || !period_end) {
+    if (!period_start || !period_end) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 },
@@ -32,8 +32,8 @@ export async function POST(request) {
     }
 
     const summary = await Summary.create({
-      projec_name,
-      projec_code,
+      projec_name: "NSCR",
+      projec_code: "9665R7268",
       period_start,
       period_end,
     });

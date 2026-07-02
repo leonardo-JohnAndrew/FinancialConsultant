@@ -52,6 +52,7 @@ const CashbooksList = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         fetchCashbooks={fetchCashbooks}
+        existingCashbooks={cashbook}
       />
     </>
   );

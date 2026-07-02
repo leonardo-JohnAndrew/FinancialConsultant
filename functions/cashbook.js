@@ -198,19 +198,19 @@ export async function insertMissingCashbookEntries(cashbookId) {
         ChiefAdminSignature: {
           [Op.not]: null,
         },
-        createdAt: {
-          [Op.between]: [range.dateRangeStart, range.dateRangeEnd],
-        },
       },
       include: [
         {
           model: CheckItem,
           as: "items",
+          required: true,
           where: {
             parent_id: null,
             voucherType,
+            payment_voucher_date: {
+              [Op.between]: [range.dateRangeStart, range.dateRangeEnd],
+            },
           },
-          required: true,
           include: [
             {
               model: CheckItem,
@@ -220,7 +220,6 @@ export async function insertMissingCashbookEntries(cashbookId) {
         },
       ],
     });
-
     let inserted = 0;
 
     for (const check of checks) {

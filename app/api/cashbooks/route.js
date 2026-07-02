@@ -3,12 +3,12 @@ import { CashBooks, PH_Cash_Bank, US_Cash_Bank } from "@/db/models";
 import { createCashbookEntry } from "@/functions/cashbook";
 
 // POST - create new cashbook
+// POST - create new cashbook
 export async function POST(request) {
   try {
     const body = await request.json();
     const { project, combination, dateRangeStart, dateRangeEnd } = body;
 
-    // required lahat except project (may default)
     if (!combination || !dateRangeStart || !dateRangeEnd) {
       return NextResponse.json(
         {
@@ -19,18 +19,6 @@ export async function POST(request) {
       );
     }
 
-    // hindi pwede pareho ang start/end date
-    if (dateRangeStart === dateRangeEnd) {
-      return NextResponse.json(
-        {
-          success: false,
-          error_message: "End date cannot be the same as start date.",
-        },
-        { status: 400 },
-      );
-    }
-
-    // extract currency and category from combination e.g. "PH Cash" -> currency: "PH", category: "Cash"
     const VALID_COMBINATIONS = {
       "PH Cash": { currency: "PH", category: "Cash" },
       "PH Bank": { currency: "PH", category: "Bank" },
@@ -49,14 +37,37 @@ export async function POST(request) {
       );
     }
 
+    const start = new Date(dateRangeStart);
+    const end = new Date(dateRangeEnd);
+
+    // check kung existing na ang same range start/end PARA SA SAME currency+category
+    const existing = await CashBooks.findOne({
+      where: {
+        currency: parsed.currency,
+        category: parsed.category,
+        dateRangeStart: start,
+        dateRangeEnd: end,
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          success: false,
+          error_message: `A ${combination} cashbook with the same date range already exists.`,
+        },
+        { status: 400 },
+      );
+    }
+
     const projectValue = project || "9665R7268";
 
     const newCashbook = await CashBooks.create({
       project: projectValue,
       currency: parsed.currency,
       category: parsed.category,
-      dateRangeStart: new Date(dateRangeStart),
-      dateRangeEnd: new Date(dateRangeEnd),
+      dateRangeStart: start,
+      dateRangeEnd: end,
     });
 
     return NextResponse.json({

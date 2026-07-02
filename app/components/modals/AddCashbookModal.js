@@ -23,8 +23,12 @@ const initialForm = {
 };
 
 const COMBINATION_OPTIONS = ["PH Cash", "PH Bank", "US Bank", "US Cash"];
-
-const AddCashbookModal = ({ isOpen, onClose, fetchCashbooks }) => {
+const AddCashbookModal = ({
+  isOpen,
+  onClose,
+  fetchCashbooks,
+  existingCashbooks = [],
+}) => {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -41,20 +45,32 @@ const AddCashbookModal = ({ isOpen, onClose, fetchCashbooks }) => {
   const validate = () => {
     const newErrors = {};
 
-    // required lahat except project
     if (!form.combination)
       newErrors.combination = "Currency/Category is required";
     if (!form.dateRangeStart)
       newErrors.dateRangeStart = "Start date is required";
     if (!form.dateRangeEnd) newErrors.dateRangeEnd = "End date is required";
 
-    // hindi pwede pareho ang start/end date
-    if (
-      form.dateRangeStart &&
-      form.dateRangeEnd &&
-      form.dateRangeStart === form.dateRangeEnd
-    ) {
-      newErrors.dateRangeEnd = "End date cannot be the same as start date";
+    if (form.combination && form.dateRangeStart && form.dateRangeEnd) {
+      const [currency, category] = form.combination.split(" ");
+      const newStart = new Date(form.dateRangeStart).getTime();
+      const newEnd = new Date(form.dateRangeEnd).getTime();
+
+      // check lang sa records na kaparehas ng currency+category
+      const isDuplicate = existingCashbooks.some((cb) => {
+        const sameCombination =
+          cb.currency === currency && cb.category === category;
+        if (!sameCombination) return false;
+
+        const existingStart = new Date(cb.dateRangeStart).getTime();
+        const existingEnd = new Date(cb.dateRangeEnd).getTime();
+
+        return existingStart === newStart && existingEnd === newEnd;
+      });
+
+      if (isDuplicate) {
+        newErrors.dateRangeEnd = `A ${form.combination} cashbook with this date range already exists`;
+      }
     }
 
     setErrors(newErrors);
@@ -79,6 +95,8 @@ const AddCashbookModal = ({ isOpen, onClose, fetchCashbooks }) => {
     }
   };
 
+  // ...rest ng JSX walang binago
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -93,7 +111,9 @@ const AddCashbookModal = ({ isOpen, onClose, fetchCashbooks }) => {
               name="project"
               value={form.project}
               onChange={handleChange}
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border bg-gray-200 rounded-md px-3 py-2"
+              disabled={true}
+              readOnly={true}
             />
           </div>
 

@@ -13,12 +13,12 @@ const fmt = (dt) => {
 };
 
 const fmtNum = (n) =>
-  n != null
-    ? Number(n).toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    : "0.00";
+  n != null ?
+    Number(n).toLocaleString("en-PH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  : "0.00";
 
 export default function SummariesPage() {
   const [summaries, setSummaries] = useState([]);
@@ -96,21 +96,15 @@ export default function SummariesPage() {
     if (found) {
       setForm((f) => ({
         ...f,
-        period_start: found.dateRangeStart
-          ? found.dateRangeStart.slice(0, 10)
-          : "",
+        period_start:
+          found.dateRangeStart ? found.dateRangeStart.slice(0, 10) : "",
         period_end: found.dateRangeEnd ? found.dateRangeEnd.slice(0, 10) : "",
       }));
     }
   };
 
   const handleSave = async () => {
-    if (
-      !form.projec_name ||
-      !form.projec_code ||
-      !form.period_start ||
-      !form.period_end
-    ) {
+    if (!form.period_start || !form.period_end) {
       showToast("Please fill all fields", "error");
       return;
     }
@@ -275,20 +269,19 @@ export default function SummariesPage() {
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {loading ?
                   <tr>
                     <td colSpan={6} className="text-center py-10 text-gray-400">
                       Loading…
                     </td>
                   </tr>
-                ) : summaries.length === 0 ? (
+                : summaries.length === 0 ?
                   <tr>
                     <td colSpan={6} className="text-center py-10 text-gray-400">
                       No summaries yet. Click + Add Summary to create one.
                     </td>
                   </tr>
-                ) : (
-                  summaries.map((row, i) => (
+                : summaries.map((row, i) => (
                     <tr
                       key={row.summary_id}
                       className={`border-t border-gray-100 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
@@ -339,7 +332,7 @@ export default function SummariesPage() {
                       </td>
                     </tr>
                   ))
-                )}
+                }
               </tbody>
             </table>
           </div>
@@ -440,7 +433,7 @@ export default function SummariesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {items.length === 0 ? (
+                      {items.length === 0 ?
                         <tr>
                           <td
                             colSpan={4}
@@ -449,19 +442,16 @@ export default function SummariesPage() {
                             No {label} data — click Sync
                           </td>
                         </tr>
-                      ) : (
-                        items.map((d, i) => {
+                      : items.map((d, i) => {
                           const isPrev =
                             d.item_name === "Balance from Previous Month";
                           return (
                             <tr
                               key={d.id}
                               className={`border-t border-gray-100 ${
-                                isPrev
-                                  ? "bg-yellow-50 font-medium"
-                                  : i % 2 === 0
-                                    ? "bg-white"
-                                    : "bg-gray-50"
+                                isPrev ? "bg-yellow-50 font-medium"
+                                : i % 2 === 0 ? "bg-white"
+                                : "bg-gray-50"
                               }`}
                             >
                               <td className="px-3 py-1.5 text-gray-800 text-xs">
@@ -479,7 +469,7 @@ export default function SummariesPage() {
                             </tr>
                           );
                         })
-                      )}
+                      }
 
                       {/* Total */}
                       <tr className="border-t-2 border-gray-900 bg-gray-100">
@@ -595,30 +585,6 @@ export default function SummariesPage() {
             </div>
 
             <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
-              Project Name
-            </label>
-            <input
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 mb-3 outline-none focus:border-gray-400"
-              value={form.projec_name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, projec_name: e.target.value }))
-              }
-              placeholder="e.g. NSCR"
-            />
-
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
-              Project Code
-            </label>
-            <input
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 mb-3 outline-none focus:border-gray-400"
-              value={form.projec_code}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, projec_code: e.target.value }))
-              }
-              placeholder="e.g. 9665R7268"
-            />
-
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
               Period Range — from cashbooks
             </label>
             <select
@@ -641,7 +607,8 @@ export default function SummariesPage() {
                 </label>
                 <input
                   type="date"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                  readOnly={true}
+                  className="w-full border bg-gray-200 border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
                   value={form.period_start}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, period_start: e.target.value }))
@@ -654,7 +621,8 @@ export default function SummariesPage() {
                 </label>
                 <input
                   type="date"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
+                  readOnly={true}
+                  className="w-full border bg-gray-200 border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400"
                   value={form.period_end}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, period_end: e.target.value }))
@@ -675,11 +643,11 @@ export default function SummariesPage() {
                 disabled={saving}
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gray-900 hover:bg-gray-700 disabled:opacity-60 transition-colors"
               >
-                {saving
-                  ? "Saving…"
-                  : editTarget
-                    ? "Save Changes"
-                    : "Create Summary"}
+                {saving ?
+                  "Saving…"
+                : editTarget ?
+                  "Save Changes"
+                : "Create Summary"}
               </button>
             </div>
           </div>
