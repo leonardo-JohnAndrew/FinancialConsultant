@@ -92,6 +92,10 @@ const US_Cash_Bank = sequelize.define(
     descript_length: {
       type: DataTypes.INTEGER,
     },
+    check_item_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
   },
   {},
 );

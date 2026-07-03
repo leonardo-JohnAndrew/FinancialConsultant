@@ -225,7 +225,7 @@ const CashbooksTable = (props) => {
                     onChange={(e) =>
                       handleChange(index, "slipNo", Number(e.target.value))
                     }
-                    value={index + 1}
+                    value={data.slipNo || 0}
                     //slip number
                   />
                 </td>

@@ -39,5 +39,8 @@ const Check = sequelize.define("check", {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
+  Reason: {
+    type: DataTypes.STRING,
+  },
 });
 module.exports = Check;

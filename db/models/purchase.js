@@ -77,6 +77,9 @@ const Purchase = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    reason: {
+      type: DataTypes.STRING,
+    },
   },
   {},
 );

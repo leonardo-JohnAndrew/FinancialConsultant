@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(request, { params }) {
   const { purchaseid } = await params;
-
+  const body = await request.json();
+  const { reason } = body;
   // update make purchase cancel
   try {
     await Purchase.update(
@@ -23,8 +24,9 @@ export async function PATCH(request, { params }) {
 }
 export async function POST(request, { params }) {
   const { purchaseid } = await params;
-
-  // update make purchase cancel
+  const body = await request.json();
+  const { reason } = body;
+  // update mak e purchase cancel
   try {
     await Purchase.update(
       {

@@ -96,6 +96,10 @@ const PH_Cash_Bank = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    check_item_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
   },
   {},
 );

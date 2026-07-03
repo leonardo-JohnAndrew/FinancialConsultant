@@ -1130,23 +1130,22 @@ const PaymentVouchers = () => {
         </div>
       )}
       <div className="flex justify-end mt-4">
-        <div className="flex justify-end">
+        <div className="flex justify-end ">
           <button
             onClick={handleExportCheque}
-            className="bg-green-700 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
+            className="bg-green-700 mr-2 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
           >
             Export Cheque
           </button>
+          <button
+            onClick={handleDownload}
+            className="bg-green-700 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
+          >
+            Export Voucher
+          </button>
         </div>
       </div>
-      <div className="flex justify-end items-end mt-4">
-        <button
-          onClick={handleDownload}
-          className="bg-green-700 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
-        >
-          Export Voucher
-        </button>
-      </div>
+      <div className="flex justify-end items-end mt-4"></div>
       {/* add checkbox claimable and not
        */}
       <div className="flex justify-center mt-6 gap-6">

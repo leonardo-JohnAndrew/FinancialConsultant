@@ -76,8 +76,6 @@ const VouchersList = () => {
   useEffect(() => {
     if (voucherId === "") {
       setSearch(false);
-    } else {
-      setSearch(true);
     }
   }, [voucherId]);
   const handleChangeId = useCallback(
@@ -143,9 +141,9 @@ const VouchersList = () => {
 
   //signature Fields
   const signatureField =
-    userRole === "Chief Accountant" ?
-      "ChiefAccountSignature"
-    : "ChiefAdminSignature";
+    userRole === "Chief Accountant"
+      ? "ChiefAccountSignature"
+      : "ChiefAdminSignature";
 
   const pendingVouchers = vouchers?.filter((v) => !v[signatureField]);
 
@@ -213,9 +211,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("pending")}
             className={`border border-darkRed  ${
-              activeTab === "pending" ?
-                "bg-white text-black"
-              : "bg-darkRed text-white"
+              activeTab === "pending"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
           >
             Pending
@@ -224,9 +222,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("approved")}
             className={`border border-darkRed  ${
-              activeTab === "approved" ?
-                "bg-white text-black"
-              : "bg-darkRed text-white"
+              activeTab === "approved"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
           >
             Approved
@@ -236,12 +234,14 @@ const VouchersList = () => {
       <div>
         <VoucherTable
           data={
-            search ?
-              (activeTab === "pending" ? pendingVouchers : approvedVouchers
-              )?.filter((e) => e.id == voucherId)
-            : activeTab === "pending" ?
-              pendingVouchers
-            : approvedVouchers
+            search
+              ? (activeTab === "pending"
+                  ? pendingVouchers
+                  : approvedVouchers
+                )?.filter((e) => e.id == voucherId)
+              : activeTab === "pending"
+                ? pendingVouchers
+                : approvedVouchers
           }
           header={[
             "No ID",

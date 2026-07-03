@@ -165,6 +165,123 @@ export async function insertCashbooks(
     };
   }
 }
+// export async function insertMissingCashbookEntries(cashbookId) {
+//   try {
+//     const range = await CashBooks.findByPk(cashbookId, {
+//       attributes: [
+//         "cashbook_id",
+//         "dateRangeStart",
+//         "dateRangeEnd",
+//         "currency",
+//         "category",
+//       ],
+//     });
+
+//     if (!range) {
+//       return {
+//         success: false,
+//         message: "Cashbook not found",
+//       };
+//     }
+
+//     const voucherType = `${range.category.toUpperCase()} ${
+//       range.currency === "PH" ? "PHP" : "USD"
+//     }`;
+
+//     const CashBankModel = range.currency === "PH" ? PH_Cash_Bank : US_Cash_Bank;
+
+//     const checks = await Check.findAll({
+//       where: {
+//         ChiefAccountSignature: {
+//           [Op.not]: null,
+//         },
+//         ChiefAdminSignature: {
+//           [Op.not]: null,
+//         },
+//       },
+//       include: [
+//         {
+//           model: CheckItem,
+//           as: "items",
+//           required: true,
+//           where: {
+//             parent_id: null,
+//             voucherType,
+//             payment_voucher_date: {
+//               [Op.between]: [range.dateRangeStart, range.dateRangeEnd],
+//             },
+//           },
+//           include: [
+//             {
+//               model: CheckItem,
+//               as: "children",
+//             },
+//           ],
+//         },
+//       ],
+//     });
+//     let inserted = 0;
+
+//     for (const check of checks) {
+//       for (const item of check.items) {
+//         for (const child of item.children) {
+//           /*
+//             duplicate checking
+//           */
+//           const existing = await CashBankModel.findOne({
+//             where: {
+//               cashbook_id: cashbookId,
+//               slipNo: id,
+//               date: item.payment_voucher_date,
+//               description: child.title,
+//               payment: item.receiptOrPayment === "payment" ? child.amount : 0,
+//               receipt: item.receiptOrPayment === "receipt" ? child.amount : 0,
+//             },
+//           });
+
+//           if (existing) {
+//             continue;
+//           }
+
+//           await CashBankModel.create({
+//             cashbook_id: cashbookId,
+
+//             date: item.payment_voucher_date,
+
+//             description: child.title,
+
+//             A_C_code: item.accountCode,
+
+//             job_No: item.job,
+
+//             receipt: item.receiptOrPayment === "receipt" ? child.amount : 0,
+
+//             payment: item.receiptOrPayment === "payment" ? child.amount : 0,
+
+//             glCount: item.glCode,
+
+//             Claimable: check.claimable ? "Claimable" : "Non-Claimable",
+//           });
+
+//           inserted++;
+//         }
+//       }
+//     }
+
+//     return {
+//       success: true,
+//       inserted,
+//       message: `${inserted} entries inserted.`,
+//     };
+//   } catch (err) {
+//     console.log(err);
+
+//     return {
+//       success: false,
+//       message: err.message,
+//     };
+//   }
+// }
 export async function insertMissingCashbookEntries(cashbookId) {
   try {
     const range = await CashBooks.findByPk(cashbookId, {
@@ -178,10 +295,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
     });
 
     if (!range) {
-      return {
-        success: false,
-        message: "Cashbook not found",
-      };
+      return { success: false, message: "Cashbook not found" };
     }
 
     const voucherType = `${range.category.toUpperCase()} ${
@@ -192,12 +306,8 @@ export async function insertMissingCashbookEntries(cashbookId) {
 
     const checks = await Check.findAll({
       where: {
-        ChiefAccountSignature: {
-          [Op.not]: null,
-        },
-        ChiefAdminSignature: {
-          [Op.not]: null,
-        },
+        ChiefAccountSignature: { [Op.not]: null },
+        ChiefAdminSignature: { [Op.not]: null },
       },
       include: [
         {
@@ -211,55 +321,36 @@ export async function insertMissingCashbookEntries(cashbookId) {
               [Op.between]: [range.dateRangeStart, range.dateRangeEnd],
             },
           },
-          include: [
-            {
-              model: CheckItem,
-              as: "children",
-            },
-          ],
+          include: [{ model: CheckItem, as: "children" }],
         },
       ],
     });
+
     let inserted = 0;
 
     for (const check of checks) {
       for (const item of check.items) {
         for (const child of item.children) {
-          /*
-            duplicate checking
-          */
+          // duplicate check gamit ang check_item_id
           const existing = await CashBankModel.findOne({
             where: {
               cashbook_id: cashbookId,
-              slipNo: item.slipNo,
-              date: item.payment_voucher_date,
-              description: child.title,
-              payment: item.receiptOrPayment === "payment" ? child.amount : 0,
-              receipt: item.receiptOrPayment === "receipt" ? child.amount : 0,
+              check_item_id: child.id,
             },
           });
 
-          if (existing) {
-            continue;
-          }
+          if (existing) continue;
 
           await CashBankModel.create({
             cashbook_id: cashbookId,
-
+            check_item_id: child.id,
             date: item.payment_voucher_date,
-
             description: child.title,
-
             A_C_code: item.accountCode,
-
             job_No: item.job,
-
             receipt: item.receiptOrPayment === "receipt" ? child.amount : 0,
-
             payment: item.receiptOrPayment === "payment" ? child.amount : 0,
-
             glCount: item.glCode,
-
             Claimable: check.claimable ? "Claimable" : "Non-Claimable",
           });
 
@@ -275,11 +366,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
     };
   } catch (err) {
     console.log(err);
-
-    return {
-      success: false,
-      message: err.message,
-    };
+    return { success: false, message: err.message };
   }
 }
 export async function getCreditors() {

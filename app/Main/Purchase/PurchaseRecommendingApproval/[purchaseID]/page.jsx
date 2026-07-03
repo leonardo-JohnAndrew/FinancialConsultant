@@ -21,6 +21,8 @@ export default function PurchaseDetails() {
   const pathname = usePathname();
   const [rejecting, setRejecting] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectReasonError, setRejectReasonError] = useState("");
   const params = useParams();
   const { user } = useUserContext();
   const [total, setTotal] = useState(0);
@@ -370,25 +372,39 @@ export default function PurchaseDetails() {
 
   // Actually calls the API, runs only after user confirms
   const handleRejectConfirmed = async () => {
+    // validate required reason
+    if (!rejectReason.trim()) {
+      setRejectReasonError("Please provide a reason for rejection.");
+      return;
+    }
+
     try {
       setRejecting(true);
       const response = await axios.post(
         `/api/purchase/${params.purchaseID}/cancel-reject-request`,
+        {
+          reason: rejectReason.trim(),
+        },
       );
-      // reject system
+
       const notifySytstem = await axios.post("/api/notification", {
         userId: purchaseDetails?.purchase?.user?.userID,
         title: "Purchase Budget Confirmation",
         message:
-          "Accounting Reject Purchase Requisition id: " + params.purchaseID,
+          "Accounting Reject Purchase Requisition id: " +
+          params.purchaseID +
+          " — Reason: " +
+          rejectReason.trim(),
         type: "Info",
         link: "",
       });
+
       await sendPurchaseRejectedEmail({
         toEmail: purchaseDetails?.purchase?.user?.email,
         requestNo: params.purchaseID,
         rejectedBy: user?.name,
         rejectedByRole: userRole,
+        reason: rejectReason.trim(),
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -613,13 +629,50 @@ export default function PurchaseDetails() {
         ))}
       {showRejectConfirm && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 ">
-          <ConfirmBox
-            title="Rejected Purchase Request"
-            content={`Are you sure you want to reject Purchase Code:`}
-            id={params.purchaseID}
-            handleConfirm={handleRejectConfirmed}
-            handleclose={() => setShowRejectConfirm(false)}
-          />
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-2">
+              Rejected Purchase Request
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to reject Purchase Code:{" "}
+              <span className="font-bold">{params.purchaseID}</span>
+            </p>
+
+            <label className="block text-sm font-medium mb-1">
+              Reason for rejection <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => {
+                setRejectReason(e.target.value);
+                setRejectReasonError("");
+              }}
+              rows={4}
+              placeholder="Enter reason for rejecting this purchase requisition..."
+              className="w-full border rounded-md px-3 py-2 text-sm resize-none"
+            />
+            {rejectReasonError && (
+              <p className="text-red-500 text-xs mt-1">{rejectReasonError}</p>
+            )}
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowRejectConfirm(false)}
+                className="px-4 py-2 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectConfirmed}
+                disabled={rejecting}
+                className="px-4 py-2 bg-darkRed text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                {rejecting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

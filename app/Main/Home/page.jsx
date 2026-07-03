@@ -312,7 +312,7 @@ export default function DashboardPage() {
             value: stats.approvedPR ?? 0,
             theme: "blue",
             icon: "✔️",
-            href: "/Main/Vourchers",
+            href: "/Main/SubmittedRequisition/ApprovedPurchaseRequisition",
           },
         ];
       case "Chief Accountant":
@@ -343,7 +343,7 @@ export default function DashboardPage() {
             value: stats.approvedPR ?? 0,
             theme: "blue",
             icon: "✔️",
-            href: "/Main/Vourchers",
+            href: "/Main/SubmittedRequisition/ApprovedPurchaseRequisition",
           },
         ];
       case "Chief Administrator Manager":
