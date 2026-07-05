@@ -115,6 +115,15 @@ SummaryDetailed.belongsTo(Summary, {
   targetKey: "summary_id",
 });
 
+// voucher many purchase
+Check.hasMany(Purchase, {
+  foreignKey: "id",
+  sourceKey: "id",
+});
+Purchase.belongsTo(Check, {
+  foreignKey: "id",
+  targetKey: "id",
+});
 export {
   Purchase,
   PurchaseItems,
@@ -131,7 +140,7 @@ export {
   PH_Cash_Bank,
   Creditor,
   AccountCode,
-  Departments, 
+  Departments,
   GLcode,
   ExpensesDescription,
   Summary,

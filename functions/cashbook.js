@@ -347,6 +347,8 @@ export async function insertMissingCashbookEntries(cashbookId) {
             date: item.payment_voucher_date,
             description: child.title,
             A_C_code: item.accountCode,
+            payee_payer: item.title,
+            CRM: (await getCreditorsNumber(item.tinNumber || "")).code,
             job_No: item.job,
             receipt: item.receiptOrPayment === "receipt" ? child.amount : 0,
             payment: item.receiptOrPayment === "payment" ? child.amount : 0,
@@ -374,5 +376,40 @@ export async function getCreditors() {
 
   return {
     dataList: data.map((item) => item.toJSON()),
+  };
+}
+
+export async function getCreditorsNumber(tin) {
+  if (!tin) {
+    return { code: "" };
+  }
+
+  // e.g. "000-117-296-00000" -> ["000", "117", "296", "00000"]
+  const parts = tin.split("-").filter(Boolean);
+
+  let prefix = "";
+  let matches = [];
+
+  for (let i = 0; i < parts.length; i++) {
+    prefix = prefix ? `${prefix}-${parts[i]}` : parts[i];
+
+    matches = await Creditor.findAll({
+      where: {
+        tin1: {
+          [Op.like]: `${prefix}%`,
+        },
+      },
+    });
+
+    console.log(`prefix: "${prefix}" -> ${matches.length} match(es)`);
+
+    // pag isa na lang natira (o wala na), stop na
+    if (matches.length <= 1) {
+      break;
+    }
+  }
+
+  return {
+    code: matches[0]?.code || "",
   };
 }

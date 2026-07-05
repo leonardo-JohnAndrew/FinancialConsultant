@@ -58,6 +58,7 @@ export async function POST(request, { params }) {
     title,
     receiptOrPayment,
     voucherTypeNumber,
+    tinNumber,
     accountCode,
     glCode,
     payment_voucher_date,
@@ -81,13 +82,15 @@ export async function POST(request, { params }) {
         payment_voucher_date,
         payment_voucher_formatted_date: formatVoucherDate(payment_voucher_date),
         accountCode,
+        tinNumber,
         glCode,
         job,
         slipNo,
         voucherType,
         pm,
-        amount: children
-          ? children.reduce((sum, child) => sum + Number(child.amount || 0), 0)
+        amount:
+          children ?
+            children.reduce((sum, child) => sum + Number(child.amount || 0), 0)
           : 0,
       },
       { transaction },
@@ -268,6 +271,7 @@ export async function PUT(request, { params }) {
       voucherType,
       slipNo,
       job,
+      tinNumber,
       pm,
       children,
     } = body;
@@ -301,13 +305,15 @@ export async function PUT(request, { params }) {
         glCode,
         voucherType,
         receiptOrPayment,
+        tinNumber,
         slipNo,
         payment_voucher_date,
         payment_voucher_formatted_date: formatVoucherDate(payment_voucher_date),
         job,
         pm,
-        amount: children
-          ? children.reduce((sum, child) => sum + Number(child.amount || 0), 0)
+        amount:
+          children ?
+            children.reduce((sum, child) => sum + Number(child.amount || 0), 0)
           : 0,
       },
       { transaction },

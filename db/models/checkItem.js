@@ -54,6 +54,9 @@ const CheckItem = sequelize.define(
     receiptOrPayment: {
       type: DataTypes.STRING,
     },
+    tinNumber: {
+      type: DataTypes.STRING,
+    },
     payment_voucher_formatted_date: {
       type: DataTypes.STRING,
     },

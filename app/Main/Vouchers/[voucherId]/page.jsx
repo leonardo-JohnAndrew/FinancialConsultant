@@ -59,6 +59,7 @@ const PaymentVouchers = () => {
   const [formData, setFormData] = useState({
     title: "",
     voucherTypeNumber: "",
+    tinNumber: "",
     // payment_item: "",
     accountCode: "", // ✅ bago
     glCode: "", // ✅ bago
@@ -194,6 +195,7 @@ const PaymentVouchers = () => {
   };
   const handlePayeeChange = (e) => {
     const value = e.target.value;
+
     setFormData((prev) => ({ ...prev, title: value }));
 
     if (value.trim() === "") {
@@ -202,19 +204,25 @@ const PaymentVouchers = () => {
       return;
     }
 
-    const matches = suppliers
-      .map((s) => s.supplierName)
-      .filter((name) => name.toLowerCase().includes(value.toLowerCase()));
+    // keep both supplierName and supplierTin, wag i-map lang sa string
+    const matches = suppliers.filter((s) =>
+      s.supplierName?.toLowerCase().includes(value.toLowerCase()),
+    );
 
-    setFilteredSuppliers(matches);
+    setFilteredSuppliers(matches); // array of objects na, hindi .supplierName
     setShowSuggestions(matches.length > 0);
   };
 
-  const handleSelectSupplier = (name) => {
-    setFormData((prev) => ({ ...prev, title: name }));
+  const handleSelectSupplier = (supplier) => {
+    setFormData((prev) => ({
+      ...prev,
+      title: supplier.supplierName,
+      tinNumber: supplier.supplierTin || "", //  auto-fill tin
+    }));
     setShowSuggestions(false);
     setFilteredSuppliers([]);
   };
+
   // HANDLE CHILD ROW
   const handleRowChange = (index, e) => {
     const { name, value } = e.target;
@@ -280,6 +288,7 @@ const PaymentVouchers = () => {
       // RESET
       setFormData({
         title: "",
+        tinNumber: "",
         voucherTypeNumber: "",
         accountCode: "", // ✅
         glCode: "", // ✅
@@ -326,18 +335,18 @@ const PaymentVouchers = () => {
       pm: voucher.pm || "",
 
       children:
-        voucher.children?.length > 0
-          ? voucher.children.map((child) => ({
-              id: child.id,
-              title: child.title,
-              amount: child.amount,
-            }))
-          : [
-              {
-                title: "",
-                amount: "",
-              },
-            ],
+        voucher.children?.length > 0 ?
+          voucher.children.map((child) => ({
+            id: child.id,
+            title: child.title,
+            amount: child.amount,
+          }))
+        : [
+            {
+              title: "",
+              amount: "",
+            },
+          ],
     });
     setOpenModal(true);
   };
@@ -839,9 +848,10 @@ const PaymentVouchers = () => {
             {/* HEADER */}
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-2xl font-bold">
-                {isEdit
-                  ? `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
-                  : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`}
+                {isEdit ?
+                  `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                }
               </h2>
 
               <button
@@ -912,13 +922,13 @@ const PaymentVouchers = () => {
                 />
                 {showSuggestions && (
                   <ul className="absolute z-50 top-full left-0 right-0 bg-white border border-gray-200 rounded shadow-lg max-h-48 overflow-y-auto mt-1">
-                    {filteredSuppliers.map((name, index) => (
+                    {filteredSuppliers.map((supplier, index) => (
                       <li
                         key={index}
-                        onMouseDown={() => handleSelectSupplier(name)}
+                        onMouseDown={() => handleSelectSupplier(supplier)}
                         className="px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
                       >
-                        {name}
+                        {supplier.supplierName}
                       </li>
                     ))}
                   </ul>
@@ -1074,9 +1084,11 @@ const PaymentVouchers = () => {
           // file attachment
           <>
             {(preview || checks?.cheque_attachment) &&
-              ((preview || checks?.cheque_attachment)
-                .toLowerCase()
-                .includes(".pdf") ? (
+              ((
+                (preview || checks?.cheque_attachment)
+                  .toLowerCase()
+                  .includes(".pdf")
+              ) ?
                 <div className="flex justify-center items-center">
                   <iframe
                     src={preview || checks?.cheque_attachment}
@@ -1084,15 +1096,13 @@ const PaymentVouchers = () => {
                     title="Attachment Preview"
                   />
                 </div>
-              ) : (
-                <div className="flex justify-center items-center">
+              : <div className="flex justify-center items-center">
                   <img
                     src={preview || checks?.cheque_attachment}
                     alt="Attachment Preview"
                     className="w-full max-h-96 border rounded m-5"
                   />
-                </div>
-              ))}
+                </div>)}
           </>
         )}
 
@@ -1234,7 +1244,7 @@ const PaymentVouchers = () => {
 
       {(userRole === "Chief Accountant" ||
         userRole === "Chief Administrator Manager") &&
-        (isApproving ? (
+        (isApproving ?
           <div className="flex justify-end gap-4 mt-10 mb-10">
             <button
               onClick={handleCancel}
@@ -1249,8 +1259,7 @@ const PaymentVouchers = () => {
               Confirm
             </button>
           </div>
-        ) : (
-          <div className="flex justify-end gap-4 mt-10 mb-10">
+        : <div className="flex justify-end gap-4 mt-10 mb-10">
             {/* ✅ Show Accept only if THIS role hasn't signed yet */}
             {((userRole === "Chief Accountant" &&
               !checks?.ChiefAccountSignature) ||
@@ -1272,8 +1281,7 @@ const PaymentVouchers = () => {
                 </button>
               </>
             )}
-          </div>
-        ))}
+          </div>)}
 
       {/* ✅ Submit button — only show if no one has signed yet */}
       {userRole !== "Chief Accountant" &&
@@ -1285,9 +1293,9 @@ const PaymentVouchers = () => {
               title="Total Amount must not be zero"
               onClick={() => setApproving(true)}
               className={`${
-                checks.checkAmount > 0
-                  ? "bg-btnRed text-white hover:bg-black"
-                  : "bg-gray-200 text-black"
+                checks.checkAmount > 0 ?
+                  "bg-btnRed text-white hover:bg-black"
+                : "bg-gray-200 text-black"
               } px-5 py-2 rounded mr-2`}
               disabled={checks.checkAmount <= 0}
             >

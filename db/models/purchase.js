@@ -80,6 +80,9 @@ const Purchase = sequelize.define(
     reason: {
       type: DataTypes.STRING,
     },
+    id: {
+      type: DataTypes.INTEGER,
+    },
   },
   {},
 );

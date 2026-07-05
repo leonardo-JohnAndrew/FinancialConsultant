@@ -71,6 +71,7 @@ export async function GetSpecificRequest(
   endParam,
   page,
   limit,
+  selectAll = false,
 ) {
   const offset = (page - 1) * limit;
 
@@ -202,14 +203,20 @@ export async function GetSpecificRequest(
     // -----------------------------
     // 5. QUERY
     // -----------------------------
-    const { rows, count } = await Purchase.findAndCountAll({
-      offset,
-      limit,
+
+    const queryOptions = {
       distinct: true,
       order: [["PurchaseID", "DESC"]],
       where: whereClause,
       include: [{ model: User }, { model: PurchaseItems }],
-    });
+    };
+
+    if (!selectAll) {
+      queryOptions.limit = limit;
+      queryOptions.offset = offset;
+    }
+
+    const { rows, count } = await Purchase.findAndCountAll(queryOptions);
     const totalCount = await Purchase.count({
       where: whereClause,
       distinct: true,
@@ -221,11 +228,11 @@ export async function GetSpecificRequest(
         data: rows,
         total: count,
         totalCount,
-        page,
-        limit,
+        page: selectAll ? 1 : page,
+        limit: selectAll ? count : limit,
         rangeStart,
         rangeEnd,
-        totalPages: Math.ceil(count / limit),
+        totalPages: selectAll ? 1 : Math.ceil(count / limit),
         message: `${role} purchase request fetched successfully`,
       },
       { status: 200 },
@@ -268,21 +275,17 @@ export async function GetPurchaseWithUserId(
       raw: true,
     });
 
-    const earliestDate = dateRange?.earliestDate
-      ? new Date(dateRange.earliestDate)
-      : new Date();
+    const earliestDate =
+      dateRange?.earliestDate ? new Date(dateRange.earliestDate) : new Date();
 
-    const latestDate = dateRange?.latestDate
-      ? new Date(dateRange.latestDate)
-      : new Date();
+    const latestDate =
+      dateRange?.latestDate ? new Date(dateRange.latestDate) : new Date();
 
-    const rangeStart = startParam
-      ? new Date(`${startParam}T00:00:00.000Z`)
-      : earliestDate;
+    const rangeStart =
+      startParam ? new Date(`${startParam}T00:00:00.000Z`) : earliestDate;
 
-    const rangeEnd = endParam
-      ? new Date(`${endParam}T23:59:59.999Z`)
-      : latestDate;
+    const rangeEnd =
+      endParam ? new Date(`${endParam}T23:59:59.999Z`) : latestDate;
 
     // build tab-based condition
     let tabWhere = {};

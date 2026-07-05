@@ -1,5 +1,5 @@
 import sequelize from "@/db/connection";
-import { Check, CheckItem } from "@/db/models";
+import { Check, CheckItem, Purchase } from "@/db/models";
 import { validateFields } from "@/functions/validations";
 
 import { NextResponse } from "next/server";
@@ -26,12 +26,10 @@ export async function GET(request) {
     });
     const startParam = searchParams.get("dateStart");
     const endParam = searchParams.get("dateEnd");
-    const rangeStart = startParam
-      ? `${startParam} 00:00:00`
-      : date.dataValues.earliestDate;
-    const rangeEnd = endParam
-      ? `${endParam} 23:59:59`
-      : date.dataValues.latestDate;
+    const rangeStart =
+      startParam ? `${startParam} 00:00:00` : date.dataValues.earliestDate;
+    const rangeEnd =
+      endParam ? `${endParam} 23:59:59` : date.dataValues.latestDate;
 
     const { rows, count } = await Check.findAndCountAll({
       offset: offset,
@@ -82,9 +80,12 @@ export async function POST(request) {
     );
 
     // create
-    const parent = await Check.create({
-      checkId: body.VoucherID,
-    });
+    const parent = await Check.create(
+      {
+        checkId: body.VoucherID,
+      },
+      { transaction },
+    );
 
     if (body.NoPayments > 0) {
       // loops
@@ -97,6 +98,19 @@ export async function POST(request) {
         }),
       );
       await CheckItem.bulkCreate(checkItemsData, { transaction });
+    }
+
+    // link selected approved PRs to this Check
+    const purchaseIds = Array.isArray(body.purchaseIds) ? body.purchaseIds : [];
+
+    if (purchaseIds.length > 0) {
+      await Purchase.update(
+        { id: parent.id },
+        {
+          where: { PurchaseID: purchaseIds },
+          transaction,
+        },
+      );
     }
 
     await transaction.commit();

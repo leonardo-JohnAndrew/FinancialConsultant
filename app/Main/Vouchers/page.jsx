@@ -29,7 +29,87 @@ const VouchersList = () => {
     VoucherID: "",
     NoPayments: "",
   });
+  const [approvedPRs, setApprovedPRs] = useState([]);
+  const [selectedPRs, setSelectedPRs] = useState([]);
+  const [viewPR, setViewPR] = useState(null); // holds PR object for the detail modal
+  const [loadingPRs, setLoadingPRs] = useState(false);
 
+  const fetchApprovedPRs = async () => {
+    setLoadingPRs(true);
+    try {
+      const res = await axios.get("/api/purchase/approved");
+      setApprovedPRs(res.data?.data || []);
+    } catch (err) {
+      console.error("Error fetching approved PRs", err);
+    } finally {
+      setLoadingPRs(false);
+    }
+  };
+
+  // fetch pag bukas ung modal, reset pag sarado
+  useEffect(() => {
+    if (showModal) {
+      fetchApprovedPRs();
+    } else {
+      setSelectedPRs([]);
+      setApprovedPRs([]);
+      setViewPR(null);
+    }
+  }, [showModal]);
+
+  const handleAddPR = (pr) => {
+    setSelectedPRs((prev) => [...prev, pr]);
+    setApprovedPRs((prev) =>
+      prev.filter((p) => p.PurchaseID !== pr.PurchaseID),
+    );
+  };
+
+  const handleRemovePR = (pr) => {
+    setApprovedPRs((prev) => [...prev, pr]);
+    setSelectedPRs((prev) =>
+      prev.filter((p) => p.PurchaseID !== pr.PurchaseID),
+    );
+  };
+
+  const handleAddVoucher = async () => {
+    try {
+      const validation = validateRequiredFields(newVoucher, [
+        {
+          name: "NoPayments",
+          label: "Number of Payments",
+          required: true,
+          type: "number",
+          min: 1,
+        },
+      ]);
+      if (!validation.isValid) {
+        showError(Object.values(validation.errors).join("\n"));
+        return;
+      }
+
+      if (selectedPRs.length === 0) {
+        showError("Please add at least one approved PR to this voucher.");
+        return;
+      }
+
+      const payload = {
+        ...newVoucher,
+        purchaseIds: selectedPRs.map((pr) => pr.PurchaseID),
+      };
+
+      const response = await axios.post("/api/vouchers", payload);
+      setShowModal(false);
+      showSuccess(`Sucessfully Added ${newVoucher.VoucherID}`);
+      setNewVoucher({ VoucherID: "", NoPayments: "" });
+      setSelectedPRs([]);
+      fetchVouchers();
+    } catch (error) {
+      console.error("Error adding voucher", error);
+      const message =
+        error.response?.data?.error_message || error.message || "Failed";
+      showError(message);
+    }
+  };
   const userRole = user?.role || "";
 
   const fetchVouchers = async () => {
@@ -106,44 +186,44 @@ const VouchersList = () => {
     }));
   };
 
-  const handleAddVoucher = async () => {
-    // validation
-    try {
-      const validation = validateRequiredFields(newVoucher, [
-        {
-          name: "NoPayments",
-          label: "Number of Payments",
-          required: true,
-          type: "number",
-          min: 1,
-        },
-      ]);
-      if (!validation.isValid) {
-        showError(Object.values(validation.errors).join("\n"));
-        return;
-      }
-      const response = await axios.post("/api/vouchers", newVoucher);
-      setShowModal(false);
-      showSuccess(`Sucessfully Added ${newVoucher.VoucherID}`);
-      setNewVoucher({
-        VoucherID: "",
-        NoPayments: "",
-      });
-      fetchVouchers();
-    } catch (error) {
-      console.error("Error adding voucher", error);
+  // const handleAddVoucher = async () => {
+  //   // validation
+  //   try {
+  //     const validation = validateRequiredFields(newVoucher, [
+  //       {
+  //         name: "NoPayments",
+  //         label: "Number of Payments",
+  //         required: true,
+  //         type: "number",
+  //         min: 1,
+  //       },
+  //     ]);
+  //     if (!validation.isValid) {
+  //       showError(Object.values(validation.errors).join("\n"));
+  //       return;
+  //     }
+  //     const response = await axios.post("/api/vouchers", newVoucher);
+  //     setShowModal(false);
+  //     showSuccess(`Sucessfully Added ${newVoucher.VoucherID}`);
+  //     setNewVoucher({
+  //       VoucherID: "",
+  //       NoPayments: "",
+  //     });
+  //     fetchVouchers();
+  //   } catch (error) {
+  //     console.error("Error adding voucher", error);
 
-      error.response?.data?.error_message || error.message || "Failed";
+  //     error.response?.data?.error_message || error.message || "Failed";
 
-      showError(message);
-    }
-  };
+  //     showError(message);
+  //   }
+  // };
 
   //signature Fields
   const signatureField =
-    userRole === "Chief Accountant"
-      ? "ChiefAccountSignature"
-      : "ChiefAdminSignature";
+    userRole === "Chief Accountant" ?
+      "ChiefAccountSignature"
+    : "ChiefAdminSignature";
 
   const pendingVouchers = vouchers?.filter((v) => !v[signatureField]);
 
@@ -211,9 +291,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("pending")}
             className={`border border-darkRed  ${
-              activeTab === "pending"
-                ? "bg-white text-black"
-                : "bg-darkRed text-white"
+              activeTab === "pending" ?
+                "bg-white text-black"
+              : "bg-darkRed text-white"
             }`}
           >
             Pending
@@ -222,9 +302,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("approved")}
             className={`border border-darkRed  ${
-              activeTab === "approved"
-                ? "bg-white text-black"
-                : "bg-darkRed text-white"
+              activeTab === "approved" ?
+                "bg-white text-black"
+              : "bg-darkRed text-white"
             }`}
           >
             Approved
@@ -234,14 +314,12 @@ const VouchersList = () => {
       <div>
         <VoucherTable
           data={
-            search
-              ? (activeTab === "pending"
-                  ? pendingVouchers
-                  : approvedVouchers
-                )?.filter((e) => e.id == voucherId)
-              : activeTab === "pending"
-                ? pendingVouchers
-                : approvedVouchers
+            search ?
+              (activeTab === "pending" ? pendingVouchers : approvedVouchers
+              )?.filter((e) => e.id == voucherId)
+            : activeTab === "pending" ?
+              pendingVouchers
+            : approvedVouchers
           }
           header={[
             "No ID",
@@ -284,7 +362,7 @@ const VouchersList = () => {
       {/* modal  */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-87.5 p-6">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6">
             <h2 className="text-xl font-bold mb-4 text-black">
               Add New Voucher
             </h2>
@@ -298,12 +376,109 @@ const VouchersList = () => {
                   type="number"
                   name="NoPayments"
                   min={0}
-                  required={true}
+                  required
                   value={newVoucher.NoPayments}
                   onChange={handleVoucherChange}
                   className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-darkRed"
                   placeholder="Enter number of payments"
                 />
+              </div>
+
+              {/* PR selector */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* available approved PRs */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                    Approved PRs
+                  </h3>
+                  <div className="border border-gray-300 rounded h-64 overflow-y-auto">
+                    {loadingPRs ?
+                      <p className="text-center text-sm text-gray-500 p-3">
+                        Loading...
+                      </p>
+                    : approvedPRs.length === 0 ?
+                      <p className="text-center text-sm text-gray-500 p-3">
+                        No approved PRs
+                      </p>
+                    : approvedPRs.map((pr) => (
+                        <div
+                          key={pr.PurchaseID}
+                          className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
+                        >
+                          <div className="truncate mr-2">
+                            <p className="font-semibold text-black truncate">
+                              {pr.PurchaseID}
+                            </p>
+                            <p className="text-gray-500 truncate">
+                              {pr.PRCode || "No PR Code"} · ₱{pr.Total}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setViewPR(pr)}
+                              className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                            >
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAddPR(pr)}
+                              className="px-2 py-1 text-xs bg-btnRed text-white rounded hover:bg-black"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+
+                {/* selected PRs */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-1">
+                    Added to this Voucher ({selectedPRs.length})
+                  </h3>
+                  <div className="border border-gray-300 rounded h-64 overflow-y-auto">
+                    {selectedPRs.length === 0 ?
+                      <p className="text-center text-sm text-gray-500 p-3">
+                        None added yet
+                      </p>
+                    : selectedPRs.map((pr) => (
+                        <div
+                          key={pr.PurchaseID}
+                          className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
+                        >
+                          <div className="truncate mr-2">
+                            <p className="font-semibold text-black truncate">
+                              {pr.PurchaseID}
+                            </p>
+                            <p className="text-gray-500 truncate">
+                              {"Total"} · ₱{pr.Total}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => setViewPR(pr)}
+                              className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                            >
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePR(pr)}
+                              className="px-2 py-1 text-xs bg-black text-white rounded hover:bg-gray-700"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -314,7 +489,6 @@ const VouchersList = () => {
               >
                 Cancel
               </button>
-
               <button
                 onClick={handleAddVoucher}
                 className="px-4 py-2 bg-btnRed text-white rounded hover:bg-black"
@@ -323,6 +497,58 @@ const VouchersList = () => {
               </button>
             </div>
           </div>
+
+          {/* PR detail modal - stacked on top */}
+          {viewPR && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+              <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-[80vh] overflow-y-auto">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-black">
+                      {viewPR.PurchaseID}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Dept: {viewPR.RequestorDepartment}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setViewPR(null)}
+                    className="text-gray-500 hover:text-black font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <table className="w-full text-sm border border-gray-200">
+                  <thead className="bg-gray-100 text-black">
+                    <tr>
+                      <th className="text-left p-2 border-b">Item</th>
+                      <th className="text-left p-2 border-b">Unit</th>
+                      <th className="text-right p-2 border-b">Qty</th>
+                      <th className="text-right p-2 border-b">Unit Price</th>
+                      <th className="text-right p-2 border-b">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {viewPR.purchaseItems?.map((item) => (
+                      <tr key={item.id} className="border-b border-gray-100">
+                        <td className="p-2">{item.ItemName}</td>
+                        <td className="p-2">{item.Unit}</td>
+                        <td className="p-2 text-right">{item.Quantity}</td>
+                        <td className="p-2 text-right">{item.UnitPrice}</td>
+                        <td className="p-2 text-right">{item.Total}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-between mt-4 font-semibold text-black">
+                  <span>Total</span>
+                  <span>₱{viewPR.Total}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
