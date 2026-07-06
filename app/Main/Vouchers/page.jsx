@@ -12,6 +12,7 @@ import { FiChevronLeft, FiChevronRight, FiSearch } from "react-icons/fi";
 const VouchersList = () => {
   const [vouchers, setVourchers] = useState();
   const [activeTab, setActiveTab] = useState("pending"); // active tab
+  const [rejectedVouchers, setRejectedVouchers] = useState();
 
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
@@ -38,7 +39,10 @@ const VouchersList = () => {
     setLoadingPRs(true);
     try {
       const res = await axios.get("/api/purchase/approved");
-      setApprovedPRs(res.data?.data || []);
+      const unattached = (res.data?.data || []).filter(
+        (pr) => pr.id == null || pr.id == "",
+      );
+      setApprovedPRs(unattached);
     } catch (err) {
       console.error("Error fetching approved PRs", err);
     } finally {
@@ -140,12 +144,20 @@ const VouchersList = () => {
     }
   };
   useEffect(() => {
-    fetchVouchers();
-  }, [page]);
+    if (activeTab === "rejected") {
+      fetchRejectedVouchers();
+    } else {
+      fetchVouchers();
+    }
+  }, [page, activeTab]);
 
   useEffect(() => {
     if (dateStart || dateEnd) {
-      fetchVouchers();
+      if (activeTab === "rejected") {
+        fetchRejectedVouchers();
+      } else {
+        fetchVouchers();
+      }
     }
   }, [dateStart, dateEnd]);
 
@@ -185,7 +197,17 @@ const VouchersList = () => {
       [name]: value,
     }));
   };
-
+  const fetchRejectedVouchers = async () => {
+    try {
+      const response = await axios.get(
+        `/api/vouchers/reject?page=${page}&limit=${limit}&dateStart=${dateStart}&dateEnd=${dateEnd}`,
+      );
+      setRejectedVouchers(response.data?.data || []);
+      setTotalPages(response.data.totalPages);
+    } catch (err) {
+      console.error("Error Fetch Rejected Vouchers", err);
+    }
+  };
   // const handleAddVoucher = async () => {
   //   // validation
   //   try {
@@ -221,9 +243,9 @@ const VouchersList = () => {
 
   //signature Fields
   const signatureField =
-    userRole === "Chief Accountant" ?
-      "ChiefAccountSignature"
-    : "ChiefAdminSignature";
+    userRole === "Chief Accountant"
+      ? "ChiefAccountSignature"
+      : "ChiefAdminSignature";
 
   const pendingVouchers = vouchers?.filter((v) => !v[signatureField]);
 
@@ -287,13 +309,13 @@ const VouchersList = () => {
       )}
 
       <div className="flex justify-end items-end mb-3">
-        <div className="border-t w-60 border-gray-300 grid grid-cols-[auto_auto]">
+        <div className="border-t w-60 border-gray-300 grid grid-cols-[auto_auto_auto]">
           <button
             onClick={() => setActiveTab("pending")}
             className={`border border-darkRed  ${
-              activeTab === "pending" ?
-                "bg-white text-black"
-              : "bg-darkRed text-white"
+              activeTab === "pending"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
           >
             Pending
@@ -302,24 +324,43 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("approved")}
             className={`border border-darkRed  ${
-              activeTab === "approved" ?
-                "bg-white text-black"
-              : "bg-darkRed text-white"
+              activeTab === "approved"
+                ? "bg-white text-black"
+                : "bg-darkRed text-white"
             }`}
           >
             Approved
           </button>
+          {userRole !== "Chief Accountant" &&
+            userRole !== "Chief Administrator Manager" && (
+              <button
+                onClick={() => setActiveTab("rejected")}
+                className={`border border-darkRed  ${
+                  activeTab === "rejected"
+                    ? "bg-white text-black"
+                    : "bg-darkRed text-white"
+                }`}
+              >
+                Rejected
+              </button>
+            )}
         </div>
       </div>
       <div>
         <VoucherTable
           data={
-            search ?
-              (activeTab === "pending" ? pendingVouchers : approvedVouchers
-              )?.filter((e) => e.id == voucherId)
-            : activeTab === "pending" ?
-              pendingVouchers
-            : approvedVouchers
+            search
+              ? (activeTab === "pending"
+                  ? pendingVouchers
+                  : activeTab === "approved"
+                    ? approvedVouchers
+                    : rejectedVouchers
+                )?.filter((e) => e.id == voucherId)
+              : activeTab === "pending"
+                ? pendingVouchers
+                : activeTab === "approved"
+                  ? approvedVouchers
+                  : rejectedVouchers
           }
           header={[
             "No ID",
@@ -328,6 +369,7 @@ const VouchersList = () => {
             "Claimable",
             "Date Created",
           ]}
+          onDuplicated={fetchVouchers}
         />
       </div>
 
@@ -392,15 +434,16 @@ const VouchersList = () => {
                     Approved PRs
                   </h3>
                   <div className="border border-gray-300 rounded h-64 overflow-y-auto">
-                    {loadingPRs ?
+                    {loadingPRs ? (
                       <p className="text-center text-sm text-gray-500 p-3">
                         Loading...
                       </p>
-                    : approvedPRs.length === 0 ?
+                    ) : approvedPRs.length === 0 ? (
                       <p className="text-center text-sm text-gray-500 p-3">
                         No approved PRs
                       </p>
-                    : approvedPRs.map((pr) => (
+                    ) : (
+                      approvedPRs.map((pr) => (
                         <div
                           key={pr.PurchaseID}
                           className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
@@ -410,7 +453,7 @@ const VouchersList = () => {
                               {pr.PurchaseID}
                             </p>
                             <p className="text-gray-500 truncate">
-                              {pr.PRCode || "No PR Code"} · ₱{pr.Total}
+                              ₱{pr.Total}
                             </p>
                           </div>
                           <div className="flex gap-1 shrink-0">
@@ -431,7 +474,7 @@ const VouchersList = () => {
                           </div>
                         </div>
                       ))
-                    }
+                    )}
                   </div>
                 </div>
 
@@ -441,11 +484,12 @@ const VouchersList = () => {
                     Added to this Voucher ({selectedPRs.length})
                   </h3>
                   <div className="border border-gray-300 rounded h-64 overflow-y-auto">
-                    {selectedPRs.length === 0 ?
+                    {selectedPRs.length === 0 ? (
                       <p className="text-center text-sm text-gray-500 p-3">
                         None added yet
                       </p>
-                    : selectedPRs.map((pr) => (
+                    ) : (
+                      selectedPRs.map((pr) => (
                         <div
                           key={pr.PurchaseID}
                           className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
@@ -476,7 +520,7 @@ const VouchersList = () => {
                           </div>
                         </div>
                       ))
-                    }
+                    )}
                   </div>
                 </div>
               </div>

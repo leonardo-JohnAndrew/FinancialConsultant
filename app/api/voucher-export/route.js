@@ -11,8 +11,10 @@
  */
 
 import { NextResponse } from "next/server";
+
 import { buildVoucherWorkbook } from "@/lib/Voucherexport";
 import { Check, CheckItem } from "@/db/models"; // adjust to your actual model imports
+import { convertXlsxBufferToPdf } from "@/lib/xlsxToPdf";
 
 async function getCheckData(checkId) {
   const check = await Check.findOne({
@@ -40,6 +42,7 @@ async function getCheckData(checkId) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const checkId = searchParams.get("checkId");
+  const format = (searchParams.get("format") || "xlsx").toLowerCase();
 
   if (!checkId) {
     return NextResponse.json({ error: "checkId is required" }, { status: 400 });
@@ -54,7 +57,18 @@ export async function GET(request) {
     //     return NextResponse.json({ check }, { status: 200 });
 
     const buffer = await buildVoucherWorkbook(check.toJSON());
-
+    if (format === "pdf") {
+      const pdfBuffer = await convertXlsxBufferToPdf(buffer, {
+        baseName: `voucher-${checkId}`,
+      });
+      return new Response(pdfBuffer, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="voucher-${checkId}.pdf"`,
+        },
+      });
+    }
     return new NextResponse(buffer, {
       status: 200,
       headers: {

@@ -24,10 +24,13 @@ import { findDepartment, findSpecificRole } from "@/functions/notification";
 const PaymentVouchers = () => {
   const [showCalculationModal, setShowCalculationModal] = useState(false);
   const voucherRefs = useRef([]);
-  const [generatingPDF, setGeneratingPDF] = useState(false);
-  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectReasonError, setRejectReasonError] = useState("");
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+
   const [selectedCalculationId, setSelectedCalculationId] = useState("");
   const [selectedOperator, setSelectedOperator] = useState("+");
   const [calculationValue, setCalculationValue] = useState("");
@@ -78,7 +81,88 @@ const PaymentVouchers = () => {
   });
   const [attachment, setAttachment] = useState(null);
   const [preview, setPreview] = useState("");
+  const [attachedPRs, setAttachedPRs] = useState([]);
+  const [viewPR, setViewPR] = useState(null);
+  const [removingPRId, setRemovingPRId] = useState(null);
+  const [showAddPRModal, setShowAddPRModal] = useState(false);
+  const [approvedPRs, setApprovedPRs] = useState([]);
+  const [loadingPRs, setLoadingPRs] = useState(false);
+  const [attachingPRId, setAttachingPRId] = useState(null);
+  const [showPurchaseItemModal, setShowPurchaseItemModal] = useState(false);
+  const [selectedPurchaseRow, setSelectedPurchaseRow] = useState(null);
+  const [showExportFormatModal, setShowExportFormatModal] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState(null); // "xlsx" | "pdf" | null
+  const fetchApprovedPRs = async () => {
+    setLoadingPRs(true);
+    try {
+      const res = await axios.get("/api/purchase/approved");
+      const unattached = (res.data?.data || []).filter(
+        (pr) => pr.id == null || pr.id == "",
+      );
+      setApprovedPRs(unattached);
+    } catch (err) {
+      console.error("Error fetching approved PRs", err);
+    } finally {
+      setLoadingPRs(false);
+    }
+  };
 
+  useEffect(() => {
+    if (showAddPRModal) {
+      fetchApprovedPRs();
+    }
+  }, [showAddPRModal]);
+
+  // yung mga naka-attach na dapat hindi na lumabas sa "available" list
+  const availablePRs = approvedPRs.filter(
+    (pr) => !attachedPRs.some((a) => a.PurchaseID === pr.PurchaseID),
+  );
+
+  const handleAttachPR = async (purchaseId) => {
+    try {
+      setAttachingPRId(purchaseId);
+      await axios.post(`/api/vouchers/${params.voucherId}/purchases`, {
+        PurchaseID: purchaseId,
+      });
+      showSuccess("PR added to voucher");
+      fetchAttachedPRs();
+    } catch (err) {
+      console.error(err);
+      showError(err.response?.data?.error_message || "Failed to attach PR");
+    } finally {
+      setAttachingPRId(null);
+    }
+  };
+  const fetchAttachedPRs = async () => {
+    try {
+      const res = await axios.get(
+        `/api/vouchers/${params.voucherId}/purchases`,
+      );
+      setAttachedPRs(res.data?.data || []);
+    } catch (err) {
+      console.error("Error fetching attached PRs", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAttachedPRs();
+  }, []);
+
+  const handleRemovePR = async (purchaseId) => {
+    try {
+      setRemovingPRId(purchaseId);
+      await axios.patch(`/api/vouchers/${params.voucherId}/purchases`, {
+        PurchaseID: purchaseId,
+      });
+      showSuccess("Removed from voucher");
+      fetchAttachedPRs();
+    } catch (err) {
+      console.error(err);
+      showError("Failed to remove PR");
+    } finally {
+      setRemovingPRId(null);
+    }
+  };
   //file attachment
   const handleChange = async (e) => {
     const file = e.target.files?.[0];
@@ -246,6 +330,8 @@ const PaymentVouchers = () => {
         {
           title: "",
           amount: "",
+          purchaseItemId: null,
+          purchaseId: null,
         },
       ],
     }));
@@ -302,6 +388,8 @@ const PaymentVouchers = () => {
           {
             title: "",
             amount: "",
+            purchaseItemId: null,
+            purchaseId: null,
           },
         ],
       });
@@ -335,18 +423,18 @@ const PaymentVouchers = () => {
       pm: voucher.pm || "",
 
       children:
-        voucher.children?.length > 0 ?
-          voucher.children.map((child) => ({
-            id: child.id,
-            title: child.title,
-            amount: child.amount,
-          }))
-        : [
-            {
-              title: "",
-              amount: "",
-            },
-          ],
+        voucher.children?.length > 0
+          ? voucher.children.map((child) => ({
+              id: child.id,
+              title: child.title,
+              amount: child.amount,
+            }))
+          : [
+              {
+                title: "",
+                amount: "",
+              },
+            ],
     });
     setOpenModal(true);
   };
@@ -538,20 +626,35 @@ const PaymentVouchers = () => {
       ) || []
     );
   }, [checks]);
-  const handleDownload = async () => {
-    const res = await axios.get(
-      `/api/voucher-export?checkId=${params.voucherId}`,
-      {
-        responseType: "blob",
-      },
-    );
+  const handleDownload = async (format = "xlsx") => {
+    try {
+      setExportingFormat(format);
 
-    const url = URL.createObjectURL(new Blob([res.data]));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `voucher-${params.voucherId}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const res = await axios.get(
+        `/api/voucher-export?checkId=${params.voucherId}&format=${format}`,
+        { responseType: "blob" },
+      );
+
+      const mimeType =
+        format === "pdf"
+          ? "application/pdf"
+          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+      const blob = new Blob([res.data], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `voucher-${params.voucherId}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setShowExportFormatModal(false);
+    } catch (error) {
+      console.error(error);
+      showError("Failed to export voucher");
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   const handleCalculationConfirm = () => {
@@ -626,54 +729,70 @@ const PaymentVouchers = () => {
   };
   // Opens the confirmation modal
   const handleRejectClick = () => {
+    setRejectReason("");
+    setRejectReasonError("");
     setShowRejectConfirm(true);
   };
-
   // Actually calls the API, runs only after user confirms
   const handleRejectConfirmed = async () => {
+    if (!rejectReason.trim()) {
+      setRejectReasonError("Please provide a reason for rejection.");
+      return;
+    }
+
     try {
       setRejecting(true);
       const response = await axios.post(
         `/api/vouchers/${params.voucherId}/reject`,
+        {
+          reason: rejectReason.trim(),
+        },
       );
-      // reject system
-      // const notifySytstem = await axios.post("/api/notification", {
-      //   userId: purchaseDetails?.purchase?.user?.userID,
-      //   title: "Purchase Budget Confirmation",
-      //   message:
-      //     "Accounting Reject Purchase Requisition id: " + params.purchaseID,
-      //   type: "Info",
-      //   link: "",
-      // });
-      // await sendPurchaseRejectedEmail({
-      //   toEmail: purchaseDetails?.purchase?.user?.email,
-      //   requestNo: params.purchaseID,
-      //   rejectedBy: user?.name,
-      //   rejectedByRole: userRole,
-      // });
+
+      // notify + email disabled pa dati sa'yo, pwede mo i-enable balik dito
+      // kung meron kang findSpecificRole/findDepartment/sendVoucherRejectedEmail
 
       if (response.status === 200 || response.status === 201) {
-        showSuccess(response.data?.message || "Purchase Requisition Rejected");
+        showSuccess(response.data?.message || "Voucher Rejected");
         setTimeout(() => {
-          router.push("/Main/Purchase/PurchaseRecommendingApproval");
+          router.push("/Main/Vouchers");
         }, 1800);
       } else {
-        showError(
-          `Rejection for Purchase Requisition ${params.purchaseID} Failed`,
-        );
+        showError(`Rejection for Voucher ${params.voucherId} Failed`);
       }
     } catch (error) {
-      console.error("Error rejecting purchase:", error);
+      console.error("Error rejecting voucher:", error);
       showError(
-        error?.response?.data?.message ||
-          `Rejection for Purchase Requisition ${params.purchaseID} Failed`,
+        error?.response?.data?.error_message ||
+          `Rejection for Voucher ${params.voucherId} Failed`,
       );
     } finally {
       setRejecting(false);
       setShowRejectConfirm(false);
     }
   };
+  const handleLinkPR = (pr) => {
+    const newRows = pr.purchaseItems.map((item) => ({
+      title: item.ItemName,
+      amount: item.Total,
+      purchaseItemId: item.id,
+      purchaseId: pr.PurchaseID,
+    }));
 
+    setFormData((prev) => {
+      const hasOnlyBlankRow =
+        prev.children.length === 1 &&
+        prev.children[0].title === "" &&
+        prev.children[0].amount === "";
+
+      return {
+        ...prev,
+        children: hasOnlyBlankRow ? newRows : [...prev.children, ...newRows],
+      };
+    });
+
+    setShowPurchaseItemModal(false);
+  };
   const handleGeneratePDF = async () => {
     if (!checks?.items?.length) {
       showError("No vouchers to print");
@@ -787,14 +906,70 @@ const PaymentVouchers = () => {
   return (
     <div className="p-5">
       {/* {JSON.stringify(checks)} */}
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-      </table>
+
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-bold text-lg">
+            Attached Purchase Requisitions ({attachedPRs.length})
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowAddPRModal(true)}
+            className="bg-btnRed text-white px-3 py-1.5 text-sm rounded hover:bg-black"
+          >
+            + Add PR
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto border rounded p-3">
+          {attachedPRs.length === 0 ? (
+            <p className="col-span-2 text-center text-gray-500 text-sm py-4">
+              No PR attached yet
+            </p>
+          ) : (
+            attachedPRs.map((pr) => (
+              <div
+                key={pr.PurchaseID}
+                className="border rounded p-3 flex flex-col gap-2 bg-gray-50"
+              >
+                <div>
+                  <p className="font-semibold text-black truncate">
+                    {pr.PurchaseID}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {pr.RequestorDepartment}
+                  </p>
+                  <p className="text-sm text-black">₱{pr.Total}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setViewPR(pr)}
+                    className="flex-1 px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemovePR(pr.PurchaseID)}
+                    disabled={removingPRId === pr.PurchaseID}
+                    className="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {removingPRId === pr.PurchaseID ? "Removing..." : "Remove"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      {checks?.isRejected === true && (
+        <>
+          <div className="border border-red-600 bg-red-200 p-2 mb-2">
+            <h4 className="text-lg font-bold  text-darkRed">Rejected </h4>
+            <h4>{checks?.Reason}</h4>
+          </div>
+        </>
+      )}
       {/* ADD BUTTON */}
       <div className="flex justify-end mb-5">
         <button
@@ -848,10 +1023,9 @@ const PaymentVouchers = () => {
             {/* HEADER */}
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-2xl font-bold">
-                {isEdit ?
-                  `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
-                : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
-                }
+                {isEdit
+                  ? `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                  : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`}
               </h2>
 
               <button
@@ -998,13 +1172,21 @@ const PaymentVouchers = () => {
             {/* CHILDREN */}
             <div className="border rounded-lg p-4">
               <div className="flex justify-between mb-4">
-                <h3 className="font-bold">Rows</h3>
+                <h3 className="font-bold self-end-safe">Rows</h3>
 
                 <button
                   onClick={handleAddRow}
                   className="bg-green-600 text-white px-3 py-2 rounded"
                 >
                   + Add Rows
+                </button>
+              </div>
+              <div className="flex justify-end items-end mb-3">
+                <button
+                  onClick={() => setShowPurchaseItemModal(true)}
+                  className="bg-blue-600 text-white px-3 py-2 rounded"
+                >
+                  Link PR
                 </button>
               </div>
 
@@ -1084,11 +1266,9 @@ const PaymentVouchers = () => {
           // file attachment
           <>
             {(preview || checks?.cheque_attachment) &&
-              ((
-                (preview || checks?.cheque_attachment)
-                  .toLowerCase()
-                  .includes(".pdf")
-              ) ?
+              ((preview || checks?.cheque_attachment)
+                .toLowerCase()
+                .includes(".pdf") ? (
                 <div className="flex justify-center items-center">
                   <iframe
                     src={preview || checks?.cheque_attachment}
@@ -1096,13 +1276,15 @@ const PaymentVouchers = () => {
                     title="Attachment Preview"
                   />
                 </div>
-              : <div className="flex justify-center items-center">
+              ) : (
+                <div className="flex justify-center items-center">
                   <img
                     src={preview || checks?.cheque_attachment}
                     alt="Attachment Preview"
                     className="w-full max-h-96 border rounded m-5"
                   />
-                </div>)}
+                </div>
+              ))}
           </>
         )}
 
@@ -1148,7 +1330,7 @@ const PaymentVouchers = () => {
             Export Cheque
           </button>
           <button
-            onClick={handleDownload}
+            onClick={() => setShowExportFormatModal(true)}
             className="bg-green-700 text-white font-bold my-2 hover:bg-green-900 px-4 py-2 rounded"
           >
             Export Voucher
@@ -1200,7 +1382,7 @@ const PaymentVouchers = () => {
                     className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
-                <span>Laarni Cruz</span>
+                <span>Laarni N Cruz</span>
               </td>
 
               {/* Chief Admin Manager */}
@@ -1212,13 +1394,13 @@ const PaymentVouchers = () => {
                     className="absolute left-1/2 -translate-x-1/2 -top-15 h-25 object-contain pointer-events-none"
                   />
                 )}
-                <span>Kai Sumitomo</span>
+                <span>Atshushi Yamada</span>
               </td>
             </tr>
 
             <tr className="text-center">
               <td className="text-white bg-black py-2 w-1/3">
-                Chief Accountant
+                Deputy Cheif Administrator Manager
               </td>
               <td className="text-white bg-black py-2 w-1/3">
                 Chief Administrator Manager
@@ -1241,10 +1423,9 @@ const PaymentVouchers = () => {
             />
           </div>
         )}
-
       {(userRole === "Chief Accountant" ||
         userRole === "Chief Administrator Manager") &&
-        (isApproving ?
+        (isApproving ? (
           <div className="flex justify-end gap-4 mt-10 mb-10">
             <button
               onClick={handleCancel}
@@ -1259,7 +1440,8 @@ const PaymentVouchers = () => {
               Confirm
             </button>
           </div>
-        : <div className="flex justify-end gap-4 mt-10 mb-10">
+        ) : (
+          <div className="flex justify-end gap-4 mt-10 mb-10">
             {/* ✅ Show Accept only if THIS role hasn't signed yet */}
             {((userRole === "Chief Accountant" &&
               !checks?.ChiefAccountSignature) ||
@@ -1281,7 +1463,8 @@ const PaymentVouchers = () => {
                 </button>
               </>
             )}
-          </div>)}
+          </div>
+        ))}
 
       {/* ✅ Submit button — only show if no one has signed yet */}
       {userRole !== "Chief Accountant" &&
@@ -1293,9 +1476,9 @@ const PaymentVouchers = () => {
               title="Total Amount must not be zero"
               onClick={() => setApproving(true)}
               className={`${
-                checks.checkAmount > 0 ?
-                  "bg-btnRed text-white hover:bg-black"
-                : "bg-gray-200 text-black"
+                checks.checkAmount > 0
+                  ? "bg-btnRed text-white hover:bg-black"
+                  : "bg-gray-200 text-black"
               } px-5 py-2 rounded mr-2`}
               disabled={checks.checkAmount <= 0}
             >
@@ -1362,15 +1545,273 @@ const PaymentVouchers = () => {
           </div>
         </div>
       )}
+      {showAddPRModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6 max-h-[80vh] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black">Add Approved PR</h2>
+              <button
+                onClick={() => setShowAddPRModal(false)}
+                className="text-gray-500 hover:text-black font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="border border-gray-300 rounded flex-1 overflow-y-auto">
+              {loadingPRs ? (
+                <p className="text-center text-sm text-gray-500 p-3">
+                  Loading...
+                </p>
+              ) : availablePRs.length === 0 ? (
+                <p className="text-center text-sm text-gray-500 p-3">
+                  No available approved PRs
+                </p>
+              ) : (
+                availablePRs.map((pr) => (
+                  <div
+                    key={pr.PurchaseID}
+                    className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
+                  >
+                    <div className="truncate mr-2">
+                      <p className="font-semibold text-black truncate">
+                        {pr.PurchaseID}
+                      </p>
+                      <p className="text-gray-500 truncate">
+                        {pr.RequestorDepartment} · ₱{pr.Total}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setViewPR(pr)}
+                        className="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAttachPR(pr.PurchaseID)}
+                        disabled={attachingPRId === pr.PurchaseID}
+                        className="px-2 py-1 text-xs bg-btnRed text-white rounded hover:bg-black disabled:opacity-50"
+                      >
+                        {attachingPRId === pr.PurchaseID ? "Adding..." : "Add"}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowAddPRModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {viewPR && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-black">
+                  {viewPR.PurchaseID}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Dept: {viewPR.RequestorDepartment}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewPR(null)}
+                className="text-gray-500 hover:text-black font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <table className="w-full text-sm border border-gray-200">
+              <thead className="bg-gray-100 text-black">
+                <tr>
+                  <th className="text-left p-2 border-b">Item</th>
+                  <th className="text-left p-2 border-b">Unit</th>
+                  <th className="text-right p-2 border-b">Qty</th>
+                  <th className="text-right p-2 border-b">Unit Price</th>
+                  <th className="text-right p-2 border-b">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {viewPR.purchaseItems?.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100">
+                    <td className="p-2">{item.ItemName}</td>
+                    <td className="p-2">{item.Unit}</td>
+                    <td className="p-2 text-right">{item.Quantity}</td>
+                    <td className="p-2 text-right">{item.UnitPrice}</td>
+                    <td className="p-2 text-right">{item.Total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="flex justify-between mt-4 font-semibold text-black">
+              <span>Total</span>
+              <span>₱{viewPR.Total}</span>
+            </div>
+          </div>
+        </div>
+      )}
       {showRejectConfirm && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 ">
-          <ConfirmBox
-            title="Rejected Voucher"
-            content={`Are you sure you want to reject Voucher:`}
-            id={params.voucherId}
-            handleConfirm={handleRejectConfirmed}
-            handleclose={() => setShowRejectConfirm(false)}
-          />
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-2">Reject Voucher</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to reject Voucher:{" "}
+              <span className="font-bold">{params.voucherId}</span>
+            </p>
+
+            <label className="block text-sm font-medium mb-1">
+              Reason for rejection <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => {
+                setRejectReason(e.target.value);
+                setRejectReasonError("");
+              }}
+              rows={4}
+              placeholder="Enter reason for rejecting this voucher..."
+              className="w-full border rounded-md px-3 py-2 text-sm resize-none"
+            />
+            {rejectReasonError && (
+              <p className="text-red-500 text-xs mt-1">{rejectReasonError}</p>
+            )}
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowRejectConfirm(false)}
+                className="px-4 py-2 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectConfirmed}
+                disabled={rejecting}
+                className="px-4 py-2 bg-darkRed text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                {rejecting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showExportFormatModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-4">Export Voucher</h2>
+            <p className="text-sm text-gray-600 mb-4">Choose Format</p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleDownload("xlsx")}
+                disabled={exportingFormat !== null}
+                className="w-full px-4 py-2 bg-green-700 text-white rounded hover:bg-green-900 disabled:opacity-50"
+              >
+                {exportingFormat === "xlsx"
+                  ? "Generating Excel..."
+                  : "Export as Excel"}
+              </button>
+              <button
+                onClick={() => handleDownload("pdf")}
+                disabled={exportingFormat !== null}
+                className="w-full px-4 py-2 bg-red-700 text-white rounded hover:bg-red-900 disabled:opacity-50"
+              >
+                {exportingFormat === "pdf"
+                  ? "Generating PDF..."
+                  : "Export as PDF"}
+              </button>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowExportFormatModal(false)}
+                disabled={exportingFormat !== null}
+                className="px-4 py-2 border rounded disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPurchaseItemModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-3xl p-6 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Link Purchase Requisition</h2>
+
+              <button
+                onClick={() => setShowPurchaseItemModal(false)}
+                className="text-xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {attachedPRs.length === 0 ? (
+              <div className="text-center text-gray-500 py-10">
+                No Attached PR
+              </div>
+            ) : (
+              attachedPRs.map((pr) => (
+                <div key={pr.PurchaseID} className="border rounded mb-5">
+                  <div className="flex justify-between items-center bg-gray-100 p-3">
+                    <div>
+                      <div className="font-bold">{pr.PurchaseID}</div>
+
+                      <div className="text-sm text-gray-500">
+                        {pr.RequestorDepartment}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleLinkPR(pr)}
+                      className="bg-blue-600 text-white px-3 py-2 rounded"
+                    >
+                      Link Whole PR
+                    </button>
+                  </div>
+
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Item</th>
+                        <th className="text-right p-2">Qty</th>
+                        <th className="text-right p-2">Total</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {pr.purchaseItems?.map((item) => (
+                        <tr key={item.id}>
+                          <td className="p-2">{item.ItemName}</td>
+
+                          <td className="p-2 text-right">{item.Quantity}</td>
+
+                          <td className="p-2 text-right">₱{item.Total}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

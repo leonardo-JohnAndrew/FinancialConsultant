@@ -92,10 +92,10 @@ const Login = () => {
               {/* headers text*/}
               <div className="flex-1 p-3 ">
                 <h2 className="text-5xl font-medium block">
-                  Welcome to Financial
+                  Welcome to Accounting
                 </h2>
                 <h2 className="text-5xl font-semibold text-lightRed mt-4">
-                  Consultant !
+                  NStren!
                 </h2>
                 <div className="items-center justify-center flex flex-col mt-5">
                   <h4 className="font-semibold text-black opacity-50">

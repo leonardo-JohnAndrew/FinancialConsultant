@@ -1,5 +1,6 @@
 "use client";
 
+import { clearCreditors } from "@/functions/vouchers";
 import { useState, useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
 
@@ -530,6 +531,19 @@ export default function CreditorsPage() {
       showToast("Failed to export creditors.", "error");
     }
   };
+  const handleClear = async () => {
+    const ok = confirm("Delete ALL creditors?");
+    if (!ok) return;
+
+    const result = await clearCreditors();
+
+    if (result.success) {
+      showToast(result.message);
+      fetchCreditors(); // kung client fetch ang gamit mo
+    } else {
+      showToast(result.message, "error");
+    }
+  };
   const handleDownloadTemplate = () => {
     const headers = [
       "code",
@@ -705,6 +719,9 @@ export default function CreditorsPage() {
             </button>
             <button className="btn btn-primary" onClick={() => setModal("add")}>
               + Add Creditor
+            </button>
+            <button className="btn btn-danger" onClick={handleClear}>
+              🗑 Clear All
             </button>
           </div>
         </div>

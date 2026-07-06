@@ -36,7 +36,8 @@ export default function PurchaseDetails() {
   const [EndingInventoryDate, setEndingInventoryDate] = useState();
   const [formattedEnding, setFormattedEnding] = useState();
   const { showError, showSuccess } = useBanner();
-
+  const [showExportFormatModal, setShowExportFormatModal] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState(null); // "xlsx" | "pdf" | null
   const fetchPurchaseDetails = useCallback(async () => {
     try {
       const response = await axios.get(`/api/purchase/${params.purchaseID}`);
@@ -69,24 +70,54 @@ export default function PurchaseDetails() {
   useEffect(() => {
     fetchPurchaseDetails();
   }, []);
-  const handleDownload = async () => {
-    setIsClick(true);
-    const res = await axios.get(`/api/purchase/${params.purchaseID}/export`, {
-      responseType: "blob",
-    });
+  // const handleDownload = async () => {
+  //   setIsClick(true);
+  //   const res = await axios.get(`/api/purchase/${params.purchaseID}/export`, {
+  //     responseType: "blob",
+  //   });
 
-    const url = URL.createObjectURL(new Blob([res.data]));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `purchase-${params.purchaseID}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setTimeout(function () {
-      setIsClick(false);
-    }, 2000);
-  };
+  //   const url = URL.createObjectURL(new Blob([res.data]));
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = `purchase-${params.purchaseID}.xlsx`;
+  //   a.click();
+  //   URL.revokeObjectURL(url);
+  //   setTimeout(function () {
+  //     setIsClick(false);
+  //   }, 2000);
+  // };
   const handleCancelClick = () => {
     setCancelModal(true);
+  };
+  const handleDownload = async (format = "xlsx") => {
+    try {
+      setExportingFormat(format);
+
+      const res = await axios.get(
+        `/api/purchase/${params.purchaseID}/export?format=${format}`,
+        { responseType: "blob" },
+      );
+
+      const mimeType =
+        format === "pdf"
+          ? "application/pdf"
+          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+      const blob = new Blob([res.data], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `purchase-${params.purchaseID}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setShowExportFormatModal(false);
+    } catch (error) {
+      console.error(error);
+      showError("Failed to export purchase form");
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   // Actually calls the API, runs only after user confirms
@@ -277,7 +308,14 @@ export default function PurchaseDetails() {
         </div>
         <hr className="border-t border-gray-300" />
       </div>
-
+      {purchaseDetails?.purchase?.isRejected === true && (
+        <>
+          <div className="border border-red-600 bg-red-200 p-2">
+            <h4 className="text-lg font-bold  text-darkRed">Rejected </h4>
+            <h4>{purchaseDetails?.purchase?.reason}</h4>
+          </div>
+        </>
+      )}
       <div className="scrollbar-custom overflow-y-auto">
         <Table
           tableHeader={
@@ -486,22 +524,24 @@ export default function PurchaseDetails() {
           </tbody>
         </table>
       }
-      <div className="flex justify-end items-end mt-3">
-        <button
-          onClick={handleCancelClick}
-          disabled={canceling}
-          className="px-6 py-2 mr-2 bg-gray-500 border border-gray-600 text-white font-bold rounded-md hover:bg-gray-600 transition disabled:opacity-50"
-        >
-          {canceling ? "Cancel..." : "Cancel"}
-        </button>
-        <button
-          className={`py-2 px-6  ${isCLick === true ? "bg-gray-500" : "bg-green-800"}  text-white ${isCLick === false && "hover:bg-green-950"}  font-bold rounded-md`}
-          onClick={handleDownload}
-          disabled={isCLick}
-        >
-          {"Export Data"}
-        </button>
-      </div>
+      {purchaseDetails?.purchase?.isRejected === false && (
+        <div className="flex justify-end items-end mt-3">
+          <button
+            onClick={handleCancelClick}
+            disabled={canceling}
+            className="px-6 py-2 mr-2 bg-gray-500 border border-gray-600 text-white font-bold rounded-md hover:bg-gray-600 transition disabled:opacity-50"
+          >
+            {canceling ? "Cancel..." : "Cancel"}
+          </button>
+          <button
+            onClick={() => setShowExportFormatModal(true)}
+            className={`py-2 px-5  ${isCLick === true ? "bg-gray-500" : "bg-green-800"}  text-white ${isCLick === false && "hover:bg-green-950"}  font-bold rounded-md`}
+            disabled={isCLick}
+          >
+            {"Export Data"}
+          </button>
+        </div>
+      )}
       {cancelingModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 ">
           <ConfirmBox
@@ -589,6 +629,47 @@ export default function PurchaseDetails() {
             </div>         
          </div> */}
       {/* resubmit*/}
+      {showExportFormatModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-4">Export Voucher</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Piliin ang format na i-e-export
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => handleDownload("xlsx")}
+                disabled={exportingFormat !== null}
+                className="w-full px-4 py-2 bg-green-700 text-white rounded hover:bg-green-900 disabled:opacity-50"
+              >
+                {exportingFormat === "xlsx"
+                  ? "Generating Excel..."
+                  : "Export as Excel"}
+              </button>
+              <button
+                onClick={() => handleDownload("pdf")}
+                disabled={exportingFormat !== null}
+                className="w-full px-4 py-2 bg-red-700 text-white rounded hover:bg-red-900 disabled:opacity-50"
+              >
+                {exportingFormat === "pdf"
+                  ? "Generating PDF..."
+                  : "Export as PDF"}
+              </button>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowExportFormatModal(false)}
+                disabled={exportingFormat !== null}
+                className="px-4 py-2 border rounded disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,11 +1,36 @@
 "use server";
-import { AccountCode, Check, CheckItem, GLcode } from "@/db/models";
+import { AccountCode, Check, CheckItem, Creditor, GLcode } from "@/db/models";
 import { NextResponse } from "next/server";
 import { json, Sequelize } from "sequelize";
 
 import fs from "fs/promises";
 import path from "path";
 
+import { revalidatePath } from "next/cache";
+
+export async function clearCreditors() {
+  try {
+    await Creditor.destroy({
+      where: {},
+      truncate: true,
+      force: true,
+    });
+
+    revalidatePath("/creditors");
+
+    return {
+      success: true,
+      message: "All creditors deleted.",
+    };
+  } catch (error) {
+    console.error(error);
+
+    return {
+      success: false,
+      message: "Failed to clear creditors.",
+    };
+  }
+}
 export async function UpdateAttachment({ id, file }) {
   try {
     // Convert File to Buffer
@@ -208,4 +233,15 @@ export async function GetBDONo(voucherType) {
 
 export async function TotalAmount(data) {
   return { data };
+}
+
+export async function GetChiefAccountantSign({ id }) {
+  const chiefAccountant = await Check.findOne({
+    where: { id: id },
+  });
+  // console.log(chiefAccountant);
+
+  return {
+    signature: chiefAccountant?.ChiefAccountSignature,
+  };
 }
