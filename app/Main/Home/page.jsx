@@ -645,13 +645,13 @@ export default function DashboardPage() {
       </td>
       <td style={tdMuted}>{p.mode || "—"}</td>
       <td style={tdMuted}>
-        {p.timeStamp
-          ? new Date(p.timeStamp).toLocaleDateString("en-PH", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-          : "—"}
+        {p.timeStamp ?
+          new Date(p.timeStamp).toLocaleDateString("en-PH", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : "—"}
       </td>
       <td style={tdBase}>
         <Badge status={p.Status} />
@@ -825,13 +825,15 @@ export default function DashboardPage() {
                 </p>
               </div>
             );
-            return href ? (
-              <Link key={label} href={href} style={{ textDecoration: "none" }}>
-                {cardContent}
-              </Link>
-            ) : (
-              <div key={label}>{cardContent}</div>
-            );
+            return href ?
+                <Link
+                  key={label}
+                  href={href}
+                  style={{ textDecoration: "none" }}
+                >
+                  {cardContent}
+                </Link>
+              : <div key={label}>{cardContent}</div>;
           })}
         </div>
       )}
@@ -861,7 +863,7 @@ export default function DashboardPage() {
               <thead>
                 <tr>
                   <Th>ID</Th>
-                  <Th>Payee</Th>
+                  <Th>Voucher Count</Th>
                   <Th>Amount</Th>
                   <Th>Status</Th>
                 </tr>
@@ -879,7 +881,7 @@ export default function DashboardPage() {
                   >
                     <td style={tdMono}>{v.checkId || v.id || "—"}</td>
                     <td style={{ ...tdBase, fontWeight: 500 }}>
-                      {v.payee || v.Payee || v.checkId || "—"}
+                      {v.items?.length || 0}
                     </td>
                     <td style={tdBase}>
                       ₱
@@ -891,7 +893,18 @@ export default function DashboardPage() {
                       ).toLocaleString()}
                     </td>
                     <td style={tdBase}>
-                      <Badge status={v.status || v.Status} />
+                      <Badge
+                        status={
+                          (
+                            v.ChiefAdminSignature === null ||
+                            v.ChiefAdminSignature === ""
+                          ) ?
+                            "For Approval"
+                          : v.isRejected === false ?
+                            "Approved"
+                          : "Rejected"
+                        }
+                      />
                     </td>
                   </tr>
                 ))}
@@ -915,7 +928,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {recommendingApproval.length === 0 ? (
+                {recommendingApproval.length === 0 ?
                   <tr>
                     <td
                       colSpan={6}
@@ -929,11 +942,10 @@ export default function DashboardPage() {
                       No purchases for recommending approval
                     </td>
                   </tr>
-                ) : (
-                  recommendingApproval.map((p, i) => (
+                : recommendingApproval.map((p, i) => (
                     <RequisitionRow key={i} p={p} />
                   ))
-                )}
+                }
               </tbody>
             </table>
             <div
@@ -982,7 +994,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {myRequisitions.length === 0 ? (
+                {myRequisitions.length === 0 ?
                   <tr>
                     <td
                       colSpan={6}
@@ -996,9 +1008,8 @@ export default function DashboardPage() {
                       No requisitions submitted yet
                     </td>
                   </tr>
-                ) : (
-                  myRequisitions.map((p, i) => <RequisitionRow key={i} p={p} />)
-                )}
+                : myRequisitions.map((p, i) => <RequisitionRow key={i} p={p} />)
+                }
               </tbody>
             </table>
             <div

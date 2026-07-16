@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import db from "@/lib/db";
+
 import { Summary } from "@/db/models";
 
 // GET all summaries

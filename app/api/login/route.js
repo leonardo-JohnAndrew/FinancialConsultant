@@ -43,6 +43,7 @@ export async function POST(request) {
       profile: userAccount.profile_pic,
       department: userAccount.department,
       e_sign: userAccount.e_signature,
+      status: userAccount.status,
       mustChangePassword: userAccount.mustChangePassword ?? false,
       name: `${userAccount.firstname} ${
         (
@@ -69,6 +70,7 @@ export async function POST(request) {
       user: {
         userID: userAccount.userID,
         role: userAccount.role,
+        status: userAccount.status,
       },
     });
   } catch (error) {

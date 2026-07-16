@@ -344,6 +344,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
           await CashBankModel.create({
             cashbook_id: cashbookId,
             check_item_id: child.id,
+            check_parent: check.id,
             date: item.payment_voucher_date,
             description: child.title,
             A_C_code: item.accountCode,

@@ -9,6 +9,9 @@ const US_Cash_Bank = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    check_parent: {
+      type: DataTypes.INTEGER,
+    },
     slipNo: {
       type: DataTypes.INTEGER,
       unique: false,

@@ -634,7 +634,7 @@ export default function PurchaseDetails() {
           <div className="bg-white rounded-lg p-6 w-full max-w-sm">
             <h2 className="text-lg font-semibold mb-4">Export Voucher</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Piliin ang format na i-e-export
+             Choose Format 
             </p>
 
             <div className="flex flex-col gap-3">

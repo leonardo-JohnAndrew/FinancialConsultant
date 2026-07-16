@@ -28,7 +28,13 @@ const Login = () => {
 
       if (response.status === 200) {
         updateUser(response.data);
-        router.push("/Main/Home");
+        //    console.log(response.data);
+        if (response.data?.user?.status === "InActive") {
+          setError("Account is inActive/Disable");
+          router.push("/PR");
+        } else {
+          router.push("/Main/Home");
+        }
       } else {
         setError(response.data?.error_message);
 

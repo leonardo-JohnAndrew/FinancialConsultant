@@ -222,6 +222,15 @@ const CashbooksTable = (props) => {
                   <input
                     className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent w-10"
                     type="number"
+                    readOnly
+                    value={data.check_parent || 0}
+                    //slip number
+                  />
+                </td>
+                <td className="px-2 py-2">
+                  <input
+                    className="border border-gray-300 bg-gray-200 text-black print:border-0 print:outline-none print:bg-transparent w-10"
+                    type="number"
                     onChange={(e) =>
                       handleChange(index, "slipNo", Number(e.target.value))
                     }
