@@ -91,11 +91,6 @@ const VouchersList = () => {
         return;
       }
 
-      if (selectedPRs.length === 0) {
-        showError("Please add at least one approved PR to this voucher.");
-        return;
-      }
-
       const payload = {
         ...newVoucher,
         purchaseIds: selectedPRs.map((pr) => pr.PurchaseID),

@@ -7,11 +7,13 @@ import {
   CheckItem,
   Check,
   Creditor,
+  Supplier,
 } from "../db/models/index.js";
 import sequelize from "../db/connection.js";
 
 import { validateRequiredFields } from "./validations.js";
 import { Op } from "sequelize";
+import { request } from "node:http";
 
 export async function createCashbookEntry() {
   try {
@@ -373,7 +375,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
 }
 export async function getCreditors() {
   const data = await Creditor.findAll();
-
+  console.log(JSON.stringify(data));
   return {
     dataList: data.map((item) => item.toJSON()),
   };
@@ -412,4 +414,53 @@ export async function getCreditorsNumber(tin) {
   return {
     code: matches[0]?.code || "",
   };
+}
+
+//add to suppliers
+//supplierName , supplierAddress and zipCode , supplierTin
+export async function addSuppliers({
+  supplierName,
+  supplierAddress,
+  zipCode,
+  supplierTin,
+}) {
+  try {
+    if (supplierTin) {
+      const supplier = await Supplier.findAll({
+        where: { supplierTin: supplierTin },
+        attributes: ["id"],
+      });
+      if (supplier.length > 0) {
+        return {
+          error_message: "Supplier is exist",
+        };
+      }
+    }
+
+    await Supplier.create({
+      supplierName,
+      supplierAddress,
+      zipCode,
+      supplierTin,
+    });
+
+    return {
+      message: "Successfully Added",
+    };
+  } catch (err) {
+    console.error("Supplier create error:", err); // full object
+    if (err.name === "SequelizeValidationError") {
+      console.error(
+        "Validation details:",
+        err.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+          value: e.value,
+        })),
+      );
+    }
+    return {
+      error_message: err.errors?.[0]?.message || err.message,
+    };
+  }
 }

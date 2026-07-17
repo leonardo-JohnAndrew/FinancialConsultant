@@ -2,6 +2,7 @@
 
 import { clearCreditors } from "@/functions/vouchers";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { addSuppliers } from "@/functions/cashbook";
 import * as XLSX from "xlsx";
 
 const API_BASE = "/api/creditors";
@@ -18,7 +19,12 @@ const EMPTY_FORM = {
   tin2: "",
   tin3: "",
 };
-
+const EMPTY_SUPPLIER_ROW = {
+  supplierName: "",
+  supplierAddress: "",
+  zipCode: "",
+  supplierTin: "",
+};
 const REQUIRED_COLS = ["code", "creditorsName"];
 const OPTIONAL_COLS = [
   "address1",
@@ -188,7 +194,162 @@ function CreditorForm({
     </form>
   );
 }
+function SupplierForm({ onSuccess, onCancel }) {
+  const [rows, setRows] = useState([{ ...EMPTY_SUPPLIER_ROW }]);
+  const [loading, setLoading] = useState(false);
+  const [rowErrors, setRowErrors] = useState({});
 
+  const setField = (index, key) => (e) => {
+    const value = e.target.value;
+    setRows((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, [key]: value } : r)),
+    );
+  };
+
+  const addRow = () => setRows((prev) => [...prev, { ...EMPTY_SUPPLIER_ROW }]);
+
+  const removeRow = (index) => {
+    setRows((prev) => prev.filter((_, i) => i !== index));
+    setRowErrors((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setRowErrors({});
+
+    const errors = {};
+    let successCount = 0;
+
+    // sunod-sunod na tawag sa server action per row
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      try {
+        const result = await addSuppliers(row);
+        if (result?.error_message) {
+          errors[i] = result.error_message;
+        } else {
+          successCount++;
+        }
+      } catch (err) {
+        errors[i] = err.message || "Failed to add";
+      }
+    }
+
+    setLoading(false);
+
+    if (Object.keys(errors).length > 0) {
+      setRowErrors(errors);
+    }
+    if (successCount > 0) {
+      onSuccess?.(successCount, Object.keys(errors).length);
+    }
+    if (Object.keys(errors).length === 0) {
+      // lahat successful, close modal
+      onCancel();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="creditor-form">
+      {rows.map((row, index) => (
+        <div key={index} className="supplier-row-card">
+          <div className="supplier-row-header">
+            <span className="supplier-row-label">Supplier #{index + 1}</span>
+            <div className="supplier-row-btns">
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  className="btn-row-icon btn-row-remove"
+                  onClick={() => removeRow(index)}
+                  disabled={loading}
+                  title="Remove row"
+                >
+                  −
+                </button>
+              )}
+              {index === rows.length - 1 && (
+                <button
+                  type="button"
+                  className="btn-row-icon btn-row-add"
+                  onClick={addRow}
+                  disabled={loading}
+                  title="Add row"
+                >
+                  +
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Supplier Name *</label>
+            <input
+              value={row.supplierName}
+              onChange={setField(index, "supplierName")}
+              placeholder="Company or individual name"
+              disabled={loading}
+            />
+          </div>
+          <div className="form-group">
+            <label>Supplier Address</label>
+            <input
+              value={row.supplierAddress}
+              onChange={setField(index, "supplierAddress")}
+              placeholder="Street, barangay, city"
+              disabled={loading}
+            />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Zip Code</label>
+              <input
+                value={row.zipCode}
+                onChange={setField(index, "zipCode")}
+                placeholder="e.g. 2009"
+                disabled={loading}
+              />
+            </div>
+            <div className="form-group">
+              <label>Supplier TIN *</label>
+              <input
+                value={row.supplierTin}
+                onChange={setField(index, "supplierTin")}
+                placeholder="000-000-000"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {rowErrors[index] && (
+            <div className="supplier-row-error">⚠ {rowErrors[index]}</div>
+          )}
+        </div>
+      ))}
+
+      <div className="form-actions">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onCancel}
+          disabled={loading}
+        >
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading
+            ? "Saving..."
+            : `Save ${rows.length > 1 ? `${rows.length} Suppliers` : "Supplier"}`}
+        </button>
+      </div>
+    </form>
+  );
+}
 // ── Import Excel Form (inside modal) ──────────────────────────────────────────
 function ImportForm({ onSuccess, onClose }) {
   const fileRef = useRef(null);
@@ -685,6 +846,16 @@ export default function CreditorsPage() {
           th:nth-child(3), td:nth-child(3),
           th:nth-child(5), td:nth-child(5) { display: none; }
         }
+          .supplier-row-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; background: #fafafa; }
+.supplier-row-header { display: flex; justify-content: space-between; align-items: center; }
+.supplier-row-label { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+.supplier-row-btns { display: flex; gap: 6px; }
+.btn-row-icon { width: 26px; height: 26px; border-radius: 6px; border: none; cursor: pointer; font-size: 1rem; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.btn-row-add { background: #dcfce7; color: #16a34a; }
+.btn-row-add:hover { background: #bbf7d0; }
+.btn-row-remove { background: #fee2e2; color: #dc2626; }
+.btn-row-remove:hover { background: #fecaca; }
+.supplier-row-error { font-size: 0.75rem; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 10px; }
       `}</style>
 
       <div className="page">
@@ -719,6 +890,12 @@ export default function CreditorsPage() {
             </button>
             <button className="btn btn-primary" onClick={() => setModal("add")}>
               + Add Creditor
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => setModal("addSupplier")}
+            >
+              + Add Supplier
             </button>
             <button className="btn btn-danger" onClick={handleClear}>
               🗑 Clear All
@@ -882,7 +1059,21 @@ export default function CreditorsPage() {
           />
         </Modal>
       )}
-
+      {modal === "addSupplier" && (
+        <Modal title="Add Supplier(s)" onClose={() => setModal(null)}>
+          <SupplierForm
+            onSuccess={(successCount, errorCount) => {
+              showToast(
+                errorCount > 0
+                  ? `${successCount} supplier(s) added, ${errorCount} failed.`
+                  : `${successCount} supplier(s) added.`,
+                errorCount > 0 ? "error" : "success",
+              );
+            }}
+            onCancel={() => setModal(null)}
+          />
+        </Modal>
+      )}
       {modal?.type === "edit" && (
         <Modal title="Edit Creditor" onClose={() => setModal(null)}>
           <CreditorForm

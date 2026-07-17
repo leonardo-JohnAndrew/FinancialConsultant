@@ -26,8 +26,8 @@ export default function BudgetConfirmation() {
       );
       setPurchaseDetails(response.data.data);
       setTotalPages(response.data.totalPages);
-      setDateStartDefault(response.data.rangeStart.split("T")[0]);
-      setDateEndDefault(response.data.rangeEnd.split("T")[0]);
+      setDateStartDefault(response.data.rangeStart?.split("T")[0]);
+      setDateEndDefault(response.data.rangeEnd?.split("T")[0]);
     } catch (error) {
       if (error.response && error.response.status === 404) {
         setIs404(true);
@@ -134,9 +134,9 @@ export default function BudgetConfirmation() {
         <button
           onClick={() => setActiveTab("pending")}
           className={`border border-darkRed px-4 py-2 ${
-            activeTab === "pending" ?
-              "bg-white text-black"
-            : "bg-darkRed text-white"
+            activeTab === "pending"
+              ? "bg-white text-black"
+              : "bg-darkRed text-white"
           }`}
         >
           Confirmation
@@ -144,9 +144,9 @@ export default function BudgetConfirmation() {
         <button
           onClick={() => setActiveTab("approved")}
           className={`border border-darkRed px-4 py-2 ${
-            activeTab === "approved" ?
-              "bg-white text-black"
-            : "bg-darkRed text-white"
+            activeTab === "approved"
+              ? "bg-white text-black"
+              : "bg-darkRed text-white"
           }`}
         >
           PR Approval
@@ -182,9 +182,9 @@ export default function BudgetConfirmation() {
             key={index}
             onClick={() => setPage(index + 1)}
             className={`px-4 py-1 border-r-2 border-gray-500 ${
-              page === index + 1 ?
-                "bg-darkRed text-white"
-              : "bg-gray-200 hover:bg-darkRed hover:text-white"
+              page === index + 1
+                ? "bg-darkRed text-white"
+                : "bg-gray-200 hover:bg-darkRed hover:text-white"
             }`}
           >
             {index + 1}
