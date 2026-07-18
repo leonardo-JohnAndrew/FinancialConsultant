@@ -26,8 +26,8 @@ export default function BudgetConfirmation() {
       );
       setPurchaseDetails(response.data.data);
       setTotalPages(response.data.totalPages);
-      setDateStartDefault(response.data.rangeStart.split("T")[0]);
-      setDateEndDefault(response.data.rangeEnd.split("T")[0]);
+      setDateStartDefault(response.data.rangeStart?.split("T")[0]);
+      setDateEndDefault(response.data.rangeEnd?.split("T")[0]);
     } catch (error) {
       if (error.response && error.response.status === 404) {
         setIs404(true);

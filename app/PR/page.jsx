@@ -101,7 +101,7 @@ const Login = () => {
                   Welcome to Accounting
                 </h2>
                 <h2 className="text-5xl font-semibold text-lightRed mt-4">
-                  NStren!
+                  NSTren!
                 </h2>
                 <div className="items-center justify-center flex flex-col mt-5">
                   <h4 className="font-semibold text-black opacity-50">

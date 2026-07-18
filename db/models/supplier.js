@@ -24,7 +24,7 @@ const Supplier = sequelize.define(
     supplierTin: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: false,
     },
   },
   {

@@ -423,18 +423,18 @@ const PaymentVouchers = () => {
       pm: voucher.pm || "",
 
       children:
-        voucher.children?.length > 0
-          ? voucher.children.map((child) => ({
-              id: child.id,
-              title: child.title,
-              amount: child.amount,
-            }))
-          : [
-              {
-                title: "",
-                amount: "",
-              },
-            ],
+        voucher.children?.length > 0 ?
+          voucher.children.map((child) => ({
+            id: child.id,
+            title: child.title,
+            amount: child.amount,
+          }))
+        : [
+            {
+              title: "",
+              amount: "",
+            },
+          ],
     });
     setOpenModal(true);
   };
@@ -636,9 +636,9 @@ const PaymentVouchers = () => {
       );
 
       const mimeType =
-        format === "pdf"
-          ? "application/pdf"
-          : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        format === "pdf" ? "application/pdf" : (
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
 
       const blob = new Blob([res.data], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -921,12 +921,11 @@ const PaymentVouchers = () => {
           </button>
         </div>
         <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto border rounded p-3">
-          {attachedPRs.length === 0 ? (
+          {attachedPRs.length === 0 ?
             <p className="col-span-2 text-center text-gray-500 text-sm py-4">
               No PR attached yet
             </p>
-          ) : (
-            attachedPRs.map((pr) => (
+          : attachedPRs.map((pr) => (
               <div
                 key={pr.PurchaseID}
                 className="border rounded p-3 flex flex-col gap-2 bg-gray-50"
@@ -959,7 +958,7 @@ const PaymentVouchers = () => {
                 </div>
               </div>
             ))
-          )}
+          }
         </div>
       </div>
       {checks?.isRejected === true && (
@@ -1023,13 +1022,17 @@ const PaymentVouchers = () => {
             {/* HEADER */}
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-2xl font-bold">
-                {isEdit
-                  ? `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
-                  : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`}
+                {isEdit ?
+                  `Edit ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                : `Create ${formData.receiptOrPayment === "payment" ? "Payment" : "Receipt"} Voucher`
+                }
               </h2>
 
               <button
-                onClick={() => setOpenModal(false)}
+                onClick={() => {
+                  setOpenModal(false);
+                  setIsEdit(false);
+                }}
                 className="text-red-500 text-xl"
               >
                 ✕
@@ -1043,13 +1046,14 @@ const PaymentVouchers = () => {
                 name="payment_voucher_date"
                 placeholder="Voucher Date"
                 value={formData.payment_voucher_date}
+                required={true}
                 onChange={handleParentChange}
                 className="border p-2 rounded "
               />
 
               <select
                 name="voucherType"
-                value={formData.voucherType}
+                value={formData.voucherType || "CASH USD"}
                 onChange={handleParentChange}
                 className="border p-2 rounded"
               >
@@ -1060,7 +1064,7 @@ const PaymentVouchers = () => {
               </select>
               <select
                 name="receiptOrPayment"
-                value={formData.receiptOrPayment}
+                value={formData.receiptOrPayment || "receipt"}
                 onChange={handleParentChange}
                 className="border p-2 rounded"
               >
@@ -1113,7 +1117,7 @@ const PaymentVouchers = () => {
                 type="text"
                 name="voucherTypeNumber"
                 placeholder={`${formData.voucherType.includes("CASH") ? "Cash No." : "Bank No."}`}
-                value={formData.voucherTypeNumber || "033N2"}
+                value={formData.voucherTypeNumber || "001I2"}
                 readOnly
                 onChange={handleParentChange}
                 className="border p-2 rounded"
@@ -1244,7 +1248,10 @@ const PaymentVouchers = () => {
             {/* FOOTER */}
             <div className="flex justify-end gap-3 mt-5">
               <button
-                onClick={() => setOpenModal(false)}
+                onClick={() => {
+                  setOpenModal(false);
+                  setIsEdit(false);
+                }}
                 className="border px-4 py-2 rounded"
               >
                 Cancel
@@ -1266,9 +1273,11 @@ const PaymentVouchers = () => {
           // file attachment
           <>
             {(preview || checks?.cheque_attachment) &&
-              ((preview || checks?.cheque_attachment)
-                .toLowerCase()
-                .includes(".pdf") ? (
+              ((
+                (preview || checks?.cheque_attachment)
+                  .toLowerCase()
+                  .includes(".pdf")
+              ) ?
                 <div className="flex justify-center items-center">
                   <iframe
                     src={preview || checks?.cheque_attachment}
@@ -1276,15 +1285,13 @@ const PaymentVouchers = () => {
                     title="Attachment Preview"
                   />
                 </div>
-              ) : (
-                <div className="flex justify-center items-center">
+              : <div className="flex justify-center items-center">
                   <img
                     src={preview || checks?.cheque_attachment}
                     alt="Attachment Preview"
                     className="w-full max-h-96 border rounded m-5"
                   />
-                </div>
-              ))}
+                </div>)}
           </>
         )}
 
@@ -1425,7 +1432,7 @@ const PaymentVouchers = () => {
         )}
       {(userRole === "Chief Accountant" ||
         userRole === "Chief Administrator Manager") &&
-        (isApproving ? (
+        (isApproving ?
           <div className="flex justify-end gap-4 mt-10 mb-10">
             <button
               onClick={handleCancel}
@@ -1440,8 +1447,7 @@ const PaymentVouchers = () => {
               Confirm
             </button>
           </div>
-        ) : (
-          <div className="flex justify-end gap-4 mt-10 mb-10">
+        : <div className="flex justify-end gap-4 mt-10 mb-10">
             {/* ✅ Show Accept only if THIS role hasn't signed yet */}
             {((userRole === "Chief Accountant" &&
               !checks?.ChiefAccountSignature) ||
@@ -1463,8 +1469,7 @@ const PaymentVouchers = () => {
                 </button>
               </>
             )}
-          </div>
-        ))}
+          </div>)}
 
       {/* ✅ Submit button — only show if no one has signed yet */}
       {userRole !== "Chief Accountant" &&
@@ -1476,9 +1481,9 @@ const PaymentVouchers = () => {
               title="Total Amount must not be zero"
               onClick={() => setApproving(true)}
               className={`${
-                checks.checkAmount > 0
-                  ? "bg-btnRed text-white hover:bg-black"
-                  : "bg-gray-200 text-black"
+                checks.checkAmount > 0 ?
+                  "bg-btnRed text-white hover:bg-black"
+                : "bg-gray-200 text-black"
               } px-5 py-2 rounded mr-2`}
               disabled={checks.checkAmount <= 0}
             >
@@ -1559,16 +1564,15 @@ const PaymentVouchers = () => {
             </div>
 
             <div className="border border-gray-300 rounded flex-1 overflow-y-auto">
-              {loadingPRs ? (
+              {loadingPRs ?
                 <p className="text-center text-sm text-gray-500 p-3">
                   Loading...
                 </p>
-              ) : availablePRs.length === 0 ? (
+              : availablePRs.length === 0 ?
                 <p className="text-center text-sm text-gray-500 p-3">
                   No available approved PRs
                 </p>
-              ) : (
-                availablePRs.map((pr) => (
+              : availablePRs.map((pr) => (
                   <div
                     key={pr.PurchaseID}
                     className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
@@ -1600,7 +1604,7 @@ const PaymentVouchers = () => {
                     </div>
                   </div>
                 ))
-              )}
+              }
             </div>
 
             <div className="flex justify-end mt-4">
@@ -1722,18 +1726,18 @@ const PaymentVouchers = () => {
                 disabled={exportingFormat !== null}
                 className="w-full px-4 py-2 bg-green-700 text-white rounded hover:bg-green-900 disabled:opacity-50"
               >
-                {exportingFormat === "xlsx"
-                  ? "Generating Excel..."
-                  : "Export as Excel"}
+                {exportingFormat === "xlsx" ?
+                  "Generating Excel..."
+                : "Export as Excel"}
               </button>
               <button
                 onClick={() => handleDownload("pdf")}
                 disabled={exportingFormat !== null}
                 className="w-full px-4 py-2 bg-red-700 text-white rounded hover:bg-red-900 disabled:opacity-50"
               >
-                {exportingFormat === "pdf"
-                  ? "Generating PDF..."
-                  : "Export as PDF"}
+                {exportingFormat === "pdf" ?
+                  "Generating PDF..."
+                : "Export as PDF"}
               </button>
             </div>
 
@@ -1763,12 +1767,11 @@ const PaymentVouchers = () => {
               </button>
             </div>
 
-            {attachedPRs.length === 0 ? (
+            {attachedPRs.length === 0 ?
               <div className="text-center text-gray-500 py-10">
                 No Attached PR
               </div>
-            ) : (
-              attachedPRs.map((pr) => (
+            : attachedPRs.map((pr) => (
                 <div key={pr.PurchaseID} className="border rounded mb-5">
                   <div className="flex justify-between items-center bg-gray-100 p-3">
                     <div>
@@ -1810,7 +1813,7 @@ const PaymentVouchers = () => {
                   </table>
                 </div>
               ))
-            )}
+            }
           </div>
         </div>
       )}

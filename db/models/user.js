@@ -29,7 +29,6 @@ const User = sequelize.define(
     middle: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: "N/A",
     },
     department: {
       type: DataTypes.STRING,
