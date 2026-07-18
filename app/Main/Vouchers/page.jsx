@@ -238,9 +238,9 @@ const VouchersList = () => {
 
   //signature Fields
   const signatureField =
-    userRole === "Chief Accountant"
-      ? "ChiefAccountSignature"
-      : "ChiefAdminSignature";
+    userRole === "Chief Accountant" ?
+      "ChiefAccountSignature"
+    : "ChiefAdminSignature";
 
   const pendingVouchers = vouchers?.filter((v) => !v[signatureField]);
 
@@ -308,9 +308,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("pending")}
             className={`border border-darkRed  ${
-              activeTab === "pending"
-                ? "bg-white text-black"
-                : "bg-darkRed text-white"
+              activeTab === "pending" ?
+                "bg-white text-black"
+              : "bg-darkRed text-white"
             }`}
           >
             Pending
@@ -319,9 +319,9 @@ const VouchersList = () => {
           <button
             onClick={() => setActiveTab("approved")}
             className={`border border-darkRed  ${
-              activeTab === "approved"
-                ? "bg-white text-black"
-                : "bg-darkRed text-white"
+              activeTab === "approved" ?
+                "bg-white text-black"
+              : "bg-darkRed text-white"
             }`}
           >
             Approved
@@ -331,9 +331,9 @@ const VouchersList = () => {
               <button
                 onClick={() => setActiveTab("rejected")}
                 className={`border border-darkRed  ${
-                  activeTab === "rejected"
-                    ? "bg-white text-black"
-                    : "bg-darkRed text-white"
+                  activeTab === "rejected" ?
+                    "bg-white text-black"
+                  : "bg-darkRed text-white"
                 }`}
               >
                 Rejected
@@ -344,18 +344,16 @@ const VouchersList = () => {
       <div>
         <VoucherTable
           data={
-            search
-              ? (activeTab === "pending"
-                  ? pendingVouchers
-                  : activeTab === "approved"
-                    ? approvedVouchers
-                    : rejectedVouchers
-                )?.filter((e) => e.id == voucherId)
-              : activeTab === "pending"
-                ? pendingVouchers
-                : activeTab === "approved"
-                  ? approvedVouchers
-                  : rejectedVouchers
+            search ?
+              (activeTab === "pending" ? pendingVouchers
+              : activeTab === "approved" ? approvedVouchers
+              : rejectedVouchers
+              )?.filter((e) => e.id == voucherId)
+            : activeTab === "pending" ?
+              pendingVouchers
+            : activeTab === "approved" ?
+              approvedVouchers
+            : rejectedVouchers
           }
           header={[
             "No ID",
@@ -429,16 +427,15 @@ const VouchersList = () => {
                     Approved PRs
                   </h3>
                   <div className="border border-gray-300 rounded h-64 overflow-y-auto">
-                    {loadingPRs ? (
+                    {loadingPRs ?
                       <p className="text-center text-sm text-gray-500 p-3">
                         Loading...
                       </p>
-                    ) : approvedPRs.length === 0 ? (
+                    : approvedPRs.length === 0 ?
                       <p className="text-center text-sm text-gray-500 p-3">
                         No approved PRs
                       </p>
-                    ) : (
-                      approvedPRs.map((pr) => (
+                    : approvedPRs.map((pr) => (
                         <div
                           key={pr.PurchaseID}
                           className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
@@ -469,7 +466,7 @@ const VouchersList = () => {
                           </div>
                         </div>
                       ))
-                    )}
+                    }
                   </div>
                 </div>
 
@@ -479,12 +476,11 @@ const VouchersList = () => {
                     Added to this Voucher ({selectedPRs.length})
                   </h3>
                   <div className="border border-gray-300 rounded h-64 overflow-y-auto">
-                    {selectedPRs.length === 0 ? (
+                    {selectedPRs.length === 0 ?
                       <p className="text-center text-sm text-gray-500 p-3">
                         None added yet
                       </p>
-                    ) : (
-                      selectedPRs.map((pr) => (
+                    : selectedPRs.map((pr) => (
                         <div
                           key={pr.PurchaseID}
                           className="flex items-center justify-between px-3 py-2 border-b border-gray-200 text-sm"
@@ -515,7 +511,7 @@ const VouchersList = () => {
                           </div>
                         </div>
                       ))
-                    )}
+                    }
                   </div>
                 </div>
               </div>

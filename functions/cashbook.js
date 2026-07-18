@@ -1,5 +1,5 @@
 "use server";
-import { Sequelize } from "sequelize";
+// import { Sequelize } from "sequelize";
 import {
   CashBooks,
   PH_Cash_Bank,
@@ -11,7 +11,7 @@ import {
 } from "../db/models/index.js";
 import sequelize from "../db/connection.js";
 
-import { validateRequiredFields } from "./validations.js";
+// import { validateRequiredFields } from "./validations.js";
 import { Op } from "sequelize";
 import { request } from "node:http";
 
@@ -346,6 +346,7 @@ export async function insertMissingCashbookEntries(cashbookId) {
           await CashBankModel.create({
             cashbook_id: cashbookId,
             check_item_id: child.id,
+            check_parent: check.id,
             date: item.payment_voucher_date,
             description: child.title,
             A_C_code: item.accountCode,

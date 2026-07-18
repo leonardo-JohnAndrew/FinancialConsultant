@@ -43,8 +43,8 @@ export default function ApprovedPurchase() {
       );
       setPurchaseDetails(response.data.data);
       setTotalPages(response.data.totalPages);
-      setDateStartDefault(response.data.rangeStart.split("T")[0]);
-      setDateEndDefault(response.data.rangeEnd.split("T")[0]);
+      setDateStartDefault(response.data.rangeStart?.split("T")[0]);
+      setDateEndDefault(response.data.rangeEnd?.split("T")[0]);
       console.log(response.data);
       //  setFormatted(formatDates(response.data.purchases[0].createdAt));
     } catch (error) {
@@ -156,9 +156,9 @@ export default function ApprovedPurchase() {
             "ACTION",
           ]}
           list={
-            search
-              ? purchaseDetails.filter((e) => e.PurchaseID === purchaseID)
-              : purchaseDetails || []
+            search ?
+              purchaseDetails.filter((e) => e.PurchaseID === purchaseID)
+            : purchaseDetails || []
           }
           approvalType={approvalType}
         />
@@ -177,9 +177,9 @@ export default function ApprovedPurchase() {
             key={index}
             onClick={() => setPage(index + 1)}
             className={`px-4 py-1 border-r-2 border-gray-500 ${
-              page === index + 1
-                ? "bg-darkRed text-white"
-                : "bg-gray-200 hover:bg-darkRed hover:text-white"
+              page === index + 1 ?
+                "bg-darkRed text-white"
+              : "bg-gray-200 hover:bg-darkRed hover:text-white"
             }`}
           >
             {index + 1}

@@ -2,7 +2,7 @@
 
 import { clearCreditors } from "@/functions/vouchers";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { addSuppliers } from "@/functions/cashbook";
+import { addSuppliers } from "@/functions/supplier";
 import * as XLSX from "xlsx";
 
 const API_BASE = "/api/creditors";
@@ -350,6 +350,7 @@ function SupplierForm({ onSuccess, onCancel }) {
     </form>
   );
 }
+
 // ── Import Excel Form (inside modal) ──────────────────────────────────────────
 function ImportForm({ onSuccess, onClose }) {
   const fileRef = useRef(null);
@@ -1056,6 +1057,21 @@ export default function CreditorsPage() {
             onSubmit={handleAdd}
             onCancel={() => setModal(null)}
             loading={formLoading}
+          />
+        </Modal>
+      )}
+      {modal === "addSupplier" && (
+        <Modal title="Add Supplier(s)" onClose={() => setModal(null)}>
+          <SupplierForm
+            onSuccess={(successCount, errorCount) => {
+              showToast(
+                errorCount > 0
+                  ? `${successCount} supplier(s) added, ${errorCount} failed.`
+                  : `${successCount} supplier(s) added.`,
+                errorCount > 0 ? "error" : "success",
+              );
+            }}
+            onCancel={() => setModal(null)}
           />
         </Modal>
       )}

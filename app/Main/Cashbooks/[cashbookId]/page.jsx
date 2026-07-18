@@ -304,6 +304,7 @@ const CashbookDetailed = () => {
             tableHeader={
               currency === "PH" ?
                 [
+                  "VoucherID",
                   "Slip No",
                   "Date",
                   "Description",
@@ -328,6 +329,7 @@ const CashbookDetailed = () => {
                   "Description",
                 ]
               : [
+                  "VoucherID",
                   "Slip No",
                   "Date",
                   "Description",
