@@ -2,7 +2,7 @@
 
 import { clearCreditors } from "@/functions/vouchers";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { addSuppliers } from "@/functions/cashbook";
+import { addSuppliers } from "@/functions/supplier";
 import * as XLSX from "xlsx";
 
 const API_BASE = "/api/creditors";
