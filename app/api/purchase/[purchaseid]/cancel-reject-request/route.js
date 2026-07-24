@@ -24,12 +24,13 @@ export async function PATCH(request, { params }) {
 }
 export async function POST(request, { params }) {
   const { purchaseid } = await params;
-  const body = await request.json();
-  const { reason } = body;
-  // update mak e purchase cancel
   try {
+    const body = await request.json();
+    const reason = body.reason || "not in budget";
+    // update mak e purchase cancel
     await Purchase.update(
       {
+        reason,
         isRejected: true,
         Status: "Rejected Purchase Requisition",
       },

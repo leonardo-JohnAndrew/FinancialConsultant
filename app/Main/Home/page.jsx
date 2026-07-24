@@ -122,7 +122,7 @@ export default function DashboardPage() {
         // Chief Accountant
         if (role === "Chief Accountant") {
           fetches.push(
-            fetch("/api/vouchers").then(async (r) => {
+            fetch("/api/vouchers/approvals/chiefAccountant").then(async (r) => {
               const d = await r.json();
               const vouchers = d.data || [];
               newStats.totalVouchers = d.total || vouchers.length;
@@ -169,7 +169,7 @@ export default function DashboardPage() {
         // Chief Administrator Manager
         if (role === "Chief Administrator Manager") {
           fetches.push(
-            fetch("/api/vouchers").then(async (r) => {
+            fetch("/api/vouchers/approvals/chiefAdmin").then(async (r) => {
               const d = await r.json();
               const vouchers = d.data || [];
               newStats.totalVouchers = d.total || vouchers.length;

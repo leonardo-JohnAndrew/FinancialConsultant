@@ -224,15 +224,12 @@ export function getAllowedPaths(role) {
       "Dashboard",
       "Purchase Requisition Form",
       "My Requisition",
-      "Creditors",
     ],
     Admin: [
       "Dashboard",
       "Purchase Requisition Form",
       "Requisition List",
       "My Requisition",
-      "BIR 2307",
-      "Creditors",
     ],
     "Chief Accountant": [
       "Dashboard",
@@ -270,16 +267,12 @@ export function getAllowedPaths(role) {
       "Purchase Requisition Form",
       "My Requisition",
       "Requisition List",
-      "BIR 2307",
-      "Creditors",
     ],
     SuperAdmin: [
       "Dashboard",
       "Purchase Requisition Form",
       "My Requisition",
       "User Management",
-      "BIR 2307",
-      "Creditors",
     ],
   };
 

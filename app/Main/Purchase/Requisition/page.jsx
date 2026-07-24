@@ -72,7 +72,10 @@ const CreateRequisition = () => {
         (item) => item.ItemName && parseFloat(item.Total) > 0,
       );
 
-      if (user.role === "Admin" && !endindInventoryDate) {
+      if (
+        (user.role === "Admin" || user.department === "Admin") &&
+        !endindInventoryDate
+      ) {
         showError("Ending Inventory Date is Required");
         return;
       }
@@ -117,6 +120,7 @@ const CreateRequisition = () => {
                 }),
                 sendPurchaseForwardedEmail({
                   toEmail: forward.email,
+                  requestNo: response.data?.id,
                   forwardedBy: user.name,
                   forwardedByRole: user.role,
                   forwardedTo: `${forward.firstname} ${forward.lastname}`,
@@ -183,8 +187,8 @@ const CreateRequisition = () => {
 
   // ✅ Memoized tableHeader — hindi na bago sa bawat render
   const tableHeader = useMemo(() => {
-    return user?.role !== "Admin"
-      ? [
+    return user?.role !== "Admin" || user?.department !== "Admin" ?
+        [
           "NO",
           "ITEM CATALOG # COMPLETE ITEM DESCRIPTION",
           "QUANTITY",

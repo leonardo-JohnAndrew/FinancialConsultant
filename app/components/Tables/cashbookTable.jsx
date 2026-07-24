@@ -146,7 +146,7 @@ const CashbooksTable = (props) => {
             {tbdatDetailes && (
               <>
                 <tr className="border-b">
-                  <td colSpan={8} className="p-2">
+                  <td colSpan={9} className="p-2">
                     <h4>
                       前月繰越額　　(Balance Brougtht Forward from Previous
                       Month )
@@ -196,7 +196,7 @@ const CashbooksTable = (props) => {
 
                 {/* // nextMonth */}
                 <tr className="border-b">
-                  <td colSpan={8} className="p-2">
+                  <td colSpan={9} className="p-2">
                     <h4>
                       次月繰越額　　(Balance Carried Forward to Next Month )
                     </h4>

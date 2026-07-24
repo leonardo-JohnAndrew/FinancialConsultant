@@ -41,9 +41,9 @@ export default function PurchaseDetails() {
   const { showError, showSuccess } = useBanner();
 
   const userRole =
-    user?.role === "Admin" && purchaseDetails?.purchase?.AdminSign != null
-      ? "Chief Administrator Manager"
-      : user?.role;
+    user?.role === "Admin" && purchaseDetails?.purchase?.AdminSign != null ?
+      "Chief Administrator Manager"
+    : user?.role;
 
   // ── Approval gate logic ──────────────────────────────────────────────────
   const isFullyApproved =
@@ -465,25 +465,25 @@ export default function PurchaseDetails() {
       <div className="scrollbar-custom overflow-y-auto">
         <Table
           tableHeader={
-            purchaseDetails?.purchase?.user?.role !== "Admin"
-              ? [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
-              : [
-                  "NO.",
-                  "ITEM DESCRIPTION",
-                  "REQUIRED BALANCE",
-                  "ENDING INVENTORY",
-                  "QUANTITY",
-                  "UNIT",
-                  "UNIT PRICE",
-                  "TOTAL",
-                ]
+            purchaseDetails?.purchase?.user?.role !== "Admin" ?
+              [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
+            : [
+                "NO.",
+                "ITEM DESCRIPTION",
+                "REQUIRED BALANCE",
+                "ENDING INVENTORY",
+                "QUANTITY",
+                "UNIT",
+                "UNIT PRICE",
+                "TOTAL",
+              ]
           }
           data={purchaseDetails || isfetching === false ? purchaseDetails : []}
           Ending={formattedEnding}
@@ -554,9 +554,9 @@ export default function PurchaseDetails() {
                 />
               )}
               <span>
-                {purchaseDetails?.purchase?.AdminName != null
-                  ? purchaseDetails?.purchase?.ChiefAdminManagerName
-                  : `${user?.name}`}
+                {purchaseDetails?.purchase?.ChiefAdminManagerName != null ?
+                  purchaseDetails?.purchase?.ChiefAdminManagerName
+                : `${user?.name}`}
               </span>
             </td>
 
@@ -582,9 +582,9 @@ export default function PurchaseDetails() {
             <td className="text-white bg-black py-2 w-1/3">Employee Name</td>
             <td className="text-white bg-black py-2 w-1/3">Admin</td>
             <td className="text-white bg-black py-2 w-1/3">
-              {purchaseDetails?.purchase?.isAdminForChiefSign
-                ? "Admin"
-                : "Chief Administrator Manager"}
+              {purchaseDetails?.purchase?.isAdminForChiefSign ?
+                "Admin"
+              : "Chief Administrator Manager"}
             </td>
             <td className="text-white bg-black py-2 w-1/3">Project Director</td>
           </tr>
@@ -593,7 +593,7 @@ export default function PurchaseDetails() {
 
       {/* ── Accept / Cancel / Confirm buttons ── */}
       {canApprove &&
-        (approving ? (
+        (approving ?
           <div className="flex justify-end gap-4 mt-10 mb-10">
             <button
               onClick={handleCancel}
@@ -608,8 +608,7 @@ export default function PurchaseDetails() {
               Confirm
             </button>
           </div>
-        ) : (
-          purchaseDetails?.purchase?.isCancel === false && (
+        : purchaseDetails?.purchase?.isCancel === false && (
             <div className="flex justify-end gap-4 mt-10 mb-10">
               <button
                 onClick={handleRejectClick}
@@ -625,8 +624,7 @@ export default function PurchaseDetails() {
                 Accept
               </button>
             </div>
-          )
-        ))}
+          ))}
       {showRejectConfirm && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 ">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">

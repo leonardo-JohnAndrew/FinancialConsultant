@@ -43,7 +43,7 @@ const PurchaseSubmitTable = React.memo((props) => {
   // ✅ useCallback — stable reference, hindi magre-re-render ang React.memo children
   const handleChange = useCallback(
     (index, field, value) => {
-      const isAdmin = user?.role === "Admin";
+      const isAdmin = user?.role === "Admin" || user?.department === "Admin";
 
       setItemInfo((prev) => {
         const update = [...prev];
@@ -127,12 +127,14 @@ const PurchaseSubmitTable = React.memo((props) => {
                       onChange={(e) => setEndingInventoryDate(e.target.value)}
                       type="date"
                       defaultValue={
-                        props.data.purchase?.purchaseItems[0]
-                          ?.EndingInventoryDate
-                          ? props.data.purchase.purchaseItems[0].EndingInventoryDate.split(
-                              "T",
-                            )[0]
-                          : ""
+                        (
+                          props.data.purchase?.purchaseItems[0]
+                            ?.EndingInventoryDate
+                        ) ?
+                          props.data.purchase.purchaseItems[0].EndingInventoryDate.split(
+                            "T",
+                          )[0]
+                        : ""
                       }
                     />
                   </div>
@@ -157,7 +159,7 @@ const PurchaseSubmitTable = React.memo((props) => {
                 />
               </td>
 
-              {user?.role === "Admin" && (
+              {(user?.role === "Admin" || user?.department === "Admin") && (
                 <>
                   <td>
                     <input
@@ -199,10 +201,10 @@ const PurchaseSubmitTable = React.memo((props) => {
                   }
                   value={itemInfo[index]?.Quantity || 0}
                   max={
-                    user?.role === "Admin"
-                      ? (itemInfo[index]?.RequiredBalance || 0) -
-                        (itemInfo[index]?.EndingInventory || 0)
-                      : undefined
+                    user?.role === "Admin" || user?.department === "Admin" ?
+                      (itemInfo[index]?.RequiredBalance || 0) -
+                      (itemInfo[index]?.EndingInventory || 0)
+                    : undefined
                   }
                   min={0}
                   readOnly={!itemInfo[index]?.ItemName}
